@@ -43,7 +43,7 @@ npm test
 Run one set of tests:
 
 ```
-NODE_ENV=test node_modules/.bin/jasmine spec/models/agentSpec.js
+NODE_ENV=test npx jasmine spec/features/agentIndexSpec.js
 ```
 
 ## Development
