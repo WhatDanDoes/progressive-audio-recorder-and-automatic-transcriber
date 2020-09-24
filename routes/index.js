@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 
   fs.readdir('public/images/uploads', (err, files) => {
     if (err) {
-      return res.render('error', { error: err });
+      return res.render('error', { error: err, message: 'Couldn\'t read upload directory' });
     }
 
     files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item)).reverse();
