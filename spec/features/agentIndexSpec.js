@@ -88,7 +88,7 @@ describe('agentIndexSpec', () => {
       });
 
       it('displays an Android deep link with JWT', () => {
-        browser.assert.element('a[href="bpe://somejwtstring"]');
+        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
       });
 
       it('shows a list of albums the agent can read', () => {

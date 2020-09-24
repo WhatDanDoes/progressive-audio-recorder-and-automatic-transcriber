@@ -79,7 +79,7 @@ describe('imageIndexSpec', () => {
     describe('authorized', () => {
       it('displays an Android deep link with JWT', () => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.element('a[href="bpe://somejwtstring"]');
+        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
       });
 
       it('allows an agent to view his own album', () => {
