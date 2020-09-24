@@ -84,7 +84,7 @@ npm start
 In the application directory:
 
 ```
-cd basic-photo-server
+cd auth0-photo-server
 NODE_ENV=production npm install
 ```
 
@@ -105,7 +105,7 @@ docker-compose -f docker-compose.prod.yml run --rm node node seed.js NODE_ENV=pr
 Connect to DB container like this:
 
 ```
-docker-compose -f docker-compose.prod.yml exec mongo mongo basic_photo_server_production
+docker-compose -f docker-compose.prod.yml exec mongo mongo auth0_photo_server_production
 ```
 
 Show databases:
