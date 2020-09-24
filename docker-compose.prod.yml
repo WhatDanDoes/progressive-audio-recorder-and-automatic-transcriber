@@ -16,10 +16,12 @@ services:
   mongo:
     image: mongo
     restart: unless-stopped
-    command: --smallfiles
     volumes:
-      - basic_photo_server_data:/data/db
+      - auth0_photo_server_data:/data/db
 networks:
   default:
     external:
       name: nginx-proxy
+volumes:
+  auth0_photo_server_data:
+
