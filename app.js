@@ -153,7 +153,7 @@ app.use(function(err, req, res, next) {
 
 let port = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'tor' ? 3000 : 3001;
 app.listen(port, '0.0.0.0', () => {
-  console.log('basic-photo-server listening on ' + port + '!');
+  console.log('auth0-photo-server listening on ' + port + '!');
 });
 
 
