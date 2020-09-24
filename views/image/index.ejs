@@ -1,0 +1,20 @@
+<% include ../_partials/head %>
+  <% include ../_partials/messages %>
+  <main>
+    <% include ../_partials/appLink %>
+    <% if (!images.length) { %>
+      <h2>No images</h2>
+    <% } else { %>
+      <% include ./_pager %>
+      <% for (let image of images) { %>
+        <section class="image">
+          <a href="<%= `/image/${image}` %>">
+            <img src="<%= `/uploads/${image}` %>" />
+          </a>
+        </section>
+      <% } %>
+      <% include ./_pager %>
+    <% } %>
+  </main> 
+<% include ../_partials/footer %>
+

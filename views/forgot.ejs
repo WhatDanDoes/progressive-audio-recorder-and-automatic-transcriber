@@ -1,0 +1,15 @@
+<% include _partials/head %>
+  <% include _partials/messages %>
+  <main>
+    <div class="reset">
+      <h2>Reset your password</h2>
+      <form id="reset-agent-password-form" role="form" action="/reset" method="post">
+        <div class="form-group">
+          <label for="email">Email:</label>       
+          <input class="form-control" type="email" name="email" placeholder="you@example.com" autofocus required=true>
+        </div>
+        <button class="btn btn-default" type="submit">Reset</button>
+      </form>
+    </div>
+  </main>
+<% include _partials/footer %>

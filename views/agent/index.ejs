@@ -1,0 +1,16 @@
+<% include ../_partials/head %>
+  <% include ../_partials/messages %>
+  <main>
+    <h2>Hello, <%= agent.email %></h2>
+    <% include ../_partials/appLink %>
+    <% if (readables.length) { %>
+      <h3>Viewable albums:</h3>
+      <% for (let readable of readables) { %>
+        <section class="agent">
+          <a href="/image/<%= readable %>"><%= readable %></a>
+        </section>
+      <% } %>
+    <% } %>
+  </main> 
+<% include ../_partials/footer %>
+

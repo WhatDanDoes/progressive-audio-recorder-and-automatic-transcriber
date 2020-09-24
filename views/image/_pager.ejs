@@ -1,0 +1,13 @@
+  <section id="pager">
+    <nav>
+      <ul>
+
+        <% if (nextPage) { %>
+          <li><a id="next-page" href="<%= `/image/${agent.getAgentDirectory()}/page/${nextPage}` %>">Next</a></li>
+        <% } %>
+        <% if (prevPage) { %>
+          <li><a id="prev-page" href="<%= `/image/${agent.getAgentDirectory()}/page/${prevPage}` %>">Previous</a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </header>

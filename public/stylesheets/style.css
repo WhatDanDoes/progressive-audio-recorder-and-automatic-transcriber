@@ -1,0 +1,537 @@
+/**
+ * general
+ */
+body {
+  margin: 0;
+  font-family: "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: #00B7FF;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+main {
+  margin: 0;
+}
+
+@media (min-width: 750px) {
+  main {
+    margin-left: 25%;
+    margin-right: 25%;
+  }
+}
+
+section {
+  width: 100%;
+  margin-top: 2em;
+}
+section img {
+  width: 100%;
+}
+
+input[type=text],
+input[type=password] {
+  border: 1px solid #4f83cc;
+  background-color: #eeeeee;
+  border-radius: 25px;
+  font-size: 1em;
+  color: #002f6c;
+}
+
+/**
+ * Alert boxes stolen from Bootstrap
+ */
+.alert {
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+}
+
+.alert-heading {
+  color: inherit;
+}
+
+.alert-link {
+  font-weight: bold;
+}
+
+.alert-dismissible .close {
+  position: relative;
+  top: -0.75rem;
+  right: -1.25rem;
+  padding: 0.75rem 1.25rem;
+  color: inherit;
+}
+
+.alert-success {
+  background-color: #dff0d8;
+  border-color: #d0e9c6;
+  color: #3c763d;
+}
+
+.alert-success hr {
+  border-top-color: #c1e2b3;
+}
+
+.alert-success .alert-link {
+  color: #2b542c;
+}
+
+.alert-info {
+  background-color: #d9edf7;
+  border-color: #bcdff1;
+  color: #31708f;
+}
+
+.alert-info hr {
+  border-top-color: #a6d5ec;
+}
+
+.alert-info .alert-link {
+  color: #245269;
+}
+
+.alert-warning {
+  background-color: #fcf8e3;
+  border-color: #faf2cc;
+  color: #8a6d3b;
+}
+
+.alert-warning hr {
+  border-top-color: #f7ecb5;
+}
+
+.alert-warning .alert-link {
+  color: #66512c;
+}
+
+.alert-danger {
+  background-color: #f2dede;
+  border-color: #ebcccc;
+  color: #a94442;
+}
+
+.alert-danger hr {
+  border-top-color: #e4b9b9;
+}
+
+.alert-danger .alert-link {
+  color: #843534;
+}
+
+/**
+ * header#page
+ */
+#page {
+  background-color: #151515;
+  padding: 0.25em;
+  color: #d7d7d7;
+}
+
+#page h1 {
+  margin: 0;
+  font-size: 1.25em;
+}
+
+#page nav {
+  margin: 0;
+  top: 1em;
+  right: 1em;
+  position: absolute;
+  color: #d7d7d7;
+  font-size: 0.75em;
+}
+
+nav ul {
+  margin: 0;
+  list-style-type: none;
+}
+
+nav ul li {
+  display: inline;
+}
+
+#page a {
+  color: #d7d7d7;
+}
+
+@media (min-width: 750px) {
+  #page h1 {
+    margin: .5em;
+    font-size: 1.5em;
+  }
+
+  #page nav {
+    font-size: 1.4em;
+  }
+
+  #page nav ul li {
+    margin: .5em;
+  }
+
+
+}
+
+/**
+ * Pagination
+ */
+#pager {
+  width: 100%;
+  text-align: center; 
+}
+#pager ul {
+  width: 100%;
+  padding: 0;
+}
+#next-page {
+  margin-left: 1em;
+}
+#prev-page {
+  margin-right: 1em;
+}
+
+/**
+ * details
+ */
+
+details {
+  border-radius: 5px;
+  margin-top: 1em;
+}
+
+details summary {
+  border-radius: inherit;
+  font-size: 1.25em;
+  font-weight: bold;
+  background-color: #ECEFF1;
+  margin-bottom: 0.5em;
+  padding: 0.25em;
+}
+
+details section {
+  margin-left: 1em;
+  margin-right: 1em;
+  padding-bottom: 1em;
+}
+
+/**
+ * Agent
+ */
+.agent {
+  margin-left: 1em;
+}
+
+h3 {
+ padding: 0.25em;
+}
+
+/**
+ * albums
+.album {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+ */
+.stakeholder .quantity,
+.agent .permissions,
+.album .permissions {
+  float: right;
+}
+
+.agent .permissions .fa,
+.album .permissions .fa {
+  margin-right: 0.5em;
+}
+
+/**
+ * forms
+ */
+form {
+  font-size: 1.25em;
+}
+
+.login form {
+  width: 80%;
+  margin: auto;
+}
+
+button[type="submit"] {
+  padding: 0.5em;
+  color: #FFF;
+  font-size: 1em;
+  text-align: center;
+  font-style: normal;
+  width: 100%;
+  border: 1px solid #4f83cc;
+  border-radius: 25px;
+  background-color: #4f83cc;
+}
+
+.form-group {
+  margin-bottom: 1em;
+}
+
+.form-control {
+  height: 2em;
+  width: 100%;
+}
+
+#selected-files {
+  font-size: 0.75em;
+}
+
+.date,
+.currency {
+  text-align: right;
+}
+
+.date input,
+.currency input {
+  width: 8em;
+  text-align: right;
+  margin-right: 2em;
+}
+
+.date label,
+.currency label {
+  display: inline-block;
+  width: 40%;
+  text-align: right;
+  margin-right: 1em;
+}
+
+.not-editable {
+  color: #2d2d2d;
+  font-size: .8em;
+  margin-right: 0.2em;
+}
+
+.not-editable input {
+  color: #2d2d2d;
+  font-size: .8em;
+}
+
+
+textarea {
+  display: inline;
+  width: 100%;
+}
+
+.checkbox label {
+  display: inline-block;
+  width: 40%;
+}
+
+.checkbox input {
+  text-align: right;
+  width: 7em;
+}
+
+/**
+ * 2016-11-22
+ * LGT
+ * http://stackoverflow.com/questions/14942081/detect-if-a-browser-in-a-mobile-device-ios-android-phone-tablet-is-used
+@media (max-resolution: 1dppx) {
+  #datepicker {
+    pointer-events: none;
+  }
+}
+ */
+
+/**
+ * show images
+ */
+h2 {
+  font-size: 1.25em;
+  font-weight: normal;
+  margin-bottom: 0.5em;
+  padding: 0.25em;
+}
+
+/**
+ * list items
+ */
+/*
+.agent,
+.image {
+  padding: 0.5em 1em 0.5em 1em;
+  border-bottom-style: solid; 
+  border-width: 1px; 
+  border-color: #CFD8DC;
+}
+*/
+
+.pending {
+  color: #90A4AE;
+}
+
+.expense {
+  color: #ff3232;
+}
+
+.approved {
+  color: #37474F; 
+}
+
+.credit {
+  color: #32ff32;
+}
+
+.image .album {
+  float: left;
+/*
+  width: 70%;
+*/
+}
+
+/*
+.image .date {
+  margin-left: 70%;
+}
+*/
+/**
+ * Image controls
+ */
+#image-controls form {
+  position: relative;
+  display: inline;
+}
+
+/**
+ * Delete image
+ */
+button[type="submit"]#delete-image  {
+  padding: 0.5em;
+  background: #ff4c4c;
+  font-size: 1em;
+  width: 30%;
+  border: 1px solid #ff1919;
+}
+
+/**
+ * Publish image
+ */
+button[type="submit"]#publish-image  {
+  padding: 0.5em;
+  background: green;
+  font-size: 1em;
+  width: 30%;
+  border: 1px solid green;
+  float: right;
+}
+
+/**
+ * Tool tips
+ */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/**
+ * New album, agent, stake forms
+ */
+.form-reveal {
+  margin-top: 0.5em;
+  margin-right: 0.5em;
+  float: right;
+}
+.closed {
+  color: green;
+}
+.open {
+  color: red;
+  transform: rotate(45deg);
+}
+
+/*** custom checkboxes ***/
+/* 2017-2-6 https://codepen.io/jamesbarnett/pen/yILjk */
+
+input[type=checkbox][class=pic] { display:none; } /* to hide the checkbox itself */
+input[type=checkbox] + label:before {
+  font-family: FontAwesome;
+  display: inline-block;
+  color: red;
+}
+
+/* Unchecked icons */
+#review + label:before { content: "\f044"; }
+#submit + label:before { content: "\f093"; }
+#view  + label:before { content: "\f06e"; }
+
+/*input[type=checkbox] + label:before { content: "\f096"; } /* unchecked icon */
+input[type=checkbox] + label:before { letter-spacing: 10px; } /* space between checkbox and label */
+/*input[type=checkbox]:checked + label:before { content: "\f046"; } /* checked icon */
+input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
+/*input[type=checkbox]:checked + label:before { letter-spacing: 5px; } /* allow space for check mark */
+
+#new-agent-form input[type=submit] {
+ /* margin: 1em;
+  float: right;*/
+}
+
+/**
+ * Footer
+ */
+#info {
+  background-color: black;
+  padding: 2em;
+  font-size: 1.5em;
+  text-align: center;
+}
+#info a {
+  color: white;
+}
+
+/**
+ * deep-link
+ */
+.deep-link {
+  width: 100%;
+  text-align: center;
+}
+.deep-link img {
+  width: 30%;
+  border-radius: 1em;
+  box-shadow: .25em .25em rgb(0,0,0,0.2);
+}
+

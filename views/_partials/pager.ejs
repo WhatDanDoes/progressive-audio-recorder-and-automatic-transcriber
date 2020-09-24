@@ -1,0 +1,12 @@
+  <section id="pager">
+    <nav>
+      <ul>
+        <% if (prevPage) { %>
+          <li><a id="prev-page" href="/page/<%= prevPage %>">< Previous</a></li>
+        <% } %>
+        <% if (nextPage) { %>
+          <li><a id="next-page" href="/page/<%= nextPage %>">Next ></a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </header>

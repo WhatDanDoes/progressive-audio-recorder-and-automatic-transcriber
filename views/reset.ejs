@@ -1,0 +1,23 @@
+<% include _partials/head %>
+  <% include _partials/messages %>
+  <main>
+    <div class="reset">
+      <h2>Reset your password</h2>
+      <form id="reset-password-form" role="form" action="/reset/<%= token %>?_method=PATCH" method="post">
+          <div class="form-group>
+            <label for="password">New Password</label>
+            <input class="form-control" type="password" name="password" value=""
+                               placeholder="New password" autofocus=true required=true>
+          </div>
+          <div class="form-group>
+            <label for="confirm">Confirm Password</label>
+            <input class="form-control" type="password" name="confirm" value=""
+                               placeholder="Confirm password" required=true>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-default" type="submit">Reset</button>
+          </div>
+      </form>
+    </div>
+  </main> 
+<% include _partials/footer %>
