@@ -85,6 +85,7 @@ In the application directory:
 
 ```
 cd auth0-photo-server
+cp .env.example .env # <- don't forget to configure
 NODE_ENV=production npm install
 ```
 
