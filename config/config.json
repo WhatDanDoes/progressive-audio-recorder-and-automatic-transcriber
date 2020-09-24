@@ -1,27 +1,27 @@
 {
   "development": {
-    "username": "basic_photo_server",
+    "username": "auth0_photo_server",
     "password": "secret",
-    "database": "basic_photo_server_development",
+    "database": "auth0_photo_server_development",
     "host": "localhost"
   },
   "test": {
-    "username": "basic_photo_server",
+    "username": "auth0_photo_server",
     "password": "secret",
-    "database": "basic_photo_server_test",
+    "database": "auth0_photo_server_test",
     "host": "localhost"
   },
   "staging": {
-    "username": "basic_photo_server",
+    "username": "auth0_photo_server",
     "password": "secret",
-    "database": "basic_photo_server_staging",
+    "database": "auth0_photo_server_staging",
     "host": "mongo",
     "dialect": "mongodb"
   },
   "production": {
-    "username": "basic_photo_server",
+    "username": "auth0_photo_server",
     "password": "secret",
-    "database": "basic_photo_server_production",
+    "database": "auth0_photo_server_production",
     "host": "mongo",
     "dialect": "mongodb"
   }
