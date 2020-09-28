@@ -1,0 +1,10 @@
+{
+  "iss": "https://silid.auth0.com/",
+  "sub": "auth0|123456",
+  "aud": [
+    "https://id.languagetechnology.org/",
+    "https://id.example.com/"
+  ],
+  "azp": "FbIjoilGxXgDXe2a0000000000000000",
+  "scope": "openid profile email"
+}

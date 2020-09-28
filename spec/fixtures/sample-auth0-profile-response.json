@@ -1,0 +1,24 @@
+{
+  "created_at": "2019-11-08T21:08:42.969Z",
+  "email": "someguy@example.com",
+  "email_verified": true,
+  "family_name": "Guy",
+  "given_name": "Some",
+  "identities": [
+    {
+      "provider": "google-oauth2",
+      "user_id": "117550400000000000000",
+      "connection": "google-oauth2",
+      "isSocial": true
+    }
+  ],
+  "locale": "en",
+  "name": "Some Guy",
+  "nickname": "someguy",
+  "picture": "/images/photo.jpg",
+  "updated_at": "2020-04-08T16:11:38.833Z",
+  "user_id": "google-oauth2|117550400000000000000",
+  "last_ip": "192.167.0.1",
+  "last_login": "2020-04-08T16:11:38.833Z",
+  "logins_count": 389
+}
