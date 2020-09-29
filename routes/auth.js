@@ -20,18 +20,6 @@ router.get('/login', (req, res, next) => {
 /**
  * Perform the final stage of authentication and redirect to previously requested URL or '/'
  */
-
-//router.get('/callback', function(req, res, next) {
-//console.log("HERE I AM LORD");
-//  passport.authenticate('auth0', function(err, user, info, status) {
-//console.log("AND NOW HERE");
-//console.log(err);
-//    if (err) { return next(err) }
-//    if (!user) { return res.redirect('/signin') }
-//    res.redirect('/account');
-//  })(req, res, next);
-//});
-
 router.get('/callback', passport.authenticate('auth0'), (req, res) => {
   if (!req.user) {
     return res.redirect('/');
@@ -58,27 +46,7 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
     });
   }
 
-//  models.Agent.findOne({ where: { email: req.user.email } }).then(result => {
-//  models.Agent.findOne({ email: req.user.email }).then(result => {
-//    if (!result) {
-//      let newAgent = new models.Agent({email: req.user.email});
-//
-//      newAgent.save().then(result => {
-//        login();
-//      }).catch(err => {
-//        res.json(err);
-//      });
-//    } else {
-////      result.socialProfile = req.user;
-////      result.save().then(result => {
-        login();
-////      }).catch(err => {
-////        res.json(err);
-////      });
-//    }
-//  }).catch(err => {
-//    res.json(err);
-//  });
+  login();
 });
 
 /**
