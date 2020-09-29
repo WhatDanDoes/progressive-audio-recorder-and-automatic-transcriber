@@ -170,7 +170,7 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
         return done(err);
       }
       recursiveSave(done);
-    });   
+    });
   };
 
   recursiveSave((err) => {
@@ -178,7 +178,7 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
       return res.status(500).json({ message: err.message });
     }
     res.status(201).json({ message: 'Image received' });
-  }) 
+  })
 });
 
 /**
@@ -206,10 +206,10 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
 //      let notSubmitter = image.agent.toString() != agent._id.toString();
 //      if (notSubmitter && notReviewer) return res.sendStatus(403);
 //      if (notReviewer && approvalChange) return res.sendStatus(403);
-// 
+//
 //      image = Object.assign(image, req.body);
 //      if (!req.body.approved) image.approved = false;
-//      let sum = image.tookPlaceAt.getTimezoneOffset() * 60000 + Date.parse(image.tookPlaceAt); // [min*60000 = ms] 
+//      let sum = image.tookPlaceAt.getTimezoneOffset() * 60000 + Date.parse(image.tookPlaceAt); // [min*60000 = ms]
 //      models.Image.findOneAndUpdate({ _id: req.params.id }, image, { new: true, runValidators: true }).then((image) => {
 //        if (disapproved) {
 //          req.flash('info', 'Image de-approved. It can now be edited.');
