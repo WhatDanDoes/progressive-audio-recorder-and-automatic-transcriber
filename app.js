@@ -144,8 +144,8 @@ app.use(methodOverride('_method'));
 app.use('/', require('./routes/index')); // Keep a close eye on this and the following
 app.use('/', require('./routes/auth'));
 //app.use('/login', require('./routes/login'));
-app.use('/logout', require('./routes/logout'));
-app.use('/reset', require('./routes/reset'));
+//app.use('/logout', require('./routes/logout'));
+//app.use('/reset', require('./routes/reset'));
 app.use('/image', require('./routes/image'));
 app.use('/agent', require('./routes/agent'));
 
