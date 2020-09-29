@@ -39,50 +39,6 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-
-/**
- * Passport authentication
- *
- * Local strategy
- */
-//const passport = require('passport');
-//const LocalStrategy = require('passport-local').Strategy;
-//
-//app.use(passport.initialize());
-//app.use(passport.session());
-//passport.use(new LocalStrategy({
-//    usernameField: 'email'
-//  },
-//  function(email, password, done) {
-//    models.Agent.findOne({ email: email }).then(function(agent) {
-//      if (!agent) {
-//        return done(null, false);
-//      }
-//      models.Agent.validPassword(password, agent.password, function(err, res) {
-//        if (err) {
-//          console.log(err);
-//        }
-//        return done(err, res);
-//      }, agent);
-//    }).catch(function(err) {
-//      return done(err);
-//    });
-//
-//  }));
-//
-//passport.serializeUser(function(agent, done) {
-//  done(null, agent._id);
-//});
-//
-//passport.deserializeUser(function(id, done) {
-//  models.Agent.findById(id).then(function(agent) {
-//    return done(null, agent);
-//  }).catch(function(error) {
-//    return done(error);
-//  });
-//});
-
-
 /**
  * passport-auth0
  */
@@ -101,65 +57,25 @@ const strategy = new Auth0Strategy(
     // extraParams.id_token has the JSON Web Token
     // profile has all the information from the user
 
-    /**
-     * 2020-3-19 https://community.auth0.com/t/how-to-check-role-of-user-in-express-application/27525/8
-     */
-//    let decoded = jsonwebtoken.decode(accessToken);
+    models.Agent.findOne({ email: profile._json.email }).then(result => {
+      if (!result) {
+        let newAgent = new models.Agent({email: profile._json.email});
 
-//    const managementClient = getManagementClient(apiScope.read.users);
-//    managementClient.getUser({id: profile.user_id}).then(agent => {
-//      if (!agent.user_metadata) {
-//        agent.user_metadata = {};
-//      }
-//
-//      agent.scope = decoded.permissions;
-//
-
-//console.log('wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwword');
-//    models.Agent.findOne({ email: profile._json.email }).then(function(agent) {
-//      if (!agent) {
-//        return done(null, false);
-//      }
-//console.log(agent);
-//      return done(null, agent);
-//    }).catch(err => {
-//      return done(err);
-//    });
-//
-  models.Agent.findOne({ email: profile._json.email }).then(result => {
-    if (!result) {
-      let newAgent = new models.Agent({email: profile._json.email});
-
-      newAgent.save().then(result => {
+        newAgent.save().then(result => {
+          return done(null, result);
+        }).catch(err => {
+          res.json(err);
+        });
+      } else {
         return done(null, result);
-      }).catch(err => {
-        res.json(err);
-      });
-    } else {
-console.log(result);
-      return done(null, result);
-    }
-  }).catch(err => {
-    res.json(err);
-  });
-
-
-
-//    }).catch(err => {
-//      return done(err);
-//    });
+      }
+    }).catch(err => {
+      res.json(err);
+    });
   }
 );
 
 passport.use(strategy);
-
-//passport.serializeUser(function(user, done) {
-//  done(null, user);
-//});
-//
-//passport.deserializeUser(function(idToken, done) {
-//  done(null, idToken);
-//});
 
 passport.serializeUser(function(agent, done) {
   done(null, agent._id);
@@ -173,12 +89,8 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
-
-
 app.use(passport.initialize());
 app.use(passport.session());
-
-
 
 /**
  * Flash messages
@@ -254,10 +166,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-//let port = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'tor' ? 3000 : 3001;
-//app.listen(port, '0.0.0.0', () => {
-//  console.log('auth0-photo-server listening on ' + port + '!');
-//});
-
+let port = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'tor' ? 3000 : 3001;
+app.listen(port, '0.0.0.0', () => {
+  console.log('auth0-photo-server listening on ' + port + '!');
+});
 
 module.exports = app;
