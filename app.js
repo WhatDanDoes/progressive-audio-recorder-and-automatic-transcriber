@@ -62,9 +62,9 @@ const strategy = new Auth0Strategy(
         let newAgent = new models.Agent({email: profile._json.email});
 
         newAgent.save().then(result => {
-          return done(null, result);
+          done(null, result);
         }).catch(err => {
-          res.json(err);
+          done(err);
         });
       } else {
         return done(null, result);
