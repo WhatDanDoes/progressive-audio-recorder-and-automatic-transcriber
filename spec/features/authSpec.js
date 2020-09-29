@@ -57,10 +57,10 @@ describe('authSpec', () => {
     models.mongoose.connection.db.dropDatabase().then(function(result) {
       done();
     }).catch(function(err) {
-      done.fail(err);         
+      done.fail(err);
     });
   });
- 
+
 
   describe('/login', () => {
     it('redirects to Auth0 login endpoint', done => {
@@ -234,7 +234,6 @@ describe('authSpec', () => {
 
     describe('database', () => {
       it('adds a new agent record if none exists', done => {
-        //models.Agent.findAll().then(results => {
         models.Agent.find().then(results => {
           expect(results.length).toEqual(0);
 
@@ -243,7 +242,7 @@ describe('authSpec', () => {
             .expect(302)
             .end(function(err, res) {
               if (err) return done.fail(err);
-              //models.Agent.findAll().then(results => {
+
               models.Agent.find().then(results => {
                 expect(results.length).toEqual(1);
                 expect(results[0].email).toEqual(_profile.email);
@@ -307,14 +306,6 @@ describe('authSpec', () => {
   });
 
   describe('Browser', () => {
-    // Setup and start server
-    const http = require('http');
-    const server = http.createServer(app);
-    server.on('listening', () => {
-      console.log('Listening on ' + PORT);
-    });
-    server.listen(PORT);
-
     // Setup and configure zombie browser
     const Browser = require('zombie');
     Browser.localhost('localhost', PORT);
@@ -439,11 +430,9 @@ describe('authSpec', () => {
         });
       });
 
-      //it('serves up the static app', done => {
-      it('serves up the static app', done => {
+      it('serves up the page', done => {
         browser.clickLink('Login', (err) => {
           if (err) return done.fail(err);
-//          browser.assert.text('body p', /This is a test page/);
           browser.assert.element('a[href="/logout"]');
           done();
         });
