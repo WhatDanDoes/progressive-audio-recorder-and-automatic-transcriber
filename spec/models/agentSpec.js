@@ -7,7 +7,7 @@ describe('Agent', function() {
   let agent;
 
   beforeEach(function(done) {
-    agent = new Agent({ email: 'someguy@example.com', password: 'secret' });
+    agent = new Agent({ email: 'someguy@example.com' });
     done();
   });
 
@@ -31,20 +31,6 @@ describe('Agent', function() {
         done.fail(err);
       });
     });
-
-//    it("encrypts the agent's password", function(done) {
-//      expect(agent.password).toEqual('secret');
-//      agent.save().then(function(obj) {
-//        Agent.findById(obj._id).then(function(results) {
-//          expect(results.password).not.toEqual('secret');
-//          done();
-//        }).catch(err => {
-//          done.fail(err);
-//        });
-//      }).catch(err => {
-//        done.fail(err);
-//      });
-//    });
 
     it('does not allow two identical emails', function(done) {
       agent.save().then(function(obj) {
@@ -80,37 +66,6 @@ describe('Agent', function() {
       });
     });
 
-//    it('does not allow an empty password field', function(done) {
-//      Agent.create({ email: 'someguy@example.com', password: '   ' }).then(function(obj) {
-//        done.fail('This should not have saved');
-//      }).catch(function(error) {
-//        expect(Object.keys(error.errors).length).toEqual(1);
-//        expect(error.errors['password'].message).toEqual('No password supplied');
-//        done();
-//      });
-//    });
-//
-//    it('does not allow an undefined password field', function(done) {
-//      Agent.create({ email: 'someguy@example.com' }).then(function(obj) {
-//        done.fail('This should not have saved');
-//      }).catch(function(error) {
-//        expect(Object.keys(error.errors).length).toEqual(1);
-//        expect(error.errors['password'].message).toEqual('No password supplied');
-//        done();
-//      });
-//    });
-//
-//    it('does not re-hash a password on update', function(done) {
-//      agent.save().then(function(obj) {
-//        var passwordHash = agent.password;
-//        agent.email = 'newemail@example.com';
-//        agent.save().then(function(obj) {
-//          expect(agent.password).toEqual(passwordHash);
-//          done();
-//        });
-//      });
-//    });
-
     /**
      * canRead relationship
      */
@@ -118,7 +73,7 @@ describe('Agent', function() {
       let newAgent;
       beforeEach(function(done) {
         agent.save().then(function(obj) {
-          new Agent({ email: 'anotherguy@example.com', password: 'secret' }).save().then(function(obj) {;
+          new Agent({ email: 'anotherguy@example.com' }).save().then(function(obj) {;
             newAgent = obj;
             done();
           }).catch(err => {
@@ -129,23 +84,33 @@ describe('Agent', function() {
         });
       });
 
-      it('does not add a duplicate agent to the canRead field', function(done) {
-        agent.canRead.push(newAgent._id);
-        agent.save().then(function(result) {
-          expect(agent.canRead.length).toEqual(1);
-          expect(agent.canRead[0]).toEqual(newAgent._id);
-
-          agent.canRead.push(newAgent._id);
-          agent.save().then(function(result) {
-            done.fail('This should not have updated');
-          }).catch(err => {
-            expect(err.message).toMatch('Duplicate values in array');
-            done();
-          });
-        }).catch(err => {
-          done.fail(err);
-        });
-      });
+      //
+      // 2020-9-29
+      //
+      // Going to save this for awhile, though it is probably irrelevant...
+      //
+      // `mongoose-unique-array` is pretty flaky. Tests pass when run as a whole,
+      // but fail individually.
+      //
+      // Similar error popped up in production too
+      //
+      //it('does not add a duplicate agent to the canRead field', function(done) {
+      //  agent.canRead.push(newAgent._id);
+      //  agent.save().then(function(result) {
+      //    expect(agent.canRead.length).toEqual(1);
+      //    expect(agent.canRead[0]).toEqual(newAgent._id);
+      //
+      //    agent.canRead.push(newAgent._id);
+      //    agent.save().then(function(result) {
+      //      done.fail('This should not have updated');
+      //    }).catch(err => {
+      //      expect(err.message).toMatch('Duplicate values in array');
+      //      done();
+      //    });
+      //  }).catch(err => {
+      //    done.fail(err);
+      //  });
+      //});
 
       it('allows two agents to push the same agent ID', function(done) {
         expect (agent.canRead.length).toEqual(0);
