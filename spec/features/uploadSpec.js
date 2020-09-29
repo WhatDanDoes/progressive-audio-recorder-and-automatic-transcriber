@@ -17,13 +17,13 @@ describe('POST image/', () => {
     models.mongoose.connection.db.dropDatabase().then(function(err, result) {
       done();
     }).catch(function(err) {
-      done.fail(err);         
+      done.fail(err);
     });
   });
- 
+
   describe('unauthenticated access', () => {
     beforeEach(done => {
-      mockAndUnmock({ 
+      mockAndUnmock({
         'uploads': mock.directory({}),
       });
 
@@ -91,7 +91,7 @@ describe('POST image/', () => {
           agent = results;
           token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 
-          mockAndUnmock({ 
+          mockAndUnmock({
             'uploads': mock.directory({}),
           });
 
@@ -122,14 +122,14 @@ describe('POST image/', () => {
           done();
         });
     });
-  
+
     it('writes the file to the disk on agent\'s first access', done => {
       fs.readdir(`uploads/`, (err, files) => {
         if (err) {
           return done.fail(err);
         }
         expect(files.length).toEqual(0);
- 
+
         request(app)
           .post('/image')
           .field('token', token)
@@ -140,14 +140,14 @@ describe('POST image/', () => {
               return done.fail(err);
             }
             expect(res.body.message).toEqual('Image received');
-    
+
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-    
+
               if (err) {
                 return done.fail(err);
               }
               expect(files.length).toEqual(1);
-    
+
               done();
             });
         });
@@ -189,7 +189,7 @@ describe('POST image/', () => {
           return done.fail(err);
         }
         expect(files.length).toEqual(0);
- 
+
         request(app)
           .post('/image')
           .field('token', token)
@@ -200,9 +200,9 @@ describe('POST image/', () => {
               return done.fail(err);
             }
             expect(res.body.message).toEqual('Image received');
-    
+
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-    
+
               if (err) {
                 return done.fail(err);
               }
@@ -218,14 +218,14 @@ describe('POST image/', () => {
                     return done.fail(err);
                   }
                   expect(res.body.message).toEqual('Image received');
-          
+
                   fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-          
+
                     if (err) {
                       return done.fail(err);
                     }
                     expect(files.length).toEqual(2);
-          
+
                     done();
                   });
                 });

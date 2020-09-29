@@ -1,14 +1,14 @@
 const Browser = require('zombie');
-const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001; 
+const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
 Browser.localhost('example.com', PORT);
 const fs = require('fs');
 const app = require('../../app');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
- * already been `require`d the tests will fail because the 
+ * already been `require`d the tests will fail because the
  * module doesn't exist in the mocked file system. `ejs` and
- * `iconv-lite/encodings` are required here to solve that 
+ * `iconv-lite/encodings` are required here to solve that
  * problem.
  */
 const mock = require('mock-fs');
@@ -25,7 +25,7 @@ describe('landing page', () => {
     mock.restore();
   });
 
-  it('displays the page title set in .env', done => { 
+  it('displays the page title set in .env', done => {
     browser.visit('/', (err) => {
       if (err) return done.fail(err);
       browser.assert.success();
@@ -46,7 +46,7 @@ describe('landing page', () => {
   });
 
   it('displays the images in the public uploads directory', done => {
-    mockAndUnmock({ 
+    mockAndUnmock({
       'public/images/uploads': {
         'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
         'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
@@ -69,7 +69,7 @@ describe('landing page', () => {
   });
 
   it('does not display non-image files', done => {
-    mockAndUnmock({ 
+    mockAndUnmock({
       'public/images/uploads': {
         'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
         'image2.pdf': fs.readFileSync('spec/files/troll.jpg'),
@@ -87,7 +87,7 @@ describe('landing page', () => {
   });
 
   it('displays image files with wonky capitalization on the filename extension', done => {
-    mockAndUnmock({ 
+    mockAndUnmock({
       './public/images/uploads': {
         'image1.Jpg': fs.readFileSync('spec/files/troll.jpg'),
         'image2.pdf': fs.readFileSync('spec/files/troll.jpg'),

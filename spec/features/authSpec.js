@@ -1,4 +1,5 @@
 const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+
 const app = require('../../app');
 const request = require('supertest-session');
 const nock = require('nock');
@@ -35,7 +36,6 @@ describe('authSpec', () => {
 
   let auth0Scope, state, nonce;
   beforeEach(done => {
-    nock.cleanAll();
 
     /**
      * This is called when `/login` is hit. The session is
@@ -55,6 +55,7 @@ describe('authSpec', () => {
 
   afterEach(function(done) {
     models.mongoose.connection.db.dropDatabase().then(function(result) {
+      nock.cleanAll();
       done();
     }).catch(function(err) {
       done.fail(err);
@@ -227,7 +228,7 @@ describe('authSpec', () => {
         .expect(302)
         .end(function(err, res) {
           if (err) return done.fail(err);
-          expect(res.headers.location).toEqual('/');
+          expect(res.headers.location).toEqual('/image/example.com/someguy');
           done();
         });
     });
@@ -265,7 +266,6 @@ describe('authSpec', () => {
          * Redirect client to Auth0 `/logout` after silid session is cleared
          */
         ssoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
-//          .log(console.log)
           .get('/v2/logout')
           .query({
             client_id: process.env.AUTH0_CLIENT_ID,
@@ -308,7 +308,7 @@ describe('authSpec', () => {
   describe('Browser', () => {
     // Setup and configure zombie browser
     const Browser = require('zombie');
-    Browser.localhost('localhost', PORT);
+    Browser.localhost('example.com', PORT);
 
 
     let browser;
@@ -421,7 +421,7 @@ describe('authSpec', () => {
         loginScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .get(/login/)
           .reply((uri, body, next) => {
-            next(null, [302, {}, { 'Location': `http://localhost:${PORT}/callback?code=AUTHORIZATION_CODE&state=${state}` }]);
+            next(null, [302, {}, { 'Location': `http://example.com/callback?code=AUTHORIZATION_CODE&state=${state}` }]);
           });
 
         browser.visit('/', (err) => {

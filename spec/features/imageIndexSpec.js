@@ -1,17 +1,21 @@
 const Browser = require('zombie');
-const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001; 
-Browser.localhost('example.com', PORT);
+const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+const DOMAIN = 'example.com';
+Browser.localhost(DOMAIN, PORT);
+
 const fs = require('fs');
 const app = require('../../app');
 const fixtures = require('pow-mongoose-fixtures');
-const models = require('../../models'); 
+const models = require('../../models');
 const jwt = require('jsonwebtoken');
+
+const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
- * already been `require`d the tests will fail because the 
+ * already been `require`d the tests will fail because the
  * module doesn't exist in the mocked file system. `ejs` and
- * `iconv-lite/encodings` are required here to solve that 
+ * `iconv-lite/encodings` are required here to solve that
  * problem.
  */
 const mock = require('mock-fs');
@@ -27,7 +31,7 @@ describe('imageIndexSpec', () => {
       models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
         agent = results;
         models.Agent.findOne({ email: 'lanny@example.com' }).then(function(results) {
-          lanny = results; 
+          lanny = results;
           browser.visit('/', function(err) {
             if (err) return done.fail(err);
             browser.assert.success();
@@ -52,34 +56,41 @@ describe('imageIndexSpec', () => {
 
   describe('authenticated', () => {
     beforeEach(done => {
-      mockAndUnmock({ 
-        [`uploads/${agent.getAgentDirectory()}`]: {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-        },
-        'public/images/uploads': {}
-      });
- 
-      spyOn(jwt, 'sign').and.returnValue('somejwtstring');
- 
-      browser.fill('email', agent.email);
-      browser.fill('password', 'secret');
-      browser.pressButton('Login', function(err) {
+      stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
-        browser.assert.success();
-        done();
+
+        mockAndUnmock({
+          [`uploads/${agent.getAgentDirectory()}`]: {
+            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          },
+          'public/images/uploads': {}
+        });
+
+
+        browser.clickLink('Login', function(err) {
+          if (err) done.fail(err);
+          browser.assert.success();
+
+          done();
+        });
       });
     });
-  
+
     afterEach(() => {
       mock.restore();
     });
 
     describe('authorized', () => {
       it('displays an Android deep link with JWT', () => {
+
+        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
+        // See `GET /image/:domain/:agentId`
+        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
+
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+        browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
       });
 
       it('allows an agent to view his own album', () => {
@@ -163,18 +174,22 @@ describe('imageIndexSpec', () => {
 
   describe('pagination', () => {
     beforeEach(done => {
-      let files = {};
-      for (let i = 0; i < 70; i++) {
-        files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-      }
-      mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
-      browser.fill('email', agent.email);
-      browser.fill('password', 'secret');
-      browser.pressButton('Login', function(err) {
+      stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
-        browser.assert.success();
-        done();
+
+        // Create a bunch of images
+        let files = {};
+        for (let i = 0; i < 70; i++) {
+          files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
+        }
+        mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
+
+        browser.clickLink('Login', function(err) {
+          if (err) done.fail(err);
+          browser.assert.success();
+          done();
+        });
       });
     });
 
