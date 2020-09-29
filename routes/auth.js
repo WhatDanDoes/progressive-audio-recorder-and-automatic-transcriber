@@ -41,7 +41,8 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
           return res.json(err);
         }
 
-        res.redirect(returnTo || '/');
+        req.flash('info', 'Hello, ' + req.user.email + '!');
+        res.redirect(returnTo || `/image/${req.user.getAgentDirectory()}`);
       });
     });
   }
