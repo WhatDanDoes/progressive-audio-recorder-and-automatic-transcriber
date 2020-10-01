@@ -43,6 +43,12 @@ input[type=password] {
   color: #002f6c;
 }
 
+section.center {
+  text-align: center;
+}
+
+
+
 /**
  * Alert boxes stolen from Bootstrap
  */
@@ -353,6 +359,8 @@ h2 {
   margin-bottom: 0.5em;
   padding: 0.25em;
 }
+
+
 
 /**
  * list items
