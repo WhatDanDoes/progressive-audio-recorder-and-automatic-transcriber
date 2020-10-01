@@ -111,7 +111,8 @@ describe('imageIndexSpec', () => {
 
           browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
           browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
-          browser.assert.text('section p', 'This web app is augmented with a native Android app. Login from your tablet or browser to send photos.');
+          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
+          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
 
           done();
         });
@@ -129,7 +130,7 @@ describe('imageIndexSpec', () => {
         browser.visit(`/image/${lanny.getAgentDirectory()}`, function(err) {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('main h2:last-child', 'No images');
           done();
         });
       });
@@ -265,11 +266,11 @@ describe('imageIndexSpec', () => {
     it('doesn\'t barf if paginating beyond the bounds', done => {
       browser.visit(`/image/${agent.getAgentDirectory()}/page/10`, (err) => {
         if (err) return done.fail(err);
-        browser.assert.text('h2', 'No images');
+        browser.assert.text('main h2:last-child', 'No images');
 
         browser.visit(`/image/${agent.getAgentDirectory()}/page/0`, (err) => {
           if (err) return done.fail(err);
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('main h2:last-child', 'No images');
 
           done();
           // Negative page params work, kinda
