@@ -286,6 +286,76 @@ describe('POST /image/:domain/:agentId/:imageId', function() {
           });
         });
       });
+
+      describe('sudo mode', () => {
+
+        afterEach(() => {
+          delete process.env.SUDO;
+        });
+
+        describe('set', () => {
+          describe('non sudo agent', () => {
+
+            beforeEach(() => {
+              process.env.SUDO = 'lanny@example.com';
+              expect(process.env.SUDO).not.toEqual(agent.email);
+            });
+
+            it('doesn\'t render the Publish button', done => {
+              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+                if (err) return done.fail(err);
+
+                browser.assert.success();
+                browser.assert.elements('#publish-image-form', 0);
+                done();
+              });
+            });
+
+            it('returns 403 forbidden', done => {
+              request(app)
+                .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+                .set('Cookie', browser.cookies)
+                .expect(403)
+                .end((err, res) => {
+                  if (err) return done.fail(err);
+
+                  expect(res.header.location).toEqual(`/image/${agent.getAgentDirectory()}/image2.jpg`);
+                  done();
+                });
+            });
+          });
+
+          describe('sudo agent', () => {
+
+            beforeEach(() => {
+              process.env.SUDO = agent.email;
+            });
+
+            it('renders the Publish button', done => {
+              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+                if (err) return done.fail(err);
+
+                browser.assert.success();
+                browser.assert.element('#publish-image-form');
+                done();
+              });
+            });
+
+            it('returns 302', done => {
+              request(app)
+                .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+                .set('Cookie', browser.cookies)
+                .expect(302)
+                .end((err, res) => {
+                  if (err) return done.fail(err);
+
+                  expect(res.header.location).toEqual('/');
+                  done();
+                });
+            });
+          });
+        });
+      });
     });
   });
 });
