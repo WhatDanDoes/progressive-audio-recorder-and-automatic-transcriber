@@ -9,9 +9,11 @@
         <form action="<%= `/image${image}?_method=DELETE` %>" method="post" id="delete-image-form">
           <button id="delete-image" type="submit">Delete</button>
         </form>
-        <form action="<%= `/image${image}` %>" method="post" id="publish-image-form">
-          <button id="publish-image" type="submit">Publish</button>
-        </form>
+        <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
+          <form action="<%= `/image${image}` %>" method="post" id="publish-image-form">
+            <button id="publish-image" type="submit">Publish</button>
+          </form>
+        <% } %>
       </section>
     <% } %>
   </main> 

@@ -311,11 +311,11 @@ describe('POST /image/:domain/:agentId/:imageId', function() {
               });
             });
 
-            it('returns 403 forbidden', done => {
+            it('redirects to the original directory', done => {
               request(app)
                 .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
                 .set('Cookie', browser.cookies)
-                .expect(403)
+                .expect(302)
                 .end((err, res) => {
                   if (err) return done.fail(err);
 
@@ -341,7 +341,7 @@ describe('POST /image/:domain/:agentId/:imageId', function() {
               });
             });
 
-            it('returns 302', done => {
+            it('redirects home (i.e., the main photo roll)', done => {
               request(app)
                 .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
                 .set('Cookie', browser.cookies)

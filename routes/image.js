@@ -111,7 +111,12 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
  * POST /image/:domain/:agentId/:imageId
  */
 router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+
+  let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+
+  if (process.env.SUDO && req.user.email !== process.env.SUDO) {
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
+  }
 
   if (!canWrite) {
     req.flash('info', 'You do not have access to that resource');
