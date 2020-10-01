@@ -12,6 +12,7 @@ const jwtAuth = require('../lib/jwtAuth');
 const ensureAuthorized = require('../lib/ensureAuthorized');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
+const isMobile = require('is-mobile');
 
 
 // Set upload destination directory
@@ -62,7 +63,15 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
     const payload = { email: req.user.email };
     const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
-    res.render('image/index', { images: files, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: 0, token: token  });
+    res.render('image/index', {
+      images: files,
+      messages: req.flash(),
+      agent: req.user,
+      nextPage: nextPage,
+      prevPage: 0,
+      token: token,
+      isMobile: isMobile({ ua: req.headers['user-agent'], tablet: true})
+    });
   });
 });
 
@@ -94,7 +103,15 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
     const payload = { email: req.user.email };
     const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
-    res.render('image/index', { images: files, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: prevPage, token: token });
+    res.render('image/index', {
+      images: files,
+      messages: req.flash(),
+      agent: req.user,
+      nextPage: nextPage,
+      prevPage: prevPage,
+      token: token,
+      isMobile: isMobile({ ua: req, tablet: true})
+     });
   });
 });
 
