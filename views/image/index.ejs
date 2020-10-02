@@ -11,10 +11,10 @@
           <a href="<%= `/image/${image}` %>">
             <img src="<%= `/uploads/${image}` %>" />
           </a>
-          <% if (canWrite) { %>
-            <% include ./_controls %>
-          <% } %>
         </section>
+        <% if (canWrite) { %>
+          <% include ./_controls %>
+        <% } %>
       <% } %>
       <% include ./_pager %>
     <% } %>
