@@ -406,6 +406,7 @@ h2 {
 /**
  * Image controls
  */
+.image-controls form,
 #image-controls form {
   position: relative;
   display: inline;
@@ -414,7 +415,8 @@ h2 {
 /**
  * Delete image
  */
-button[type="submit"]#delete-image  {
+button[type="submit"].delete-image,
+button[type="submit"]#delete-image {
   padding: 0.5em;
   background: #ff4c4c;
   font-size: 1em;
@@ -425,7 +427,8 @@ button[type="submit"]#delete-image  {
 /**
  * Publish image
  */
-button[type="submit"]#publish-image  {
+button[type="submit"].publish-image,
+button[type="submit"]#publish-image {
   padding: 0.5em;
   background: green;
   font-size: 1em;
