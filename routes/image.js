@@ -41,6 +41,8 @@ router.get('/', (req, res) => {
  */
 const MAX_IMGS = 30;
 router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+
   if (!fs.existsSync(`uploads/${req.params.domain}/${req.params.agentId}`)){
     mkdirp.sync(`uploads/${req.params.domain}/${req.params.agentId}`);
   }
@@ -70,6 +72,7 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
       nextPage: nextPage,
       prevPage: 0,
       token: token,
+      canWrite: canWrite,
       isMobile: isMobile({ ua: req.headers['user-agent'], tablet: true})
     });
   });
@@ -77,8 +80,15 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
 
 /**
  * GET /image/:domain/:agentId/page/:num
+ *
+ *
+ * 2020-10-2
+ *
+ * This needs to be consolidated with that above. It's not properly covered
+ * by tests. A refactor, if possible, is faster
  */
 router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
   fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
     if (err) {
       return res.render('error', { error: err });
@@ -110,6 +120,7 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
       nextPage: nextPage,
       prevPage: prevPage,
       token: token,
+      canWrite: canWrite,
       isMobile: isMobile({ ua: req, tablet: true})
      });
   });

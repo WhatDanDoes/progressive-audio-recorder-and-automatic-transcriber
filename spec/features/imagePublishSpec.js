@@ -548,13 +548,15 @@ describe('Publishing an image', () => {
               beforeEach(() => {
                 process.env.SUDO = 'lanny@example.com';
                 expect(process.env.SUDO).not.toEqual(agent.email);
-                browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
               });
 
-              it('doesn\'t render the Publish buttons', () => {
-                browser.assert.success();
-                browser.assert.elements('#publish-image-form', 0);
-                browser.assert.elements('.publish-image-form', 0);
+              it('doesn\'t render the Publish buttons', done => {
+                browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
+                  browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                  browser.assert.elements('#publish-image-form', 0);
+                  browser.assert.elements('.publish-image-form', 0);
+                  done();
+                });
               });
 
             });
