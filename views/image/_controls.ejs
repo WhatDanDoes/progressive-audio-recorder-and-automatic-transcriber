@@ -1,0 +1,10 @@
+      <section class="image-controls">
+        <form action="<%= `/image/${image}?_method=DELETE` %>" method="post" class="delete-image-form">
+          <button class="delete-image" type="submit">Delete</button>
+        </form>
+        <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
+          <form action="<%= `/image/${image}` %>" method="post" class="publish-image-form">
+            <button class="publish-image" type="submit">Publish</button>
+          </form>
+        <% } %>
+      </section>
