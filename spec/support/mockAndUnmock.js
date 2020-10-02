@@ -24,6 +24,7 @@ module.exports = function(mock) {
       'views/_partials/footer.ejs': fs.readFileSync('views/_partials/footer.ejs'),
       'views/_partials/pager.ejs': fs.readFileSync('views/_partials/pager.ejs'),
       'views/agent/index.ejs': fs.readFileSync('views/agent/index.ejs'),
+      'views/image/_controls.ejs': fs.readFileSync('views/image/_controls.ejs'),
       'views/image/index.ejs': fs.readFileSync('views/image/index.ejs'),
       'views/image/show.ejs': fs.readFileSync('views/image/show.ejs'),
       'views/image/_pager.ejs': fs.readFileSync('views/image/_pager.ejs'),
