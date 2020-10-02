@@ -65,7 +65,7 @@ describe('Publishing an image', () => {
   });
 
 
-  describe('POST /image/:domain/:agentId/:imageId', () => {
+  describe('from show view', () => {
 
     describe('unauthenticated', () => {
       it('does not allow publishing an image', done => {
@@ -363,7 +363,7 @@ describe('Publishing an image', () => {
     });
   });
 
-  describe('POST /image/:domain/:agentId', () => {
+  describe('from index view', () => {
 
     describe('authenticated', () => {
       beforeEach(done => {
@@ -406,13 +406,9 @@ describe('Publishing an image', () => {
 
       describe('publishing', () => {
         describe('owner resource', () => {
-          beforeEach(done => {
+          beforeEach(() => {
+            browser.assert.elements('#publish-image-form', 0);
             browser.assert.elements('.publish-image-form', 3);
-//            browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
-//              if (err) return done.fail(err);
-//              browser.assert.success();
-              done();
-//            });
           });
 
           it('redirects to home if the publish is successful', done => {
@@ -558,7 +554,6 @@ describe('Publishing an image', () => {
                   done();
                 });
               });
-
             });
 
             describe('sudo agent', () => {
