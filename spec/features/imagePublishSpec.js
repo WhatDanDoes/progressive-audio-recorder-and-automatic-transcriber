@@ -124,8 +124,8 @@ describe('Publishing an image', () => {
         mock.restore();
       });
 
-      it('renders a form to allow an agent to delete an image', function(done) {
-        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+      it('renders a form to allow an agent to delete an image', done => {
+        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.element('#publish-image-form');
@@ -134,18 +134,18 @@ describe('Publishing an image', () => {
         });
       });
 
-      describe('publishing', function() {
-        describe('owner resource', function() {
-          beforeEach(function(done) {
-            browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+      describe('publishing', () => {
+        describe('owner resource', () => {
+          beforeEach(done => {
+            browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
               if (err) return done.fail(err);
               browser.assert.success();
               done();
             });
           });
 
-          it('redirects to home if the publish is successful', function(done) {
-            browser.pressButton('Publish', function(err) {
+          it('redirects to home if the publish is successful', done => {
+            browser.pressButton('Publish', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -155,7 +155,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('deletes the image from the agent\'s directory', function(done) {
+          it('deletes the image from the agent\'s directory', done => {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
@@ -203,6 +203,7 @@ describe('Publishing an image', () => {
 
               models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
+                expect(images[0].published).toBe(false);
 
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
@@ -213,6 +214,7 @@ describe('Publishing an image', () => {
 
                     models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(true);
 
                       done();
                     }).catch(err => {
@@ -231,8 +233,8 @@ describe('Publishing an image', () => {
           });
         });
 
-        describe('readable resource', function() {
-          beforeEach(function(done) {
+        describe('readable resource', () => {
+          beforeEach(done => {
             browser.visit(`/image/${lanny.getAgentDirectory()}/image1.jpg`, (err) => {
               if (err) return done.fail(err);
               browser.assert.success();
@@ -244,7 +246,7 @@ describe('Publishing an image', () => {
             browser.assert.elements('#publish-image-form', 0);
           });
 
-          it('does not remove the image from the agent\'s directory', function(done) {
+          it('does not remove the image from the agent\'s directory', done => {
             fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
@@ -253,7 +255,7 @@ describe('Publishing an image', () => {
               request(app)
                 .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
                 .set('Cookie', browser.cookies)
-                .end(function(err, res) {
+                .end((err, res) => {
                   if (err) return done.fail(err);
                   expect(res.status).toEqual(302);
                   expect(res.header.location).toEqual(`/image/${lanny.getAgentDirectory()}`);
@@ -281,16 +283,18 @@ describe('Publishing an image', () => {
 
               models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
+                expect(images[0].published).toBe(false);
 
                 request(app)
                   .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
                   .set('Cookie', browser.cookies)
                   .expect(302)
-                  .end(function(err, res) {
+                  .end((err, res) => {
                     if (err) return done.fail(err);
 
                     models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(false);
 
                       models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
                         expect(images.length).toEqual(0);
@@ -385,6 +389,7 @@ describe('Publishing an image', () => {
 
               models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
+                expect(images[0].published).toBe(false);
 
                 request(app)
                   .post(`/image/${troy.getAgentDirectory()}/troy1.jpg`)
@@ -395,6 +400,7 @@ describe('Publishing an image', () => {
 
                     models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(false);
 
                       models.Image.find({ path: `public/images/uploads/troy1.jpg`}).then(images => {
                         expect(images.length).toEqual(0);
@@ -459,6 +465,7 @@ describe('Publishing an image', () => {
 
                   models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
                     expect(images.length).toEqual(1);
+                    expect(images[0].published).toBe(false);
 
                     request(app)
                       .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
@@ -469,6 +476,7 @@ describe('Publishing an image', () => {
 
                         models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
                           expect(images.length).toEqual(1);
+                          expect(images[0].published).toBe(false);
 
                           models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
                             expect(images.length).toEqual(0);
@@ -523,6 +531,7 @@ describe('Publishing an image', () => {
 
                   models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                     expect(images.length).toEqual(1);
+                    expect(images[0].published).toBe(false);
 
                     browser.pressButton('Publish', err => {
                       if (err) return done.fail(err);
@@ -533,6 +542,7 @@ describe('Publishing an image', () => {
 
                         models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
                           expect(images.length).toEqual(1);
+                          expect(images[0].published).toBe(true);
 
                           done();
                         }).catch(err => {
@@ -691,6 +701,7 @@ describe('Publishing an image', () => {
 
               models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image3.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
+                expect(images[0].published).toBe(false);
 
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
@@ -701,6 +712,7 @@ describe('Publishing an image', () => {
 
                     models.Image.find({ path: `public/images/uploads/image3.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(true);
 
                       done();
                     }).catch(err => {
@@ -776,6 +788,7 @@ describe('Publishing an image', () => {
 
               models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
+                expect(images[0].published).toBe(false);
 
                 request(app)
                   .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
@@ -786,6 +799,7 @@ describe('Publishing an image', () => {
 
                     models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(false);
 
                       models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
                         expect(images.length).toEqual(0);
@@ -855,6 +869,7 @@ describe('Publishing an image', () => {
 
                   models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
                     expect(images.length).toEqual(1);
+                    expect(images[0].published).toBe(false);
 
                     browser.pressButton('Publish', err => {
                       if (err) return done.fail(err);
@@ -865,6 +880,7 @@ describe('Publishing an image', () => {
 
                         models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
                           expect(images.length).toEqual(1);
+                          expect(images[0].published).toBe(true);
 
                           done();
                         }).catch(err => {

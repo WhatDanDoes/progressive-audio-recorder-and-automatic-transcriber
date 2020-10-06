@@ -139,6 +139,7 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
 
     models.Image.findOne({ path: currentPath }).then(image => {
       image.path = destinationPath;
+      image.published = true;
       image.save().then(image => {
         req.flash('success', 'Image published');
         res.redirect('/');
