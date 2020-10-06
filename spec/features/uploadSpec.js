@@ -260,14 +260,14 @@ describe('POST image/', () => {
       });
     });
 
-    it('does creates a database record', done => {
+    it('creates a database record', done => {
       models.Image.find({}).then(images => {
         expect(images.length).toEqual(0);
         request(app)
           .post('/image')
+          .field('token', token)
           .attach('docs', 'spec/files/troll.jpg')
-          .expect('Content-Type', /json/)
-          .expect(401)
+          .expect(201)
           .end(function(err, res) {
             if (err) {
               return done.fail(err);
@@ -275,7 +275,7 @@ describe('POST image/', () => {
 
             models.Image.find({}).then(images => {
               expect(images.length).toEqual(1);
-              expect(images[0].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
+              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
  
               done();
             }).catch(err => {
@@ -304,8 +304,8 @@ describe('POST image/', () => {
             }
             models.Image.find({}).then(images => {
               expect(images.length).toEqual(2);
-              expect(images[0].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
-              expect(images[1].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
+              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+              expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
  
               done();
             }).catch(err => {

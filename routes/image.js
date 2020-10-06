@@ -202,7 +202,12 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
       if (err) {
         return done(err);
       }
-      recursiveSave(done);
+
+      models.Image.create({ path: path.dest, photographer: req.user._id }).then(image => {
+        recursiveSave(done);
+      }).catch(err => {
+        done(err);
+      });
     });
   };
 
