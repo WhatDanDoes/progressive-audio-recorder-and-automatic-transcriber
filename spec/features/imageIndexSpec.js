@@ -127,7 +127,7 @@ describe('imageIndexSpec', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/image/${lanny.getAgentDirectory()}`, function(err) {
+        browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.text('main h2:last-child', 'No images');
