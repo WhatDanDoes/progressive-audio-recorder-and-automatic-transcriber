@@ -1,29 +1,30 @@
 'use strict';
 
-describe('Agent', function() {
+describe('Agent', () => {
+  const _profile = require('../fixtures/sample-auth0-profile-response');
+
   const db = require('../../models');
   const Agent = db.Agent;
 
   let agent;
-
-  beforeEach(function(done) {
-    agent = new Agent({ email: 'someguy@example.com' });
+  beforeEach(done => {
+    agent = new Agent(_profile);
     done();
   });
 
-  afterEach(function(done) {
-    db.mongoose.connection.db.dropDatabase().then(function(result) {
+  afterEach(done => {
+    db.mongoose.connection.db.dropDatabase().then(result => {
       done();
-    }).catch(function(err) {
+    }).catch(err => {
       done.fail(err);
     });
   });
 
-  describe('basic validation', function() {
-    it('sets the createdAt and updatedAt fields', function(done) {
+  describe('basic validation', () => {
+    it('sets the createdAt and updatedAt fields', done => {
       expect(agent.createdAt).toBe(undefined);
       expect(agent.updatedAt).toBe(undefined);
-      agent.save().then(function(obj) {
+      agent.save().then(obj => {
         expect(agent.createdAt instanceof Date).toBe(true);
         expect(agent.updatedAt instanceof Date).toBe(true);
         done();
@@ -32,48 +33,63 @@ describe('Agent', function() {
       });
     });
 
-    it('does not allow two identical emails', function(done) {
-      agent.save().then(function(obj) {
-        Agent.create({ email: 'someguy@example.com' }).then(function(obj) {
+    it('does not allow two identical emails', done => {
+      agent.save().then(obj => {
+        Agent.create(_profile).then(obj => {
           done.fail('This should not have saved');
-        }).catch(function(error) {
+        }).catch(error => {
           expect(Object.keys(error.errors).length).toEqual(1);
           expect(error.errors['email'].message).toEqual('That email is already registered');
           done();
         });
-      }).catch(function(error) {
+      }).catch(error => {
         done.fail(error);
       });
     });
 
-    it('does not allow an empty email field', function(done) {
-      Agent.create({ email: ' ' }).then(function(obj) {
+    it('does not allow an empty email field', done => {
+      Agent.create({ ..._profile, email: ' ' }).then(obj => {
         done.fail('This should not have saved');
-      }).catch(function(error) {
+      }).catch(error => {
         expect(Object.keys(error.errors).length).toEqual(1);
         expect(error.errors['email'].message).toEqual('No email supplied');
         done();
       });
     });
 
-    it('does not allow an undefined email field', function(done) {
-      Agent.create({ }).then(function(obj) {
+    it('does not allow an undefined email field', done => {
+      Agent.create({ }).then(obj => {
         done.fail('This should not have saved');
-      }).catch(function(error) {
+      }).catch(error => {
         expect(Object.keys(error.errors).length).toEqual(1);
         expect(error.errors['email'].message).toEqual('No email supplied');
         done();
+      });
+    });
+
+    it('saves the unstructured Auth0 data', done => {
+      const profile = { ..._profile, email: 'someotherguy@example.com' };
+      expect(Object.keys(profile).length).toEqual(15);
+      Agent.create(profile).then(obj => {
+        // +4 for created_at, canRead, _id, and __v fields
+        expect(Object.keys(obj).length).toEqual(Object.keys(profile).length + 4);
+        for (let key in profile) {
+          expect(obj[key]).toEqual(profile[key]);
+        }
+        done();
+      }).catch(error => {
+        done.fail(error);
       });
     });
 
     /**
      * canRead relationship
      */
-    describe('canRead', function() {
+    describe('canRead', () => {
       let newAgent;
-      beforeEach(function(done) {
-        agent.save().then(function(obj) {
-          new Agent({ email: 'anotherguy@example.com' }).save().then(function(obj) {;
+      beforeEach(done => {
+        agent.save().then(obj => {
+          new Agent({ ..._profile, email: 'anotherguy@example.com' }).save().then(obj => {
             newAgent = obj;
             done();
           }).catch(err => {
@@ -112,21 +128,21 @@ describe('Agent', function() {
       //  });
       //});
 
-      it('allows two agents to push the same agent ID', function(done) {
+      it('allows two agents to push the same agent ID', done => {
         expect (agent.canRead.length).toEqual(0);
         expect (newAgent.canRead.length).toEqual(0);
 
-        let viewableAgent = new Agent({ email: 'vieweableAgent@example.com', password: 'secret' });
-        viewableAgent.save().then(function(result) {
+        let viewableAgent = new Agent({ ..._profile, email: 'vieweableAgent@example.com' });
+        viewableAgent.save().then(result => {
 
           agent.canRead.push(viewableAgent._id);
           newAgent.canRead.push(viewableAgent._id);
 
-          agent.save().then(function(result) {
+          agent.save().then(result => {
             expect(agent.canRead.length).toEqual(1);
             expect(agent.canRead[0]).toEqual(viewableAgent._id);
 
-            newAgent.save().then(function(result) {
+            newAgent.save().then(result => {
               expect(newAgent.canRead.length).toEqual(1);
               expect(newAgent.canRead[0]).toEqual(viewableAgent._id);
               done();
@@ -145,14 +161,14 @@ describe('Agent', function() {
     /**
      * #getReadables
      */
-    describe('#getReadables', function() {
+    describe('#getReadables', () => {
       let newAgent;
-      beforeEach(function(done) {
-        agent.save().then(function(obj) {
-          new Agent({ email: 'anotherguy@example.com', password: 'secret' }).save().then(function(obj) {;
+      beforeEach(done => {
+        agent.save().then(obj => {
+          new Agent({ ..._profile, email: 'anotherguy@example.com' }).save().then(obj => {;
             newAgent = obj;
             agent.canRead.push(newAgent._id);
-            agent.save().then(function(result) {
+            agent.save().then(result => {
               done();
             }).catch(err => {
               done.fail(err);
@@ -165,8 +181,8 @@ describe('Agent', function() {
         });
       });
 
-      it('retrieve an array containing accessible static directories', function(done) {
-        agent.getReadables(function(err, readables) {
+      it('retrieve an array containing accessible static directories', done => {
+        agent.getReadables((err, readables) => {
           if (err) {
             return done.fail(err);
           }
@@ -206,7 +222,7 @@ describe('Agent', function() {
     /**
      * .getAgentDirectory
      */
-    describe('.getAgentDirectory', function() {
+    describe('.getAgentDirectory', () => {
       it('returns a directory path based on the agent\'s email address', () => {
         expect(agent.email).toEqual('someguy@example.com');
         expect(agent.getAgentDirectory()).toEqual('example.com/someguy');
