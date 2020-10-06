@@ -497,6 +497,7 @@ describe('Publishing an image', () => {
                 browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
                   if (err) return done.fail(err);
                   browser.assert.success();
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
                   done();
                 });
               });
@@ -685,20 +686,20 @@ describe('Publishing an image', () => {
           });
 
           it('points the database path to the public/images/uploads directory', done => {
-            models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+            models.Image.find({ path: `public/images/uploads/image3.jpg`}).then(images => {
               expect(images.length).toEqual(0);
 
-              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image3.jpg`}).then(images => {
                 expect(images.length).toEqual(1);
 
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image3.jpg`}).then(images => {
                     expect(images.length).toEqual(0);
 
-                    models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+                    models.Image.find({ path: `public/images/uploads/image3.jpg`}).then(images => {
                       expect(images.length).toEqual(1);
 
                       done();
@@ -848,22 +849,21 @@ describe('Publishing an image', () => {
                 browser.assert.elements('.publish-image-form', 3);
               });
 
-
               it('points the database path to the public/images/uploads directory', done => {
-                models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
                   expect(images.length).toEqual(0);
 
-                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
                     expect(images.length).toEqual(1);
 
                     browser.pressButton('Publish', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
                         expect(images.length).toEqual(0);
 
-                        models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                        models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
                           expect(images.length).toEqual(1);
 
                           done();

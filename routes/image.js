@@ -117,7 +117,7 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
  */
 router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
 
-  let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+  let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   if (process.env.SUDO && req.user.email !== process.env.SUDO) {
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
@@ -128,14 +128,28 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   }
 
-  fs.rename(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`, `public/images/uploads/${req.params.imageId}`, err => {
+  const currentPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`,
+        destinationPath = `public/images/uploads/${req.params.imageId}`;
+
+  fs.rename(currentPath, destinationPath, err => {
     if (err) {
       req.flash('info', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
     }
 
-    req.flash('success', 'Image published');
-    res.redirect('/');
+    models.Image.findOne({ path: currentPath }).then(image => {
+      image.path = destinationPath;
+      image.save().then(image => {
+        req.flash('success', 'Image published');
+        res.redirect('/');
+      }).catch(err => {
+        req.flash('error', err.message);
+        return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      });
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
   });
 });
 
