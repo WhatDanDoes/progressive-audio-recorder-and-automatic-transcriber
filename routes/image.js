@@ -37,15 +37,12 @@ router.get('/', (req, res) => {
 });
 
 /**
- * GET /image/:domain/:agentId
+ * This consolidates the functionality required of
+ * - GET /image/:domain/:agentId
+ * - GET /image/:domain/:agentId/page/:num
  */
-const MAX_IMGS = 30;
-router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
-
-  if (!fs.existsSync(`uploads/${req.params.domain}/${req.params.agentId}`)){
-    mkdirp.sync(`uploads/${req.params.domain}/${req.params.agentId}`);
-  }
+function getAgentAlbum(page, req, res) {
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
     if (err) {
@@ -55,50 +52,7 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
     files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item));
     files = files.map(file => `${req.params.domain}/${req.params.agentId}/${file}`).reverse();
 
-    let nextPage = 0;
-    if (files.length > MAX_IMGS) {
-      nextPage = 2;
-      files = files.slice(0, MAX_IMGS);
-    }
-
-    // To open deep link with auth token
-    const payload = { email: req.user.email };
-    const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
-
-    res.render('image/index', {
-      images: files,
-      messages: req.flash(),
-      agent: req.user,
-      nextPage: nextPage,
-      prevPage: 0,
-      token: token,
-      canWrite: canWrite,
-      isMobile: isMobile({ ua: req.headers['user-agent'], tablet: true})
-    });
-  });
-});
-
-/**
- * GET /image/:domain/:agentId/page/:num
- *
- *
- * 2020-10-2
- *
- * This needs to be consolidated with that above. It's not properly covered
- * by tests. A refactor, if possible, is faster
- */
-router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
-  fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
-    if (err) {
-      return res.render('error', { error: err });
-    }
-
-    files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item));
-    files = files.map(file => `${req.params.domain}/${req.params.agentId}/${file}`).reverse();
-
-    let page = parseInt(req.params.num),
-        nextPage = 0,
+    let nextPage = 0,
         prevPage = page - 1;
     if (files.length > MAX_IMGS * page) {
       nextPage = page + 1;
@@ -124,6 +78,29 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
       isMobile: isMobile({ ua: req, tablet: true})
      });
   });
+};
+
+/**
+ * GET /image/:domain/:agentId
+ */
+const MAX_IMGS = 30;
+router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
+
+  if (!fs.existsSync(`uploads/${req.params.domain}/${req.params.agentId}`)){
+    mkdirp.sync(`uploads/${req.params.domain}/${req.params.agentId}`);
+  }
+
+  return getAgentAlbum(1, req, res);
+});
+
+/**
+ * GET /image/:domain/:agentId/page/:num
+ */
+router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
+
+  const page = parseInt(req.params.num);
+
+  return getAgentAlbum(page, req, res);
 });
 
 
@@ -131,7 +108,7 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
  * GET /image/:domain/:agentId/:imageId
  */
 router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
   res.render('image/show', { image: `${req.path}`, messages: req.flash(), agent: req.user, canWrite: canWrite });
 });
 
