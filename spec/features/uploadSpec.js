@@ -76,6 +76,32 @@ describe('POST image/', () => {
           });
       });
     });
+
+    it('does not create a database record', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+        request(app)
+          .post('/image')
+          .attach('docs', 'spec/files/troll.jpg')
+          .expect('Content-Type', /json/)
+          .expect(401)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(0);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
   });
 
   describe('authenticated access', () => {
@@ -233,6 +259,64 @@ describe('POST image/', () => {
           });
       });
     });
+
+    it('does creates a database record', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+        request(app)
+          .post('/image')
+          .attach('docs', 'spec/files/troll.jpg')
+          .expect('Content-Type', /json/)
+          .expect(401)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(1);
+              expect(images[0].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
+    it('writes a database record for each attached file', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+
+        request(app)
+          .post('/image')
+          .field('token', token)
+          .attach('docs', 'spec/files/troll.jpg')
+          .attach('docs', 'spec/files/troll.png')
+          .expect('Content-Type', /json/)
+          .expect(201)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(2);
+              expect(images[0].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
+              expect(images[1].path).toEqual(`uploads/${agent.getAgentDirectory()}/`);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
 
     it('returns a 400 error if no image is defined', done => {
       request(app)
