@@ -99,10 +99,23 @@ describe('Publishing an image', () => {
             'public/images/uploads': {}
           });
 
-          browser.clickLink('Login', err => {
-            if (err) done.fail(err);
-            browser.assert.success();
-            done();
+          const images = [
+            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+          ];
+          models.Image.create(images).then(results => {
+
+            browser.clickLink('Login', err => {
+              if (err) done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
           });
         });
       });
@@ -163,7 +176,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('adds the image from to the public/images/uploads directory', function(done) {
+          it('adds the image to the public/images/uploads directory', function(done) {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
@@ -181,6 +194,39 @@ describe('Publishing an image', () => {
                   done();
                 });
               });
+            });
+          });
+
+          it('points the database path to the public/images/uploads directory', done => {
+            models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+              expect(images.length).toEqual(0);
+
+              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+
+                browser.pressButton('Publish', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                    expect(images.length).toEqual(0);
+
+                    models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
             });
           });
         });
@@ -228,6 +274,42 @@ describe('Publishing an image', () => {
                 });
             });
           });
+
+          it('does not modify the database record\'s path property', done => {
+            models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+              expect(images.length).toEqual(0);
+
+              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+
+                request(app)
+                  .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                  .set('Cookie', browser.cookies)
+                  .expect(302)
+                  .end(function(err, res) {
+                    if (err) return done.fail(err);
+
+                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+
+                      models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
         });
 
         describe('unauthorized resource', function() {
@@ -239,9 +321,21 @@ describe('Publishing an image', () => {
               expect(agent.canRead.length).toEqual(1);
               expect(agent.canRead[0]).not.toEqual(troy._id);
 
-              browser.visit(`/image/${troy.getAgentDirectory()}/somepic.jpg`, function(err) {
-                if (err) return done.fail(err);
-                done();
+              mkdirp(`uploads/${troy.getAgentDirectory()}`, (err) => {
+                fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.jpg`, fs.readFileSync('spec/files/troll.jpg'));
+
+                const images = [
+                  { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id },
+                ];
+                models.Image.create(images).then(results => {
+
+                  browser.visit(`/image/${troy.getAgentDirectory()}/troy1.jpg`, function(err) {
+                    if (err) return done.fail(err);
+                    done();
+                  });
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             }).catch(function(error) {
               done.fail(error);
@@ -255,37 +349,69 @@ describe('Publishing an image', () => {
           });
 
           it('does not touch the image on the file system', function(done) {
-            mkdirp(`uploads/${troy.getAgentDirectory()}`, (err) => {
-              fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.jpg`, fs.readFileSync('spec/files/troll.jpg'));
+            fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
+              if (err) return done.fail(err);
+              expect(files.length).toEqual(1);
+              expect(files.includes('troy1.jpg')).toBe(true);
 
-              fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
-                if (err) return done.fail(err);
-                expect(files.length).toEqual(1);
-                expect(files.includes('troy1.jpg')).toBe(true);
+              request(app)
+                .post(`/image/${troy.getAgentDirectory()}/troy1.jpg`)
+                .set('Cookie', browser.cookies)
+                .end(function(err, res) {
+                  if (err) return done.fail(err);
+                  expect(res.status).toEqual(302);
+                  expect(res.header.location).toEqual('/');
 
-                request(app)
-                  .post(`/image/${troy.getAgentDirectory()}/lanny1.jpg`)
-                  .set('Cookie', browser.cookies)
-                  .end(function(err, res) {
+                  fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
                     if (err) return done.fail(err);
-                    expect(res.status).toEqual(302);
-                    expect(res.header.location).toEqual('/');
+                    expect(files.length).toEqual(1);
+                    expect(files.includes('troy1.jpg')).toBe(true);
 
-                    fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
+                    fs.readdir(`public/images/uploads`, (err, files) => {
                       if (err) return done.fail(err);
-                      expect(files.length).toEqual(1);
-                      expect(files.includes('troy1.jpg')).toBe(true);
+                      expect(files.length).toEqual(0);
+                      expect(files.includes('troy1.jpg')).toBe(false);
 
-                      fs.readdir(`public/images/uploads`, (err, files) => {
-                        if (err) return done.fail(err);
-                        expect(files.length).toEqual(0);
-                        expect(files.includes('troy.jpg')).toBe(false);
-
-                        done();
-                      });
+                      done();
                     });
                   });
+                });
+            });
+          });
+
+          it('does not modify the database record\'s path property', done => {
+            models.Image.find({ path: `public/images/uploads/troy1.jpg`}).then(images => {
+              expect(images.length).toEqual(0);
+
+              models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+
+                request(app)
+                  .post(`/image/${troy.getAgentDirectory()}/troy1.jpg`)
+                  .set('Cookie', browser.cookies)
+                  .expect(302)
+                  .end(function(err, res) {
+                    if (err) return done.fail(err);
+
+                    models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+
+                      models.Image.find({ path: `public/images/uploads/troy1.jpg`}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                });
+              }).catch(err => {
+                done.fail(err);
               });
+            }).catch(err => {
+              done.fail(err);
             });
           });
         });
@@ -326,35 +452,101 @@ describe('Publishing an image', () => {
                     done();
                   });
               });
+
+              it('does not modify the database record\'s path property', done => {
+                models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
+                  expect(images.length).toEqual(0);
+
+                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
+                    expect(images.length).toEqual(1);
+
+                    request(app)
+                      .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+                      .set('Cookie', browser.cookies)
+                      .expect(302)
+                      .end(function(err, res) {
+                        if (err) return done.fail(err);
+
+                        models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
+                          expect(images.length).toEqual(1);
+
+                          models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
+                            expect(images.length).toEqual(0);
+
+                            done();
+                          }).catch(err => {
+                            done.fail(err);
+                          });
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
             });
 
             describe('sudo agent', () => {
 
-              beforeEach(() => {
+              beforeEach(done => {
                 process.env.SUDO = agent.email;
-              });
-
-              it('renders the Publish button', done => {
-                browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
                   if (err) return done.fail(err);
-
                   browser.assert.success();
-                  browser.assert.element('#publish-image-form');
                   done();
                 });
               });
 
-              it('redirects home (i.e., the main photo roll)', done => {
-                request(app)
-                  .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
-                  .set('Cookie', browser.cookies)
-                  .expect(302)
-                  .end((err, res) => {
-                    if (err) return done.fail(err);
+              it('renders the Publish button', () => {
+                browser.assert.element('#publish-image-form');
+              });
 
-                    expect(res.header.location).toEqual('/');
-                    done();
+              it('redirects home (i.e., the main photo roll)', done => {
+                browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                browser.pressButton('Publish', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.url({ pathname: '/' });
+                  done();
+                });
+              });
+
+              it('points the database path to the public/images/uploads directory', done => {
+                models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                  expect(images.length).toEqual(0);
+
+                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                    expect(images.length).toEqual(1);
+
+                    browser.pressButton('Publish', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                          expect(images.length).toEqual(1);
+
+                          done();
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                  }).catch(err => {
+                    done.fail(err);
                   });
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
           });
@@ -384,11 +576,24 @@ describe('Publishing an image', () => {
             'public/images/uploads': {}
           });
 
-          browser.clickLink('Login', err => {
-            if (err) done.fail(err);
-            browser.assert.success();
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-            done();
+          const images = [
+            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+          ];
+          models.Image.create(images).then(results => {
+
+            browser.clickLink('Login', err => {
+              if (err) done.fail(err);
+              browser.assert.success();
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
           });
         });
       });
@@ -478,6 +683,39 @@ describe('Publishing an image', () => {
               });
             });
           });
+
+          it('points the database path to the public/images/uploads directory', done => {
+            models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+              expect(images.length).toEqual(0);
+
+              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+
+                browser.pressButton('Publish', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                    expect(images.length).toEqual(0);
+
+                    models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
         });
 
         describe('readable resource', () => {
@@ -530,6 +768,42 @@ describe('Publishing an image', () => {
                 });
             });
           });
+
+          it('does not modify the database record\'s path property', done => {
+            models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+              expect(images.length).toEqual(0);
+
+              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+
+                request(app)
+                  .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                  .set('Cookie', browser.cookies)
+                  .expect(302)
+                  .end(function(err, res) {
+                    if (err) return done.fail(err);
+
+                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+
+                      models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
         });
 
         describe('sudo mode', () => {
@@ -558,15 +832,54 @@ describe('Publishing an image', () => {
 
             describe('sudo agent', () => {
 
-              beforeEach(() => {
+              beforeEach(done => {
                 process.env.SUDO = agent.email;
-                browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                  done();
+                });
               });
 
               it('renders the Publish button', () => {
                 browser.assert.success();
                 browser.assert.elements('#publish-image-form', 0);
                 browser.assert.elements('.publish-image-form', 3);
+              });
+
+
+              it('points the database path to the public/images/uploads directory', done => {
+                models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                  expect(images.length).toEqual(0);
+
+                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                    expect(images.length).toEqual(1);
+
+                    browser.pressButton('Publish', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
+                          expect(images.length).toEqual(1);
+
+                          done();
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
           });
