@@ -65,10 +65,6 @@ describe('authentication', function() {
       expect(browser.query("a[href='/logout']")).toBeNull();
     });
 
-  //  it('does not display any images if not logged in', function() {
-  //    expect(browser.queryAll('.image').length).toEqual(0);
-  //  });
-
     describe('login process', function() {
 
       beforeEach(done => {
@@ -89,10 +85,20 @@ describe('authentication', function() {
             'public/images/uploads': {}
           });
 
-          browser.clickLink('Login', function(err) {
-            if (err) done.fail(err);
-            browser.assert.success();
-            done();
+          const images = [
+            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+          ];
+          models.Image.create(images).then(results => {
+
+            browser.clickLink('Login', err => {
+              if (err) done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
           });
         });
 

@@ -68,12 +68,21 @@ describe('imageIndexSpec', () => {
           'public/images/uploads': {}
         });
 
+        const images = [
+          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+        ];
+        models.Image.create(images).then(results => {
 
-        browser.clickLink('Login', function(err) {
-          if (err) done.fail(err);
-          browser.assert.success();
-
-          done();
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
         });
       });
     });
@@ -204,16 +213,25 @@ describe('imageIndexSpec', () => {
         if (err) done.fail(err);
 
         // Create a bunch of images
-        let files = {};
+        let files = {},
+            images = [];
         for (let i = 0; i < 70; i++) {
           files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
+          images.push({ path: `uploads/${agent.getAgentDirectory()}/image${i}.jpg`, photographer: agent._id });
         }
+
         mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
-        browser.clickLink('Login', function(err) {
-          if (err) done.fail(err);
-          browser.assert.success();
-          done();
+        models.Image.create(images).then(results => {
+
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
         });
       });
     });
@@ -270,10 +288,16 @@ describe('imageIndexSpec', () => {
 
         browser.visit(`/image/${agent.getAgentDirectory()}/page/0`, (err) => {
           if (err) return done.fail(err);
-          browser.assert.text('main h2:last-child', 'No images');
+          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+          browser.assert.elements('.alert.alert-danger', 0);
 
-          done();
-          // Negative page params work, kinda
+          browser.visit(`/image/${agent.getAgentDirectory()}/page/-1`, (err) => {
+            if (err) return done.fail(err);
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.elements('.alert.alert-danger', 0);
+
+            done();
+          });
         });
       });
     });

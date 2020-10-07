@@ -508,27 +508,32 @@ describe('Deleting an image', () => {
           });
 
           it('deletes the image from the file system', done => {
-            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(3);
-              expect(files.includes('image1.jpg')).toBe(true);
-              expect(files.includes('image2.jpg')).toBe(true);
-              expect(files.includes('image3.jpg')).toBe(true);
+            models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+              expect(mostRecentImage.length).toEqual(1);
 
-              browser.pressButton('Delete', err => {
+              let filename = mostRecentImage[0].path.split('/');
+              filename = filename[filename.length - 1];
+
+              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
                 if (err) return done.fail(err);
-                browser.assert.success();
+                expect(files.length).toEqual(3);
+                expect(files.includes(filename)).toBe(true);
 
-                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                browser.pressButton('Delete', err => {
                   if (err) return done.fail(err);
-                  expect(files.length).toEqual(2);
-                  expect(files.includes('image1.jpg')).toBe(true);
-                  expect(files.includes('image2.jpg')).toBe(true);
-                  expect(files.includes('image3.jpg')).toBe(false);
+                  browser.assert.success();
 
-                  done();
+                  fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                    if (err) return done.fail(err);
+                    expect(files.length).toEqual(2);
+                    expect(files.includes(filename)).toBe(false);
+
+                    done();
+                  });
                 });
               });
+            }).catch(err => {
+              done.fail(err);
             });
           });
         });
@@ -625,20 +630,24 @@ describe('Deleting an image', () => {
               });
 
               it('points the database path to the public/images/uploads directory', done => {
-                models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
+                //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
+                models.Image.find({ photographer: lanny._id, published: true}).then(images => {
                   expect(images.length).toEqual(0);
 
-                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
-                    expect(images.length).toEqual(1);
+                  //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
+                  models.Image.find({ photographer: lanny._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+                    expect(mostRecentImage.length).toEqual(1);
 
                     browser.pressButton('Delete', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
+                      //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
+                      models.Image.find({ path: mostRecentImage[0].path }).then(images => {
                         expect(images.length).toEqual(0);
 
-                        models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
+                        //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
+                        models.Image.find({ photographer: lanny._id, published: true}).then(images => {
                           expect(images.length).toEqual(0);
 
                           done();

@@ -14,6 +14,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const isMobile = require('is-mobile');
 
+const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
 // Set upload destination directory
 let storage = multer.diskStorage({
@@ -44,46 +45,45 @@ router.get('/', (req, res) => {
 function getAgentAlbum(page, req, res) {
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
-  fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
-    if (err) {
-      return res.render('error', { error: err });
-    }
+  models.Agent.findOne({ email: `${req.params.agentId}@${req.params.domain}` }).then(agent => {
 
-    files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item));
-    files = files.map(file => `${req.params.domain}/${req.params.agentId}/${file}`).reverse();
+    models.Image.find({ photographer: agent._id, published: false }).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
 
-    let nextPage = 0,
-        prevPage = page - 1;
-    if (files.length > MAX_IMGS * page) {
-      nextPage = page + 1;
-      files = files.slice(MAX_IMGS * prevPage, MAX_IMGS * page);
-    }
+      let nextPage = 0,
+          prevPage = page - 1;
+      if (images.length === MAX_IMGS) {
+        nextPage = page + 1;
+      }
 
-    if (!nextPage && prevPage) {
-      files = files.slice(MAX_IMGS * prevPage);
-    }
+      // To open deep link with auth token
+      const payload = { email: req.user.email };
+      const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
-    // To open deep link with auth token
-    const payload = { email: req.user.email };
-    const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
+      res.render('image/index', {
+        //images: files,
+        images: images,
+        messages: req.flash(),
+        agent: req.user,
+        nextPage: nextPage,
+        prevPage: prevPage,
+        token: token,
+        canWrite: canWrite,
+        isMobile: isMobile({ ua: req, tablet: true})
+       });
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
 
-    res.render('image/index', {
-      images: files,
-      messages: req.flash(),
-      agent: req.user,
-      nextPage: nextPage,
-      prevPage: prevPage,
-      token: token,
-      canWrite: canWrite,
-      isMobile: isMobile({ ua: req, tablet: true})
-     });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   });
 };
 
 /**
  * GET /image/:domain/:agentId
  */
-const MAX_IMGS = 30;
 router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
 
   if (!fs.existsSync(`uploads/${req.params.domain}/${req.params.agentId}`)){
@@ -99,6 +99,10 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
 router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
 
   const page = parseInt(req.params.num);
+
+  if (page <= 0) {
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  }
 
   return getAgentAlbum(page, req, res);
 });
