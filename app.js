@@ -59,7 +59,8 @@ const strategy = new Auth0Strategy(
 
     models.Agent.findOne({ email: profile._json.email }).then(result => {
       if (!result) {
-        let newAgent = new models.Agent({email: profile._json.email});
+        //let newAgent = new models.Agent({email: profile._json.email});
+        let newAgent = new models.Agent(profile._json);
 
         newAgent.save().then(result => {
           done(null, result);
@@ -67,7 +68,11 @@ const strategy = new Auth0Strategy(
           done(err);
         });
       } else {
-        return done(null, result);
+        models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
+          return done(null, result);
+        }).catch(err => {
+          res.json(err);
+        });
       }
     }).catch(err => {
       res.json(err);
@@ -83,6 +88,7 @@ passport.serializeUser(function(agent, done) {
 
 passport.deserializeUser(function(id, done) {
   models.Agent.findById(id).then(function(agent) {
+
     return done(null, agent);
   }).catch(function(error) {
     return done(error);
