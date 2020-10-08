@@ -107,6 +107,11 @@ describe('landing page', () => {
         if (err) return done.fail(err);
         browser.assert.success();
         browser.assert.elements('section img', 2);
+
+        browser.assert.elements(`article.post header img.avatar`, 0);
+        browser.assert.elements(`article.post header aside div`, 0);
+        browser.assert.elements(`article.post header aside time`, 0);
+
         done();
       });
     });
@@ -300,7 +305,8 @@ describe('landing page', () => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.text('#page h1 a', process.env.TITLE); done(); });
+        browser.assert.text('#page h1 a', process.env.TITLE); done();
+      });
     });
 
     it('displays a message if there are no images to view', done => {
@@ -324,7 +330,10 @@ describe('landing page', () => {
 
         browser.assert.elements('article.post section.photo img', 2);
         // agent and lanny have the same picture src
+        // 2020-10-8 This needs to be fleshed out as the layout is decided
         browser.assert.elements(`article.post header img.avatar[src="${agent.get('picture')}"]`, 2);
+        browser.assert.elements(`article.post header aside div`, 2);
+        browser.assert.elements(`article.post header aside time`, 2);
 
         // No pagination
         browser.assert.elements('#next-page', 0);

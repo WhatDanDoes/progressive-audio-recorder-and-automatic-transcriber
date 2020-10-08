@@ -15,11 +15,19 @@
           <% if (agent) { %>
             <header>
               <img class="avatar" src="<%= image.photographer.get('picture') %>" />
+              <aside>
+                <div><%= image.photographer.get('nickname') %></div>
+                <time><%= image.updatedAt %></time>
+              </aside>
             </header>
+            <section class="photo">
+              <img src="<%= image.path.replace('public', '') %>" />
+            </section>
+          <% } else { %>
+            <section class="photo">
+              <img src="/images/uploads/<%= image %>" />
+            </section>
           <% } %>
-          <section class="photo">
-            <img src="/images/uploads/<%= image.path %>" />
-          </section>
         </article>
       <% } %>
       <% include _partials/pager %>

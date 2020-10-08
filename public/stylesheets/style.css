@@ -28,7 +28,8 @@ main {
 
 section {
   width: 100%;
-  margin-top: 2em;
+  margin-bottom: 2em;
+  margin-top: .25em;
 }
 section img {
   width: 100%;
@@ -189,7 +190,7 @@ nav ul li {
  */
 #pager {
   width: 100%;
-  text-align: center; 
+  text-align: center;
 }
 #pager ul {
   width: 100%;
@@ -369,8 +370,8 @@ h2 {
 .agent,
 .image {
   padding: 0.5em 1em 0.5em 1em;
-  border-bottom-style: solid; 
-  border-width: 1px; 
+  border-bottom-style: solid;
+  border-width: 1px;
   border-color: #CFD8DC;
 }
 */
@@ -384,7 +385,7 @@ h2 {
 }
 
 .approved {
-  color: #37474F; 
+  color: #37474F;
 }
 
 .credit {
@@ -546,3 +547,29 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
   box-shadow: .25em .25em rgb(0,0,0,0.2);
 }
 
+
+/**
+ * Image post
+ */
+
+/* 2020-10-8 https://www.w3schools.com/howto/howto_css_image_avatar.asp */
+article.post header img.avatar {
+  vertical-align: top;
+  width: 10%;
+  border-radius: 50%;
+}
+article.post section.photo img {
+  border-radius: 4px;
+}
+
+article.post header aside {
+
+  vertical-align: bottom;
+  display: inline-block;
+  width: 75%;
+}
+
+article.post header aside time {
+  font-size: .5em;
+  font-style: italic;
+}
