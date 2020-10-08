@@ -1,16 +1,20 @@
 const Browser = require('zombie');
-const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001; 
-Browser.localhost('example.com', PORT);
+const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+const DOMAIN = 'example.com';
+Browser.localhost(DOMAIN, PORT);
+
 const fs = require('fs');
 const app = require('../../app');
 const fixtures = require('pow-mongoose-fixtures');
-const models = require('../../models'); 
+const models = require('../../models');
+
+const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
- * already been `require`d the tests will fail because the 
+ * already been `require`d the tests will fail because the
  * module doesn't exist in the mocked file system. `ejs` and
- * `iconv-lite/encodings` are required here to solve that 
+ * `iconv-lite/encodings` are required here to solve that
  * problem.
  */
 const mock = require('mock-fs');
@@ -19,56 +23,68 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 describe('imageShowSpec', () => {
   let browser, agent, lanny;
 
-  beforeEach(function(done) {
+  beforeEach(done => {
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
-    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, function(err) {
-      models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
+    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
+      models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
         agent = results;
-        models.Agent.findOne({ email: 'lanny@example.com' }).then(function(results) {
-          lanny = results; 
-          browser.visit('/', function(err) {
+        models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
+          lanny = results;
+          browser.visit('/', err => {
             if (err) return done.fail(err);
             browser.assert.success();
             done();
           });
-        }).catch(function(error) {
+        }).catch(error => {
           done.fail(error);
         });
-      }).catch(function(error) {
+      }).catch(error => {
         done.fail(error);
       });
     });
   });
 
-  afterEach(function(done) {
-    models.mongoose.connection.db.dropDatabase().then(function(err, result) {
+  afterEach(done => {
+    models.mongoose.connection.db.dropDatabase().then((err, result) => {
       done();
-    }).catch(function(err) {
+    }).catch(err => {
       done.fail(err);
     });
   });
 
   describe('authenticated', () => {
     beforeEach(done => {
-      mockAndUnmock({ 
-        [`uploads/${agent.getAgentDirectory()}`]: {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-        },
-        'public/images/uploads': {}
-      });
- 
-      browser.fill('email', agent.email);
-      browser.fill('password', 'secret');
-      browser.pressButton('Login', function(err) {
+      stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
-        browser.assert.success();
-        done();
+
+        mockAndUnmock({
+          [`uploads/${agent.getAgentDirectory()}`]: {
+            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          },
+          'public/images/uploads': {}
+        });
+
+        const images = [
+          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+        ];
+        models.Image.create(images).then(results => {
+
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
       });
     });
-  
+
     afterEach(() => {
       mock.restore();
     });
@@ -77,7 +93,7 @@ describe('imageShowSpec', () => {
       it('allows an agent to click and view his own image', done => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
         browser.assert.element(`.image a[href="/image/${agent.getAgentDirectory()}/image1.jpg"] img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`);
-        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.element(`img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`);
@@ -91,7 +107,7 @@ describe('imageShowSpec', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, function(err) {
+        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
@@ -103,18 +119,18 @@ describe('imageShowSpec', () => {
 
     describe('unauthorized', () => {
       it('does not allow an agent to view an album for which he has not been granted access', done => {
-        models.Agent.findOne({ email: 'troy@example.com' }).then(function(troy) {
+        models.Agent.findOne({ email: 'troy@example.com' }).then(troy => {
           expect(agent.canRead.length).toEqual(1);
           expect(agent.canRead[0]).not.toEqual(troy._id);
 
-          browser.visit(`/image/${troy.getAgentDirectory()}/somepic.jpg`, function(err) {
+          browser.visit(`/image/${troy.getAgentDirectory()}/somepic.jpg`, err => {
             if (err) return done.fail(err);
             browser.assert.redirected();
             browser.assert.url({ pathname: '/'});
             browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
             done();
           });
-        }).catch(function(error) {
+        }).catch(error => {
           done.fail(error);
         });
       });
@@ -123,7 +139,7 @@ describe('imageShowSpec', () => {
 
   describe('unauthenticated', () => {
     it('redirects home (which is where the login form is located)', done => {
-      browser.visit(`/image/${agent.getAgentDirectory()}/image2.jpg`, function(err) {
+      browser.visit(`/image/${agent.getAgentDirectory()}/image2.jpg`, err => {
         if (err) return done.fail(err);
         browser.assert.redirected();
         browser.assert.url({ pathname: '/'});

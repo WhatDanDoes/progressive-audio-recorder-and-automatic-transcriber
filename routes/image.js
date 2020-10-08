@@ -12,7 +12,9 @@ const jwtAuth = require('../lib/jwtAuth');
 const ensureAuthorized = require('../lib/ensureAuthorized');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
+const isMobile = require('is-mobile');
 
+const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
 // Set upload destination directory
 let storage = multer.diskStorage({
@@ -36,66 +38,73 @@ router.get('/', (req, res) => {
 });
 
 /**
+ * This consolidates the functionality required of
+ * - GET /image/:domain/:agentId
+ * - GET /image/:domain/:agentId/page/:num
+ */
+function getAgentAlbum(page, req, res) {
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
+
+  models.Agent.findOne({ email: `${req.params.agentId}@${req.params.domain}` }).then(agent => {
+
+    models.Image.find({ photographer: agent._id, published: false }).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
+
+      let nextPage = 0,
+          prevPage = page - 1;
+      if (images.length === MAX_IMGS) {
+        nextPage = page + 1;
+      }
+
+      // To open deep link with auth token
+      const payload = { email: req.user.email };
+      const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
+
+      res.render('image/index', {
+        //images: files,
+        images: images,
+        messages: req.flash(),
+        agent: req.user,
+        nextPage: nextPage,
+        prevPage: prevPage,
+        token: token,
+        canWrite: canWrite,
+        isMobile: isMobile({ ua: req, tablet: true})
+       });
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
+
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+};
+
+/**
  * GET /image/:domain/:agentId
  */
-const MAX_IMGS = 30;
 router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
+
   if (!fs.existsSync(`uploads/${req.params.domain}/${req.params.agentId}`)){
     mkdirp.sync(`uploads/${req.params.domain}/${req.params.agentId}`);
   }
 
-  fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
-    if (err) {
-      return res.render('error', { error: err });
-    }
-
-    files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item));
-    files = files.map(file => `${req.params.domain}/${req.params.agentId}/${file}`).reverse();
-
-    let nextPage = 0;
-    if (files.length > MAX_IMGS) {
-      nextPage = 2;
-      files = files.slice(0, MAX_IMGS);
-    }
-
-    // To open deep link with auth token
-    const payload = { email: req.user.email };
-    const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
-
-    res.render('image/index', { images: files, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: 0, token: token  });
-  });
+  return getAgentAlbum(1, req, res);
 });
 
 /**
  * GET /image/:domain/:agentId/page/:num
  */
 router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
-  fs.readdir(`uploads/${req.params.domain}/${req.params.agentId}`, (err, files) => {
-    if (err) {
-      return res.render('error', { error: err });
-    }
 
-    files = files.filter(item => (/\.(gif|jpg|jpeg|tiff|png)$/i).test(item));
-    files = files.map(file => `${req.params.domain}/${req.params.agentId}/${file}`).reverse();
+  const page = parseInt(req.params.num);
 
-    let page = parseInt(req.params.num),
-        nextPage = 0,
-        prevPage = page - 1;
-    if (files.length > MAX_IMGS * page) {
-      nextPage = page + 1;
-      files = files.slice(MAX_IMGS * prevPage, MAX_IMGS * page);
-    }
+  if (page <= 0) {
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  }
 
-    if (!nextPage && prevPage) {
-      files = files.slice(MAX_IMGS * prevPage);
-    }
-
-    // To open deep link with auth token
-    const payload = { email: req.user.email };
-    const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
-
-    res.render('image/index', { images: files, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: prevPage, token: token });
-  });
+  return getAgentAlbum(page, req, res);
 });
 
 
@@ -103,7 +112,7 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
  * GET /image/:domain/:agentId/:imageId
  */
 router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
   res.render('image/show', { image: `${req.path}`, messages: req.flash(), agent: req.user, canWrite: canWrite });
 });
 
@@ -111,21 +120,41 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
  * POST /image/:domain/:agentId/:imageId
  */
 router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+
+  let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
+
+  if (process.env.SUDO && req.user.email !== process.env.SUDO) {
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
+  }
 
   if (!canWrite) {
     req.flash('info', 'You do not have access to that resource');
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   }
 
-  fs.rename(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`, `public/images/uploads/${req.params.imageId}`, err => {
+  const currentPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`,
+        destinationPath = `public/images/uploads/${req.params.imageId}`;
+
+  fs.rename(currentPath, destinationPath, err => {
     if (err) {
       req.flash('info', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
     }
 
-    req.flash('success', 'Image published');
-    res.redirect('/');
+    models.Image.findOne({ path: currentPath }).then(image => {
+      image.path = destinationPath;
+      image.published = true;
+      image.save().then(image => {
+        req.flash('success', 'Image published');
+        res.redirect('/');
+      }).catch(err => {
+        req.flash('error', err.message);
+        return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      });
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
   });
 });
 
@@ -169,8 +198,13 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
       if (err) {
         return done(err);
       }
-      recursiveSave(done);
-    });   
+
+      models.Image.create({ path: path.dest, photographer: req.user._id }).then(image => {
+        recursiveSave(done);
+      }).catch(err => {
+        done(err);
+      });
+    });
   };
 
   recursiveSave((err) => {
@@ -178,7 +212,7 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
       return res.status(500).json({ message: err.message });
     }
     res.status(201).json({ message: 'Image received' });
-  }) 
+  })
 });
 
 /**
@@ -206,10 +240,10 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
 //      let notSubmitter = image.agent.toString() != agent._id.toString();
 //      if (notSubmitter && notReviewer) return res.sendStatus(403);
 //      if (notReviewer && approvalChange) return res.sendStatus(403);
-// 
+//
 //      image = Object.assign(image, req.body);
 //      if (!req.body.approved) image.approved = false;
-//      let sum = image.tookPlaceAt.getTimezoneOffset() * 60000 + Date.parse(image.tookPlaceAt); // [min*60000 = ms] 
+//      let sum = image.tookPlaceAt.getTimezoneOffset() * 60000 + Date.parse(image.tookPlaceAt); // [min*60000 = ms]
 //      models.Image.findOneAndUpdate({ _id: req.params.id }, image, { new: true, runValidators: true }).then((image) => {
 //        if (disapproved) {
 //          req.flash('info', 'Image de-approved. It can now be edited.');
@@ -230,22 +264,30 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
 //  });
 //});
 //
+
 /**
  * DELETE /image/:domain/:agentId/:imageId
  */
 router.delete('/:domain/:agentId/:imageId', ensureAuthorized, function(req, res) {
-  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path);
+  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
   if(!canWrite){
     req.flash('error', 'You are not authorized to delete that resource');
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   }
 
-  fs.unlink(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`, (err) => {
-    if (err) {
-      req.flash('info', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
-    }
-    req.flash('info', 'Image deleted');
+  const imagePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+
+  models.Image.deleteOne({ path: imagePath }).then(results => {
+    fs.unlink(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`, (err) => {
+      if (err) {
+        req.flash('info', err.message);
+        return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      }
+      req.flash('info', 'Image deleted');
+      res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
+  }).catch(err => {
+    req.flash('error', err.mesage);
     res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   });
 });

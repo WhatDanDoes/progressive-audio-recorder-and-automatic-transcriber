@@ -6,6 +6,7 @@ const router = express.Router();
 const models = require('../models');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const isMobile = require('is-mobile');
 
 /**
  * GET /agent
@@ -21,7 +22,13 @@ router.get('/', function(req, res) {
     const payload = { email: req.user.email };
     const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
-    res.render('agent/index', { messages: req.flash(), agent: req.user, readables: readables, token: token});
+    res.render('agent/index', {
+      messages: req.flash(),
+      agent: req.user,
+      readables: readables,
+      token: token,
+      isMobile: isMobile({ ua: req.headers['user-agent'], tablet: true})
+    });
   });
 });
 

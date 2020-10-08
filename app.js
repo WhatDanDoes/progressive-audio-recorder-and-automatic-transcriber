@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const jsonwebtoken = require('jsonwebtoken');
 const models = require('./models');
 
 const app = express();
@@ -28,6 +29,7 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   unset: 'destroy',
+  cookie: { maxAge: 1000 * 60 * 60 },
   store: new MongoStore({ mongooseConnection: models }),
 };
 
@@ -37,34 +39,48 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-
 /**
- * Passport authentication
+ * passport-auth0
  */
+const Auth0Strategy = require('passport-auth0');
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
 
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new LocalStrategy({
-    usernameField: 'email'
+const strategy = new Auth0Strategy(
+  {
+    domain: process.env.AUTH0_DOMAIN,
+    clientID: process.env.AUTH0_CLIENT_ID,
+    clientSecret: process.env.AUTH0_CLIENT_SECRET,
+    callbackURL: process.env.CALLBACK_URL
   },
-  function(email, password, done) {
-    models.Agent.findOne({ email: email }).then(function(agent) {
-      if (!agent) {
-        return done(null, false);
-      }
-      models.Agent.validPassword(password, agent.password, function(err, res) {
-        if (err) {
-          console.log(err);
-        }
-        return done(err, res);
-      }, agent);
-    }).catch(function(err) {
-      return done(err);
-    });
+  function(accessToken, refreshToken, extraParams, profile, done) {
+    // accessToken is the token to call Auth0 API (not needed in most cases)
+    // extraParams.id_token has the JSON Web Token
+    // profile has all the information from the user
 
-  }));
+    models.Agent.findOne({ email: profile._json.email }).then(result => {
+      if (!result) {
+        //let newAgent = new models.Agent({email: profile._json.email});
+        let newAgent = new models.Agent(profile._json);
+
+        newAgent.save().then(result => {
+          done(null, result);
+        }).catch(err => {
+          done(err);
+        });
+      } else {
+        models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
+          return done(null, result);
+        }).catch(err => {
+          res.json(err);
+        });
+      }
+    }).catch(err => {
+      res.json(err);
+    });
+  }
+);
+
+passport.use(strategy);
 
 passport.serializeUser(function(agent, done) {
   done(null, agent._id);
@@ -72,11 +88,15 @@ passport.serializeUser(function(agent, done) {
 
 passport.deserializeUser(function(id, done) {
   models.Agent.findById(id).then(function(agent) {
+
     return done(null, agent);
   }).catch(function(error) {
     return done(error);
   });
 });
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 /**
  * Flash messages
@@ -127,10 +147,11 @@ app.use(methodOverride('_method'));
 /**
  * Routes
  */
-app.use('/', require('./routes/index'));
-app.use('/login', require('./routes/login'));
-app.use('/logout', require('./routes/logout'));
-app.use('/reset', require('./routes/reset'));
+app.use('/', require('./routes/index')); // Keep a close eye on this and the following
+app.use('/', require('./routes/auth'));
+//app.use('/login', require('./routes/login'));
+//app.use('/logout', require('./routes/logout'));
+//app.use('/reset', require('./routes/reset'));
 app.use('/image', require('./routes/image'));
 app.use('/agent', require('./routes/agent'));
 
@@ -155,6 +176,5 @@ let port = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'to
 app.listen(port, '0.0.0.0', () => {
   console.log('auth0-photo-server listening on ' + port + '!');
 });
-
 
 module.exports = app;

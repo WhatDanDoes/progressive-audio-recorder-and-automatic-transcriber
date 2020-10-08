@@ -71,7 +71,7 @@ describe('jwtAuth', function() {
     });
   });
 
-  it('attaches agent email to request object', done => {
+  it('attaches agent database record to the request object', done => {
     const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 
     request = httpMocks.createRequest({
@@ -83,10 +83,12 @@ describe('jwtAuth', function() {
     });
 
     jwtAuth(request, response, function(err) {
-      expect(request.user.email).toEqual(agent.email);
-      expect(request.user.iat).toBeDefined();
-      expect(request.user.exp).toBeDefined();
-      done();
+      db.Agent.findOne({ email: agent.email }).then(agent => {
+        expect(request.user).toEqual(agent);
+        done();
+      }).catch(err => {
+        done.fail(err);
+      });
     });
   });
 });

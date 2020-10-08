@@ -1,17 +1,21 @@
 const Browser = require('zombie');
-const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001; 
-Browser.localhost('example.com', PORT);
+const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+const DOMAIN = 'example.com';
+Browser.localhost(DOMAIN, PORT);
+
 const fs = require('fs');
 const app = require('../../app');
 const fixtures = require('pow-mongoose-fixtures');
-const models = require('../../models'); 
+const models = require('../../models');
 const jwt = require('jsonwebtoken');
+
+const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
- * already been `require`d the tests will fail because the 
+ * already been `require`d the tests will fail because the
  * module doesn't exist in the mocked file system. `ejs` and
- * `iconv-lite/encodings` are required here to solve that 
+ * `iconv-lite/encodings` are required here to solve that
  * problem.
  */
 const mock = require('mock-fs');
@@ -27,7 +31,7 @@ describe('imageIndexSpec', () => {
       models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
         agent = results;
         models.Agent.findOne({ email: 'lanny@example.com' }).then(function(results) {
-          lanny = results; 
+          lanny = results;
           browser.visit('/', function(err) {
             if (err) return done.fail(err);
             browser.assert.success();
@@ -52,34 +56,75 @@ describe('imageIndexSpec', () => {
 
   describe('authenticated', () => {
     beforeEach(done => {
-      mockAndUnmock({ 
-        [`uploads/${agent.getAgentDirectory()}`]: {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-        },
-        'public/images/uploads': {}
-      });
- 
-      spyOn(jwt, 'sign').and.returnValue('somejwtstring');
- 
-      browser.fill('email', agent.email);
-      browser.fill('password', 'secret');
-      browser.pressButton('Login', function(err) {
+      stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
-        browser.assert.success();
-        done();
+
+        mockAndUnmock({
+          [`uploads/${agent.getAgentDirectory()}`]: {
+            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          },
+          'public/images/uploads': {}
+        });
+
+        const images = [
+          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+        ];
+        models.Image.create(images).then(results => {
+
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
       });
     });
-  
+
     afterEach(() => {
       mock.restore();
     });
 
     describe('authorized', () => {
-      it('displays an Android deep link with JWT', () => {
-        browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+      it('displays an Android deep link with JWT if browser is mobile', done => {
+        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
+        // See `GET /image/:domain/:agentId`
+        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
+
+        browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
+        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+          if (err) return done.fail(err);
+
+          browser.assert.success();
+          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+          browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+          browser.assert.element('.deep-link');
+          done();
+        });
+      });
+
+      it('does not display an Android deep link if browser is not mobile', done => {
+        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
+        // See `GET /image/:domain/:agentId`
+        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
+
+        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+
+          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+          browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
+          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
+          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
+
+          done();
+        });
       });
 
       it('allows an agent to view his own album', () => {
@@ -91,10 +136,10 @@ describe('imageIndexSpec', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/image/${lanny.getAgentDirectory()}`, function(err) {
+        browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('main h2:last-child', 'No images');
           done();
         });
       });
@@ -163,18 +208,31 @@ describe('imageIndexSpec', () => {
 
   describe('pagination', () => {
     beforeEach(done => {
-      let files = {};
-      for (let i = 0; i < 70; i++) {
-        files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-      }
-      mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
-      browser.fill('email', agent.email);
-      browser.fill('password', 'secret');
-      browser.pressButton('Login', function(err) {
+      stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
-        browser.assert.success();
-        done();
+
+        // Create a bunch of images
+        let files = {},
+            images = [];
+        for (let i = 0; i < 70; i++) {
+          files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
+          images.push({ path: `uploads/${agent.getAgentDirectory()}/image${i}.jpg`, photographer: agent._id });
+        }
+
+        mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
+
+        models.Image.create(images).then(results => {
+
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
       });
     });
 
@@ -226,14 +284,20 @@ describe('imageIndexSpec', () => {
     it('doesn\'t barf if paginating beyond the bounds', done => {
       browser.visit(`/image/${agent.getAgentDirectory()}/page/10`, (err) => {
         if (err) return done.fail(err);
-        browser.assert.text('h2', 'No images');
+        browser.assert.text('main h2:last-child', 'No images');
 
         browser.visit(`/image/${agent.getAgentDirectory()}/page/0`, (err) => {
           if (err) return done.fail(err);
-          browser.assert.text('h2', 'No images');
+          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+          browser.assert.elements('.alert.alert-danger', 0);
 
-          done();
-          // Negative page params work, kinda
+          browser.visit(`/image/${agent.getAgentDirectory()}/page/-1`, (err) => {
+            if (err) return done.fail(err);
+            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.elements('.alert.alert-danger', 0);
+
+            done();
+          });
         });
       });
     });

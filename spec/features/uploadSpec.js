@@ -17,13 +17,13 @@ describe('POST image/', () => {
     models.mongoose.connection.db.dropDatabase().then(function(err, result) {
       done();
     }).catch(function(err) {
-      done.fail(err);         
+      done.fail(err);
     });
   });
- 
+
   describe('unauthenticated access', () => {
     beforeEach(done => {
-      mockAndUnmock({ 
+      mockAndUnmock({
         'uploads': mock.directory({}),
       });
 
@@ -76,6 +76,32 @@ describe('POST image/', () => {
           });
       });
     });
+
+    it('does not create a database record', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+        request(app)
+          .post('/image')
+          .attach('docs', 'spec/files/troll.jpg')
+          .expect('Content-Type', /json/)
+          .expect(401)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(0);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
   });
 
   describe('authenticated access', () => {
@@ -91,7 +117,7 @@ describe('POST image/', () => {
           agent = results;
           token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 
-          mockAndUnmock({ 
+          mockAndUnmock({
             'uploads': mock.directory({}),
           });
 
@@ -122,14 +148,14 @@ describe('POST image/', () => {
           done();
         });
     });
-  
+
     it('writes the file to the disk on agent\'s first access', done => {
       fs.readdir(`uploads/`, (err, files) => {
         if (err) {
           return done.fail(err);
         }
         expect(files.length).toEqual(0);
- 
+
         request(app)
           .post('/image')
           .field('token', token)
@@ -140,14 +166,14 @@ describe('POST image/', () => {
               return done.fail(err);
             }
             expect(res.body.message).toEqual('Image received');
-    
+
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-    
+
               if (err) {
                 return done.fail(err);
               }
               expect(files.length).toEqual(1);
-    
+
               done();
             });
         });
@@ -189,7 +215,7 @@ describe('POST image/', () => {
           return done.fail(err);
         }
         expect(files.length).toEqual(0);
- 
+
         request(app)
           .post('/image')
           .field('token', token)
@@ -200,9 +226,9 @@ describe('POST image/', () => {
               return done.fail(err);
             }
             expect(res.body.message).toEqual('Image received');
-    
+
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-    
+
               if (err) {
                 return done.fail(err);
               }
@@ -218,14 +244,14 @@ describe('POST image/', () => {
                     return done.fail(err);
                   }
                   expect(res.body.message).toEqual('Image received');
-          
+
                   fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-          
+
                     if (err) {
                       return done.fail(err);
                     }
                     expect(files.length).toEqual(2);
-          
+
                     done();
                   });
                 });
@@ -233,6 +259,64 @@ describe('POST image/', () => {
           });
       });
     });
+
+    it('creates a database record', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+        request(app)
+          .post('/image')
+          .field('token', token)
+          .attach('docs', 'spec/files/troll.jpg')
+          .expect(201)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(1);
+              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
+    it('writes a database record for each attached file', done => {
+      models.Image.find({}).then(images => {
+        expect(images.length).toEqual(0);
+
+        request(app)
+          .post('/image')
+          .field('token', token)
+          .attach('docs', 'spec/files/troll.jpg')
+          .attach('docs', 'spec/files/troll.png')
+          .expect('Content-Type', /json/)
+          .expect(201)
+          .end(function(err, res) {
+            if (err) {
+              return done.fail(err);
+            }
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(2);
+              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+              expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+ 
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
 
     it('returns a 400 error if no image is defined', done => {
       request(app)
