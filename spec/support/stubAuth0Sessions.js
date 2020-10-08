@@ -39,7 +39,7 @@ module.exports = function(email, zombieDomain, done) {
      * This is called when `/login` is hit.
      */
     let identity, identityToken;
-    auth0Scope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+    const auth0Scope = nock(`https://${process.env.AUTH0_DOMAIN}`)
       .get(/authorize*/)
       .reply((uri, body, next) => {
         uri = uri.replace('/authorize?', '');
@@ -57,14 +57,14 @@ module.exports = function(email, zombieDomain, done) {
         /**
          * `/userinfo` mock
          */
-        userInfoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+        const userInfoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .get(/userinfo/)
           .reply(200, identity);
 
         /**
          * `/oauth/token` mock
          */
-        oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+        const oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .post(/oauth\/token/, {
                                   'grant_type': 'authorization_code',
                                   'redirect_uri': /\/callback/,
@@ -115,11 +115,22 @@ module.exports = function(email, zombieDomain, done) {
     /**
      * `/login` mock
      */
-    loginScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+    const loginScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
       .get(/login/)
       .reply((uri, body, next) => {
         next(null, [302, {}, { 'Location': `http://${zombieDomain}/callback?code=AUTHORIZATION_CODE&state=${state}` }]);
       });
+
+    /**
+     * `/logout` mock
+     */
+    const logoutScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+      .get(/\/v2\/logout\?.+/)
+      .reply((uri, body, next) => {
+        const parsed = querystring.parse(uri);
+        next(null, [302, {}, { 'Location': parsed.returnTo }]);
+      });
+
 
     // Mocks initialized
     done(null, {pub, prv, keystore});
