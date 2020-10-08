@@ -8,10 +8,13 @@
       <% include ./_pager %>
       <% for (let image of images) { %>
         <section class="image">
-          <a href="<%= `/image/${image}` %>">
-            <img src="<%= `/uploads/${image}` %>" />
+          <a href="<%= `/${image.path.replace('uploads', 'image')}` %>">
+            <img src="<%= `/${image.path}` %>" />
           </a>
         </section>
+        <% if (canWrite) { %>
+          <% include ./_controls %>
+        <% } %>
       <% } %>
       <% include ./_pager %>
     <% } %>
