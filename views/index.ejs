@@ -11,9 +11,16 @@
     <% } else { %>
       <% include _partials/pager %>
       <% for (let image of images) { %>
-        <section class="image">
-          <img src="/images/uploads/<%= image %>" />
-        </section>
+        <article class="post">
+          <% if (agent) { %>
+            <header>
+              <img class="avatar" src="<%= image.photographer.get('picture') %>" />
+            </header>
+          <% } %>
+          <section class="photo">
+            <img src="/images/uploads/<%= image.path %>" />
+          </section>
+        </article>
       <% } %>
       <% include _partials/pager %>
     <% } %>
