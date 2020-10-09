@@ -93,9 +93,85 @@ describe('Image', () => {
         expect(image.flagged).toBe(false);
         expect(image.published).toBe(false);
         expect(image.likes).toEqual([]);
+        expect(image.notes).toEqual([]);
         done();
       }).catch(error => {
         done.fail(error);
+      });
+    });
+
+    describe('notes field', () => {
+      it('saves a note and the author agent\'s _id', done => {
+        image.notes.push({ author: agent._id, text: 'd'.repeat(500) });
+        image.save().then(obj => {
+          expect(image.notes.length).toEqual(1);
+          expect(image.notes[0].author).toEqual(agent._id);
+          expect(image.notes[0].text).toEqual('d'.repeat(500));
+          done();
+        }).catch(error => {
+          done.fail(error);
+        });
+      });
+
+      it('does not allow notes of over 500 characters', done => {
+        image.notes.push({ author: agent._id, text: 'd'.repeat(501) });
+        image.save().then(obj => {
+          done.fail('This should not have saved');
+        }).catch(error => {
+          expect(Object.keys(error.errors).length).toEqual(1);
+          expect(error.errors['notes.0.text'].message).toEqual('That note is too long (max 500 characters)');
+
+          done();
+        });
+      });
+
+      it('does not allow empty notes', done => {
+        image.notes.push({ author: agent._id, text: '   ' });
+        image.save().then(obj => {
+          done.fail('This should not have saved');
+        }).catch(error => {
+          expect(Object.keys(error.errors).length).toEqual(1);
+          expect(error.errors['notes.0.text'].message).toEqual('Empty note not saved');
+          done();
+        });
+      });
+
+      it('does not allow undefined notes', done => {
+        image.notes.push({ author: agent._id });
+        image.save().then(obj => {
+          done.fail('This should not have saved');
+        }).catch(error => {
+          expect(Object.keys(error.errors).length).toEqual(1);
+          expect(error.errors['notes.0.text'].message).toEqual('Empty note not saved');
+          done();
+        });
+      });
+
+      it('requires an author', done => {
+        image.notes.push({ text: 'Paperback writer, wriiiiiter...' });
+        image.save().then(obj => {
+          done.fail('This should not have saved');
+        }).catch(error => {
+          expect(Object.keys(error.errors).length).toEqual(1);
+          expect(error.errors['notes.0.author'].message).toEqual('Who wrote the note?');
+          done();
+        });
+      });
+
+      it('allows multiple notes', done => {
+        image.notes.push({ author: agent._id, text: 'My favourite animal is the beefalo' });
+        image.save().then(obj => {
+          expect(image.notes.length).toEqual(1);
+          image.notes.push({ author: agent._id, text: 'My favourite colour is brown' });
+          image.save().then(obj => {
+            expect(image.notes.length).toEqual(2);
+            done();
+          }).catch(error => {
+            done.fail(error);
+          });
+        }).catch(error => {
+          done.fail(error);
+        });
       });
     });
 
