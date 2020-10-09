@@ -20,14 +20,10 @@
                 <time><%= image.updatedAt %></time>
               </aside>
             </header>
-            <section class="photo">
-              <img src="<%= image.path.replace('public', '') %>" />
-            </section>
-          <% } else { %>
-            <section class="photo">
-              <img src="/images/uploads/<%= image %>" />
-            </section>
           <% } %>
+          <section class="photo">
+            <img src="<%= image.path %>" />
+          </section>
         </article>
       <% } %>
       <% include _partials/pager %>
