@@ -1,11 +1,6 @@
 <% include _partials/head %>
   <% include _partials/messages %>
   <main>
-    <% if (!agent) { %>
-      <section class="copy">
-        <h1><a id="login-link" class="login-button" href="/login">Login</a></h1>
-      </section>
-    <% } %>
     <% if (!images.length) { %>
       <h2>No images</h2>
     <% } else { %>
