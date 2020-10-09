@@ -60,7 +60,6 @@ function getAgentAlbum(page, req, res) {
       const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
       res.render('image/index', {
-        //images: files,
         images: images,
         messages: req.flash(),
         agent: req.user,
@@ -132,29 +131,20 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   }
 
-  const currentPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`,
-        destinationPath = `public/images/uploads/${req.params.imageId}`;
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
 
-  fs.rename(currentPath, destinationPath, err => {
-    if (err) {
-      req.flash('info', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
-    }
-
-    models.Image.findOne({ path: currentPath }).then(image => {
-      image.path = destinationPath;
-      image.published = true;
-      image.save().then(image => {
-        req.flash('success', 'Image published');
-        res.redirect('/');
-      }).catch(err => {
-        req.flash('error', err.message);
-        return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
-      });
+  models.Image.findOne({ path: filePath }).then(image => {
+    image.published = true;
+    image.save().then(image => {
+      req.flash('success', 'Image published');
+      res.redirect('/');
     }).catch(err => {
       req.flash('error', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   });
 });
 

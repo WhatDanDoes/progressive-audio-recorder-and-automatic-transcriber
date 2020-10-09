@@ -38,7 +38,20 @@ module.exports = function(mongoose) {
     published: {
       type: Boolean,
       default: false
-    }
+    },
+    notes: [{
+      author: {
+        type: Schema.Types.ObjectId,
+        ref: 'Agent',
+        required: [true, 'Who wrote the note?'],
+      },
+      text: {
+        type: Schema.Types.String,
+        trim: true,
+        required: [true, 'Empty note not saved'],
+        maxlength: [500, 'That note is too long (max 500 characters)'],
+      }
+    }],
   }, {
     timestamps: true
   });

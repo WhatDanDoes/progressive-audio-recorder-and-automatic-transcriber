@@ -20,18 +20,66 @@ const mock = require('mock-fs');
 const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 
 describe('landing page', () => {
-  let browser;
+
+  let agent, lanny, browser;
 
   beforeEach(done => {
-    browser = new Browser();
-    done();
+    browser = new Browser({ waitDuration: '30s', loadCss: false });
+    //browser.debug();
+    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
+      models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
+        agent = results;
+        models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
+          lanny = results;
+          browser.visit('/', err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        }).catch(error => {
+          done.fail(error);
+        });
+      }).catch(error => {
+        done.fail(error);
+      });
+    });
   });
 
-  afterEach(() => {
+  afterEach(done => {
     mock.restore();
+    models.mongoose.connection.db.dropDatabase().then((err, result) => {
+      done();
+    }).catch(err => {
+      done.fail(err);
+    });
   });
 
   describe('unauthenticated', () => {
+
+    beforeEach(done => {
+      mockAndUnmock({
+        'public/images/uploads': {
+          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+        }
+      });
+
+      const images = [
+        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
+        { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: false },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: true },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: false },
+      ];
+
+      models.Image.create(images).then(results => {
+        done();
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
     it('displays the page title set in .env', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
@@ -42,30 +90,33 @@ describe('landing page', () => {
     });
 
     it('displays a message if there are no images to view', done => {
-      mockAndUnmock({ 'public/images/uploads': {} });
-
-      browser.visit('/', (err) => {
-        if (err) return done.fail(err);
-        browser.assert.success();
-        browser.assert.text('h2', 'No images');
-        done();
+      models.Image.remove({ published: true }).then(results => {
+        browser.visit('/', (err) => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+          browser.assert.text('h2', 'No images');
+          done();
+        });
+      }).catch(err => {
+        done.fail(err);
       });
     });
 
-    it('displays the images in the public uploads directory', done => {
-      mockAndUnmock({
-        'public/images/uploads': {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-        }
-      });
-
+    it('displays the published images without their stats', done => {
       browser.visit('/', (err) => {
-        mock.restore();
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.elements('section img', 3);
+
+        browser.assert.elements('article.post section.photo img', 2);
+        browser.assert.elements(`article.post section.photo img[src="uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+
+        // 2020-10-8 This needs to be fleshed out as the layout is decided
+        browser.assert.elements('article.post header', 0);
+        // Redundant, but it helps me keep track
+        browser.assert.elements(`article.post header img.avatar[src="${agent.get('picture')}"]`, 0);
+        browser.assert.elements(`article.post header aside div`, 0);
+        browser.assert.elements(`article.post header aside time`, 0);
 
         // No pagination
         browser.assert.elements('#next-page', 0);
@@ -75,56 +126,28 @@ describe('landing page', () => {
       });
     });
 
-    it('does not display non-image files', done => {
-      mockAndUnmock({
-        'public/images/uploads': {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.pdf': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.doc': fs.readFileSync('spec/files/troll.jpg'),
-        },
-      });
-
-      browser.visit('/', (err) => {
-        mock.restore();
-        if (err) return done.fail(err);
-        browser.assert.success();
-        browser.assert.elements('section img', 1);
-        done();
-      });
-    });
-
-    it('displays image files with wonky capitalization on the filename extension', done => {
-      mockAndUnmock({
-        './public/images/uploads': {
-          'image1.Jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.pdf': fs.readFileSync('spec/files/troll.jpg'),
-          'image3.GIF': fs.readFileSync('spec/files/troll.jpg'),
-        },
-      });
-
-      browser.visit('/', (err) => {
-        mock.restore();
-        if (err) return done.fail(err);
-        browser.assert.success();
-        browser.assert.elements('section img', 2);
-
-        browser.assert.elements(`article.post header img.avatar`, 0);
-        browser.assert.elements(`article.post header aside div`, 0);
-        browser.assert.elements(`article.post header aside time`, 0);
-
-        done();
-      });
-    });
-
     describe('pagination', () => {
       beforeEach(done => {
-        let files = {};
-        for (let i = 0; i < 70; i++) {
-          files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-        }
-        mockAndUnmock({ 'public/images/uploads': files });
+        models.mongoose.connection.db.dropCollection('images').then((err, result) => {
 
-        done();
+          // Create a bunch of images
+          let files = {},
+              images = [];
+          for (let i = 0; i < 70; i++) {
+            files[`lanny${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
+            images.push({ path: `uploads/${lanny.getAgentDirectory()}/lanny${i}.jpg`, photographer: agent._id, published: true });
+          }
+
+          mockAndUnmock({ [`uploads/${lanny.getAgentDirectory()}`]: files });
+
+          models.Image.create(images).then(results => {
+            done();
+          }).catch(err => {
+            done.fail(err);
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
       });
 
       it('paginates images in the public uploads directory', done => {
@@ -193,100 +216,83 @@ describe('landing page', () => {
 
   describe('authenticated', () => {
 
-    let agent, lanny;
 
     beforeEach(done => {
-      browser = new Browser({ waitDuration: '30s', loadCss: false });
-      //browser.debug();
-      fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
-        models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
-          agent = results;
-          models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
-            lanny = results;
+      // This and the login/logout cycle writes the agent's Auth0 profile to the database
+      stubAuth0Sessions(lanny.email, DOMAIN, err => {
+        if (err) done.fail(err);
+
+        browser.clickLink('Login', err => {
+          if (err) done.fail(err);
+          browser.assert.success();
+
+          browser.clickLink('Logout', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+
+            /**
+             * 2020-10-8
+             *
+             * I just discovered that successive logins (as demonstrated here)
+             * do not work. The subsequent login returns 403, but I have not
+             * determined where the status is coming from. It does not appear to
+             * be coming from the app. I think it's coming from zombie.  *
+             * Starting a new browser seems to fix everything, though test setup
+             * is becoming quite verbose.
+             *
+             * It would be easier to simply setup the lanny agent in the database,
+             * but now that I've discovered the problem, I cannot let it go.
+             */
+            browser = new Browser({ waitDuration: '30s', loadCss: false });
             browser.visit('/', err => {
               if (err) return done.fail(err);
               browser.assert.success();
 
-              // This and the login/logout cycle writes the agent's Auth0 profile to the database
-              stubAuth0Sessions(lanny.email, DOMAIN, err => {
+              // Login main test agent
+              stubAuth0Sessions(agent.email, DOMAIN, err => {
                 if (err) done.fail(err);
 
-                browser.clickLink('Login', err => {
-                  if (err) done.fail(err);
-                  browser.assert.success();
+                mockAndUnmock({
+                  'public/images/uploads': {
+                    'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+                    'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+                    'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+                    'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+                  }
+                });
 
-                  browser.clickLink('Logout', err => {
+                const images = [
+                  { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
+                  { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: false },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: true },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: false },
+                ];
+
+                models.Image.create(images).then(results => {
+                  browser.clickLink('Login', err => {
                     if (err) done.fail(err);
                     browser.assert.success();
+                    browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
 
-                    /**
-                     * 2020-10-8
-                     *
-                     * I just discovered that successive logins (as demonstrated here)
-                     * do not work. The subsequent login returns 403, but I have not
-                     * determined where the status is coming from. It does not appear to
-                     * be coming from the app. I think it's coming from zombie.
-                     *
-                     * Starting a new browser seems to fix everything, though test setup
-                     * is becoming quite verbose.
-                     *
-                     * It would be easier to simply setup the lanny agent in the database,
-                     * but now that I've discovered the problem, I cannot let it go.
-                     */
-                    browser = new Browser({ waitDuration: '30s', loadCss: false });
-                    browser.visit('/', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
+                    models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
+                      agent = results;
+                      models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
+                        lanny = results;
 
-                      // Login main test agent
-                      stubAuth0Sessions(agent.email, DOMAIN, err => {
-                        if (err) done.fail(err);
-
-                        mockAndUnmock({
-                          'public/images/uploads': {
-                            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-                            'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-                          }
-                        });
-
-                        const images = [
-                          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
-                          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: true },
-                        ];
-
-                        models.Image.create(images).then(results => {
-                          browser.clickLink('Login', err => {
-                            if (err) done.fail(err);
-                            browser.assert.success();
-                            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-
-                            models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
-                              agent = results;
-                              models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
-                                lanny = results;
-
-                                done();
-                              }).catch(err => {
-                                done.fail(err);
-                              });
-                            }).catch(err => {
-                              done.fail(err);
-                            });
-                          });
-                        }).catch(err => {
-                          done.fail(err);
-                        });
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
                       });
+                    }).catch(err => {
+                      done.fail(err);
                     });
                   });
+                }).catch(err => {
+                  done.fail(err);
                 });
               });
             });
-          }).catch(error => {
-            done.fail(error);
           });
-        }).catch(error => {
-          done.fail(error);
         });
       });
     });
@@ -300,7 +306,6 @@ describe('landing page', () => {
       });
     });
 
-
     it('displays the page title set in .env', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
@@ -310,7 +315,6 @@ describe('landing page', () => {
     });
 
     it('displays a message if there are no images to view', done => {
-      mockAndUnmock({ 'public/images/uploads': {} });
       models.mongoose.connection.db.dropDatabase().then((err, result) => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
@@ -323,12 +327,15 @@ describe('landing page', () => {
       });
     });
 
-    it('displays the images and their controls', done => {
+    it('displays the published images and their stats', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
 
         browser.assert.elements('article.post section.photo img', 2);
+        browser.assert.elements(`article.post section.photo img[src="uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+
         // agent and lanny have the same picture src
         // 2020-10-8 This needs to be fleshed out as the layout is decided
         browser.assert.elements(`article.post header img.avatar[src="${agent.get('picture')}"]`, 2);
@@ -355,7 +362,7 @@ describe('landing page', () => {
             images.push({ path: `public/images/uploads/image${i}.jpg`, photographer: agent._id, published: true });
           }
 
-          mockAndUnmock({ ['public/images/uploads']: files });
+          mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
           models.Image.create(images).then(results => {
             done();
