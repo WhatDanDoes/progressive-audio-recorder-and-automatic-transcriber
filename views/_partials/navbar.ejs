@@ -1,14 +1,16 @@
   <header id="page">
     <h1><a href="/"><%= process.env.TITLE %></a></h1>
-    <% if (agent) { %>
-      <nav>
-        <ul>
+    <nav>
+      <ul>
+        <% if (agent) { %>
           <li><a href="/agent">Profile</a></li>
           <li>|</li>
           <li><a href="/image/<%= agent.getAgentDirectory() %>">Images</a></li>
           <li>|</li>
           <li><a href="/logout">Logout</a></li>
-        </ul>
-      </nav>
-    <% } %>
+        <% } else { %>
+          <li><a id="login-link" class="login-button" href="/login">Login</a></li>
+        <% } %>
+      </ul>
+    </nav>
   </header>
