@@ -155,7 +155,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('deletes the image from the agent\'s directory', done => {
+          it('does not delete the image from the agent\'s directory', done => {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
@@ -167,8 +167,8 @@ describe('Publishing an image', () => {
 
                 fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
                   if (err) return done.fail(err);
-                  expect(files.length).toEqual(2);
-                  expect(files.includes('image1.jpg')).toBe(false);
+                  expect(files.length).toEqual(3);
+                  expect(files.includes('image1.jpg')).toBe(true);
 
                   done();
                 });
@@ -176,7 +176,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('adds the image to the public/images/uploads directory', function(done) {
+          it('does not add the image to the public/images/uploads directory', function(done) {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
@@ -188,8 +188,8 @@ describe('Publishing an image', () => {
 
                 fs.readdir(`public/images/uploads`, (err, files) => {
                   if (err) return done.fail(err);
-                  expect(files.length).toEqual(1);
-                  expect(files.includes('image1.jpg')).toBe(true);
+                  expect(files.length).toEqual(0);
+                  expect(files.includes('image1.jpg')).toBe(false);
 
                   done();
                 });
@@ -197,7 +197,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('points the database path to the public/images/uploads directory', done => {
+          it('does not point the database path to the public/images/uploads directory', done => {
             models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
               expect(images.length).toEqual(0);
 
@@ -210,11 +210,11 @@ describe('Publishing an image', () => {
                   browser.assert.success();
 
                   models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
-                    expect(images.length).toEqual(0);
+                    expect(images.length).toEqual(1);
+                    expect(images[0].published).toBe(true);
 
                     models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published).toBe(true);
+                      expect(images.length).toEqual(0);
 
                       done();
                     }).catch(err => {
@@ -525,7 +525,7 @@ describe('Publishing an image', () => {
                 });
               });
 
-              it('points the database path to the public/images/uploads directory', done => {
+              it('does not point the database path to the public/images/uploads directory', done => {
                 models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
                   expect(images.length).toEqual(0);
 
@@ -539,10 +539,10 @@ describe('Publishing an image', () => {
 
                       models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
                         expect(images.length).toEqual(0);
+                        expect(images[0].published).toBe(true);
 
                         models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-                          expect(images.length).toEqual(1);
-                          expect(images[0].published).toBe(true);
+                          expect(images.length).toEqual(0);
 
                           done();
                         }).catch(err => {
@@ -647,7 +647,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('deletes the image from the agent\'s directory', function(done) {
+          it('does not delete the image from the agent\'s directory', function(done) {
             models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
               expect(mostRecentImage.length).toEqual(1);
 
@@ -666,8 +666,8 @@ describe('Publishing an image', () => {
 
                   fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
                     if (err) return done.fail(err);
-                    expect(files.length).toEqual(2);
-                    expect(files.includes(filename)).toBe(false);
+                    expect(files.length).toEqual(3);
+                    expect(files.includes(filename)).toBe(true);
 
                     done();
                   });
@@ -678,7 +678,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('adds the image to the public/images/uploads directory', function(done) {
+          it('does not add the image to the public/images/uploads directory', function(done) {
             models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
               expect(mostRecentImage.length).toEqual(1);
 
@@ -697,8 +697,8 @@ describe('Publishing an image', () => {
 
                   fs.readdir(`public/images/uploads`, (err, files) => {
                     if (err) return done.fail(err);
-                    expect(files.length).toEqual(1);
-                    expect(files.includes(filename)).toBe(true);
+                    expect(files.length).toEqual(0);
+                    expect(files.includes(filename)).toBe(false);
 
                     done();
                   });
@@ -709,7 +709,7 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('points the database path to the public/images/uploads directory', done => {
+          it('does not point the database path to the public/images/uploads directory', done => {
             models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
               expect(mostRecentImage.length).toEqual(1);
 
@@ -728,11 +728,11 @@ describe('Publishing an image', () => {
                     browser.assert.success();
 
                     models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(images => {
-                      expect(images.length).toEqual(0);
+                      expect(images.length).toEqual(1);
+                      expect(images[0].published).toBe(true);
 
                       models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                        expect(images.length).toEqual(1);
-                        expect(images[0].published).toBe(true);
+                        expect(images.length).toEqual(0);
 
                         done();
                       }).catch(err => {
@@ -886,7 +886,7 @@ describe('Publishing an image', () => {
                 browser.assert.elements('.publish-image-form', 3);
               });
 
-              it('points the database path to the public/images/uploads directory', done => {
+              it('does not point the database path to the public/images/uploads directory', done => {
                 models.Image.find({ photographer: lanny._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
                   expect(mostRecentImage.length).toEqual(1);
 
@@ -905,11 +905,11 @@ describe('Publishing an image', () => {
                         browser.assert.success();
 
                         models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(images => {
-                          expect(images.length).toEqual(0);
+                          expect(images.length).toEqual(1);
+                          expect(images[0].published).toBe(true);
 
                           models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                            expect(images.length).toEqual(1);
-                            expect(images[0].published).toBe(true);
+                            expect(images.length).toEqual(0);
 
                             done();
                           }).catch(err => {
