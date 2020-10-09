@@ -132,17 +132,17 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   }
 
-  const currentPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`,
-        destinationPath = `public/images/uploads/${req.params.imageId}`;
+  const currentPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+//        destinationPath = `public/images/uploads/${req.params.imageId}`;
 
-  fs.rename(currentPath, destinationPath, err => {
-    if (err) {
-      req.flash('info', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
-    }
+//  fs.rename(currentPath, destinationPath, err => {
+//    if (err) {
+//      req.flash('info', err.message);
+//      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
+//    }
 
     models.Image.findOne({ path: currentPath }).then(image => {
-      image.path = destinationPath;
+//      image.path = destinationPath;
       image.published = true;
       image.save().then(image => {
         req.flash('success', 'Image published');
@@ -155,7 +155,7 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
       req.flash('error', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     });
-  });
+//  });
 });
 
 
