@@ -538,7 +538,7 @@ describe('Publishing an image', () => {
                       browser.assert.success();
 
                       models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                        expect(images.length).toEqual(0);
+                        expect(images.length).toEqual(1);
                         expect(images[0].published).toBe(true);
 
                         models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
