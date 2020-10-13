@@ -23,34 +23,41 @@ const mock = require('mock-fs');
 const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 
 describe('imageStaticSpec', () => {
-  let browser, agent, lanny;
+  let browser, agent, lanny, troy;
 
-  beforeEach(function(done) {
+  beforeEach(done => {
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
-    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, function(err) {
-      models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
+    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
+      models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
         agent = results;
-        models.Agent.findOne({ email: 'lanny@example.com' }).then(function(results) {
+        models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
           lanny = results;
-          browser.visit('/', function(err) {
-            if (err) return done.fail(err);
-            browser.assert.success();
-            done();
+          models.Agent.findOne({ email: 'troy@example.com' }).then(results => {
+            troy = results;
+
+            browser.visit('/', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
           });
-        }).catch(function(error) {
-          done.fail(error);
+        }).catch(err => {
+          done.fail(err);
         });
-      }).catch(function(error) {
-        done.fail(error);
+      }).catch(err => {
+        done.fail(err);
       });
     });
   });
 
-  afterEach(function(done) {
-    models.mongoose.connection.db.dropDatabase().then(function(err, result) {
+  afterEach(done => {
+    mock.restore();
+    models.mongoose.connection.db.dropDatabase().then((err, result) => {
       done();
-    }).catch(function(err) {
+    }).catch(err => {
       done.fail(err);
     });
   });
@@ -63,27 +70,34 @@ describe('imageStaticSpec', () => {
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
             'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
             'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          },
+          [`uploads/${troy.getAgentDirectory()}`]: {
+            'troy1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'troy2.jpg': fs.readFileSync('spec/files/troll.jpg'),
           },
           'public/images/uploads': {}
         });
 
-        browser.clickLink('Login', function(err) {
-          if (err) done.fail(err);
-          browser.assert.success();
-          done();
-        });
-       });
-    });
+        const images = [
+          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
+          { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: true },
+          { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
+        ];
+        models.Image.create(images).then(results => {
 
-    afterEach(() => {
-      mock.restore();
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
     });
 
     describe('authorized', () => {
@@ -92,7 +106,7 @@ describe('imageStaticSpec', () => {
           .get(`/uploads/${agent.getAgentDirectory()}/image1.jpg`)
           .set('Cookie', browser.cookies)
           .expect(200)
-          .end(function(err, res) {
+          .end((err, res) => {
             if (err) done.fail(err);
             done();
           });
@@ -105,44 +119,116 @@ describe('imageStaticSpec', () => {
           .get(`/uploads/${lanny.getAgentDirectory()}/lanny1.jpg`)
           .set('Cookie', browser.cookies)
           .expect(200)
-          .end(function(err, res) {
+          .end((err, res) => {
             if (err) done.fail(err);
             done();
           });
+      });
+
+      it('allows an agent to view a static image file that has been published', done => {
+        models.Image.find({ published: true }).then(published => {
+          expect(published.length).toEqual(1);
+          request(app)
+            .get(`/${published[0].path}`)
+            .set('Cookie', browser.cookies)
+            .expect(200)
+            .end((err, res) => {
+              if (err) done.fail(err);
+              done();
+            });
+        }).catch(err => {
+          done.fail();
+        });
       });
     });
 
     describe('unauthorized', () => {
       it('does not allow an agent to view a static image for which he has not been granted access', done => {
-        models.Agent.findOne({ email: 'troy@example.com' }).then(function(troy) {
-          expect(agent.canRead.length).toEqual(1);
-          expect(agent.canRead[0]).not.toEqual(troy._id);
+        expect(agent.canRead.length).toEqual(1);
+        expect(agent.canRead[0]).not.toEqual(troy._id);
 
+        request(app)
+          .get(`/uploads/${troy.getAgentDirectory()}/troy2.jpg`)
+          .set('Cookie', browser.cookies)
+          .expect(403)
+          .end((err, res) => {
+            if (err) done.fail(err);
+            done();
+          });
+      });
+
+      it('does not allow an agent to view a static image file that has been not been published', done => {
+        models.Image.find({ published: false, photographer: troy._id}).then(unpublished => {
+          expect(unpublished.length).toEqual(1);
           request(app)
-            .get(`/uploads/${troy.getAgentDirectory()}/troy.jpg`)
+            .get(`/${unpublished[0].path}`)
             .set('Cookie', browser.cookies)
             .expect(403)
-            .end(function(err, res) {
+            .end((err, res) => {
               if (err) done.fail(err);
               done();
             });
-        }).catch(function(error) {
-          done.fail(error);
+        }).catch(err => {
+          done.fail(err);
         });
       });
     });
   });
 
   describe('unauthenticated', () => {
+    beforeEach(done => {
+      mockAndUnmock({
+        [`uploads/${agent.getAgentDirectory()}`]: {
+          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+        },
+        [`uploads/${lanny.getAgentDirectory()}`]: {
+          'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+        },
+        [`uploads/${troy.getAgentDirectory()}`]: {
+          'troy1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'troy2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+        },
+        'public/images/uploads': {}
+      });
+
+      const images = [
+        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
+        { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: true },
+        { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
+      ];
+      models.Image.create(images).then(results => {
+        done();
+      }).catch(err => {
+        done.fail(err);
+      });
+    });
+
     it('returns a 404', done => {
       request(app)
         .get(`/uploads/${agent.getAgentDirectory()}/image1.jpg`)
         .set('Cookie', browser.cookies)
         .expect(404)
-        .end(function(err, res) {
+        .end((err, res) => {
           if (err) done.fail(err);
           done();
         });
+    });
+
+    it('finds a static image file that has been published', done => {
+      models.Image.find({ published: true }).then(published => {
+        expect(published.length).toEqual(1);
+        request(app)
+          .get(`/${published[0].path}`)
+          .set('Cookie', browser.cookies)
+          .expect(200)
+          .end((err, res) => {
+            if (err) done.fail(err);
+            done();
+          });
+      }).catch(err => {
+        done.fail();
+      });
     });
   });
 });
