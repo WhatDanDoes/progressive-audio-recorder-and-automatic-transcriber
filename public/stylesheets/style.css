@@ -556,15 +556,9 @@ article.post {
 }
 
 article.post header .post-menu {
-/*
-  vertical-align: bottom;
-  float: right;
-  margin-bottom: 1em;
-*/
   position: relative;
   display: inline-block;
   float: right;
-
 }
 
 article.post header .post-menu .dropdown-content {
