@@ -28,7 +28,6 @@ main {
 
 section {
   width: 100%;
-  margin-bottom: 2em;
   margin-top: .25em;
 }
 section img {
@@ -551,6 +550,10 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 /**
  * Image post
  */
+
+article.post {
+  margin-bottom: 2em;
+}
 
 /* 2020-10-8 https://www.w3schools.com/howto/howto_css_image_avatar.asp */
 article.post header img.avatar {

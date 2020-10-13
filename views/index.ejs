@@ -19,6 +19,11 @@
           <section class="photo">
             <img src="/<%= image.path %>" />
           </section>
+          <% if (agent) { %>
+            <footer>
+              <div><i id="like-button" class="far fa-heart"></i></div>
+            </header>
+          <% } %>
         </article>
       <% } %>
       <% include _partials/pager %>
