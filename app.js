@@ -33,10 +33,6 @@ const sessionConfig = {
   store: new MongoStore({ mongooseConnection: models }),
 };
 
-//if (env == 'production') {
-//  sessionConfig.store = new MongoStore({ mongooseConnection: models });
-//}
-
 app.use(session(sessionConfig));
 
 /**
@@ -121,20 +117,29 @@ app.use(express.static(path.join(__dirname, 'public')));
  * Protected static assets
  */
 app.use(`/uploads`, [function(req, res, next) {
-  // Not found instead of not authorized
-  if (!req.isAuthenticated()) {
-    return res.sendStatus(404);
-  }
-  req.user.getReadables((err, readables) => {
-    if (err) {
-      return next(err);
+  models.Image.findOne({ path: `uploads${req.path}`, published: true }).then(image => {
+    if (image) {
+      return next();
     }
-    for (let readable of readables) {
-      if (RegExp(readable).test(req.path)) {
-        return next();
+
+    // Not found instead of not authorized
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(404);
+    }
+    req.user.getReadables((err, readables) => {
+      if (err) {
+        return next(err);
       }
-    }
-    return res.sendStatus(403);
+      for (let readable of readables) {
+        if (RegExp(readable).test(req.path)) {
+          return next();
+        }
+      }
+      return res.sendStatus(403);
+    });
+
+  }).catch(err => {
+    return res.sendStatus(500);
   });
 }, express.static(path.join(__dirname, `/uploads`))]);
 
@@ -149,12 +154,8 @@ app.use(methodOverride('_method'));
  */
 app.use('/', require('./routes/index')); // Keep a close eye on this and the following
 app.use('/', require('./routes/auth'));
-//app.use('/login', require('./routes/login'));
-//app.use('/logout', require('./routes/logout'));
-//app.use('/reset', require('./routes/reset'));
 app.use('/image', require('./routes/image'));
 app.use('/agent', require('./routes/agent'));
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
