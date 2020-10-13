@@ -14,6 +14,12 @@
                 <div><%= image.photographer.get('nickname') %></div>
                 <time><%= image.updatedAt %></time>
               </aside>
+              <span class="post-menu">
+                <i class="fas fa-ellipsis-h"></i>
+                <div class="dropdown-content">
+                  <p>Hello World!</p>
+                </div>
+              </span>
             </header>
           <% } %>
           <section class="photo">
@@ -21,7 +27,7 @@
           </section>
           <% if (agent) { %>
             <footer>
-              <div><i id="like-button" class="far fa-heart"></i></div>
+              <div><i class="like-button far fa-heart"></i></div>
             </header>
           <% } %>
         </article>
