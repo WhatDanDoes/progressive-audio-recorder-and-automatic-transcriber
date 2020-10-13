@@ -148,6 +148,35 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
   });
 });
 
+/**
+ * PATCH /image/:domain/:agentId/:imageId/like
+ */
+router.patch('/:domain/:agentId/:imageId/like', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'You are not logged in' });
+  }
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  models.Image.findOne({ path: filePath }).then(image => {
+
+    const likeIndex = image.likes.indexOf(req.user._id);
+    if (likeIndex < 0) {
+      image.likes.push(req.user._id);
+    }
+    else {
+      image.likes.splice(likeIndex, 1);
+    }
+    image.save().then(result => {
+      res.status(201).json({ message: 'Liked' });
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+});
 
 /**
  * POST /image

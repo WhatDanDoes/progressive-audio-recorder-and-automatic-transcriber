@@ -17,7 +17,7 @@
               <span class="post-menu">
                 <i class="fas fa-ellipsis-h"></i>
                 <div class="dropdown-content">
-                  <p>Hello World!</p>
+                  <p>Flag post</p>
                 </div>
               </span>
             </header>
@@ -27,7 +27,7 @@
           </section>
           <% if (agent) { %>
             <footer>
-              <div><i class="like-button far fa-heart"></i></div>
+              <div><i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)"></i></div>
             </header>
           <% } %>
         </article>
