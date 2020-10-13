@@ -16,7 +16,7 @@ function like(path, el) {
         el.classList.add('far');
       }
     }
-    
+
   }).catch(err => {
     console.error(err);
   });
