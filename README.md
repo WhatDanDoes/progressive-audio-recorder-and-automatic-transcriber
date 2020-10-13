@@ -15,7 +15,7 @@ This is a web application _augmented_ by a native Android photo-taking app. Phot
 
 The Identity platform handles authentication and basic organization structuring. The `auth0-photo-server` is ideally suited to consume the services it currently offers and will likely reveal shortcomings in the process. At the time of writing, agents with varying permission levels can create _teams_ and arrange those under _organizational_ umbrellas. This by itself mirrors the expectation that an agent might invite others to contribute to a photo album, or be granted permission to publish photos to the public roll.
 
-The most currently deployment can be found at https://wycliffe.photos.
+The most current deployment can be found at https://wycliffe.photos.
 
 ## Setup
 

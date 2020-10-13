@@ -111,12 +111,8 @@ describe('landing page', () => {
         browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
         browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
 
-        // 2020-10-8 This needs to be fleshed out as the layout is decided
         browser.assert.elements('article.post header', 0);
-        // Redundant, but it helps me keep track
-        browser.assert.elements(`article.post header img.avatar[src="${agent.get('picture')}"]`, 0);
-        browser.assert.elements(`article.post header aside div`, 0);
-        browser.assert.elements(`article.post header aside time`, 0);
+        browser.assert.elements(`article.post footer`, 0);
 
         // No pagination
         browser.assert.elements('#next-page', 0);
@@ -341,6 +337,9 @@ describe('landing page', () => {
         browser.assert.elements(`article.post header img.avatar[src="${agent.get('picture')}"]`, 2);
         browser.assert.elements(`article.post header aside div`, 2);
         browser.assert.elements(`article.post header aside time`, 2);
+        browser.assert.elements(`article.post header span.post-menu`, 2);
+        browser.assert.elements(`article.post footer`, 2);
+        browser.assert.elements(`article.post footer i.like-button`, 2);
 
         // No pagination
         browser.assert.elements('#next-page', 0);

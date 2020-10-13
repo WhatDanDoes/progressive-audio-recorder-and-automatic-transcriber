@@ -55,7 +55,6 @@ const strategy = new Auth0Strategy(
 
     models.Agent.findOne({ email: profile._json.email }).then(result => {
       if (!result) {
-        //let newAgent = new models.Agent({email: profile._json.email});
         let newAgent = new models.Agent(profile._json);
 
         newAgent.save().then(result => {

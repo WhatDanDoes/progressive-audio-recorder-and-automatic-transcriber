@@ -19,7 +19,6 @@ function getMainPhotoRoll(page, req, res) {
     }
 
     res.render('index', { images: images, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: prevPage });
-
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect('/');
