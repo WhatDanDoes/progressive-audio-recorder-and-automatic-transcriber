@@ -108,8 +108,8 @@ describe('landing page', () => {
         browser.assert.success();
 
         browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
 
         // 2020-10-8 This needs to be fleshed out as the layout is decided
         browser.assert.elements('article.post header', 0);
@@ -333,8 +333,8 @@ describe('landing page', () => {
         browser.assert.success();
 
         browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
 
         // agent and lanny have the same picture src
         // 2020-10-8 This needs to be fleshed out as the layout is decided
