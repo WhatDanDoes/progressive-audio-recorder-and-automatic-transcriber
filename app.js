@@ -2,12 +2,13 @@ require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const jsonwebtoken = require('jsonwebtoken');
 const models = require('./models');
 
 const app = express();
+// Cookies won't be set in production unless you trust the proxy behind which this software runs
+app.set('trust proxy', 1);
 
 /**
  * Squelch 413s, 2019-6-28 https://stackoverflow.com/a/36514330
@@ -25,12 +26,17 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/config/config.json')[env];
 
 const sessionConfig = {
+  name: 'wycliffe.photos',
   secret: 'supersecretkey',
   resave: false,
   saveUninitialized: false,
   unset: 'destroy',
-  cookie: { maxAge: 1000 * 60 * 60 },
   store: new MongoStore({ mongooseConnection: models }),
+  cookie: {
+    secure: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60
+  }
 };
 
 app.use(session(sessionConfig));
@@ -109,7 +115,6 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
