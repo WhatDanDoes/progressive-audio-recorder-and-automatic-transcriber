@@ -128,7 +128,7 @@ module.exports = function(email, zombieDomain, done) {
       .get(/\/v2\/logout\?.+/)
       .reply((uri, body, next) => {
         const parsed = querystring.parse(uri);
-        next(null, [302, {}, { 'Location': parsed.returnTo }]);
+        next(null, [302, {}, { 'Location': parsed.returnTo || process.env.SERVER_DOMAIN }]);
       });
 
 
