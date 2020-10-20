@@ -8,6 +8,9 @@ const jsonwebtoken = require('jsonwebtoken');
 const models = require('./models');
 
 const app = express();
+// Cookies won't be set in production unless you trust the proxy behind which this software runs
+app.set('trust proxy', 1);
+
 
 /**
  * Squelch 413s, 2019-6-28 https://stackoverflow.com/a/36514330
@@ -25,11 +28,17 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/config/config.json')[env];
 
 const sessionConfig = {
-  secret: 'supersecretkey',
+  name: 'wycliffe.photos',
+  secret: process.env.AUTH0_CLIENT_SECRET, // This seemed convenient
   resave: false,
   saveUninitialized: false,
   unset: 'destroy',
-  cookie: { maxAge: 1000 * 60 * 60 },
+  cookie: {
+    maxAge: 1000 * 60 * 60,
+    httpOnly: false,
+    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+  },
   store: new MongoStore({ mongooseConnection: models }),
 };
 
@@ -83,7 +92,6 @@ passport.serializeUser(function(agent, done) {
 
 passport.deserializeUser(function(id, done) {
   models.Agent.findById(id).then(function(agent) {
-
     return done(null, agent);
   }).catch(function(error) {
     return done(error);
