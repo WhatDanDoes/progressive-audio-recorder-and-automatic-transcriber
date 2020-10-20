@@ -269,7 +269,6 @@ describe('authSpec', () => {
           .get('/v2/logout')
           .query({
             client_id: process.env.AUTH0_CLIENT_ID,
-            returnTo: process.env.SERVER_DOMAIN
           })
           .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
         done();
@@ -298,7 +297,13 @@ describe('authSpec', () => {
             expect(loc.hostname).toMatch(process.env.AUTH0_DOMAIN);
             expect(loc.pathname).toMatch('/v2/logout');
             expect(loc.searchParams.get('client_id')).toMatch(process.env.AUTH0_CLIENT_ID);
-            expect(loc.searchParams.get('returnTo')).toMatch(process.env.SERVER_DOMAIN);
+            //
+            // If `client_id` is set without a `returnTo` the server returns the
+            // user to the first Allowed Logout URLs set in the Dashboard
+            //
+            // https://auth0.com/docs/api/authentication#logout
+            //
+            expect(loc.searchParams.get('returnTo')).toBe(null);
             done();
           });
       });
@@ -446,7 +451,6 @@ describe('authSpec', () => {
             .get('/v2/logout')
             .query({
               client_id: process.env.AUTH0_CLIENT_ID,
-              returnTo: process.env.SERVER_DOMAIN
             })
             .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
 

@@ -128,16 +128,6 @@ describe('authentication', function() {
 
 
         describe('logout', function() {
-          beforeEach(() => {
-            // Clear Auth0 SSO session cookies
-            nock(`https://${process.env.AUTH0_DOMAIN}`)
-              .get('/v2/logout')
-              .query({
-                client_id: process.env.AUTH0_CLIENT_ID,
-                returnTo: process.env.SERVER_DOMAIN
-              })
-              .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
-          });
 
           it('does not display the logout button if not logged in', function(done) {
             browser.clickLink('Logout', function(err) {

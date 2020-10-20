@@ -68,9 +68,15 @@ router.get('/logout', (req, res) => {
     util.format('https://%s/v2/logout', process.env.AUTH0_DOMAIN)
   );
 
+  //
+  // If `client_id` is set without a `returnTo` the server returns the
+  // user to the first Allowed Logout URLs set in the Dashboard
+  //
+  // https://auth0.com/docs/api/authentication#logout
+  //
   const searchString = querystring.stringify({
-//    client_id: process.env.AUTH0_CLIENT_ID,
-    returnTo: process.env.SERVER_DOMAIN
+    client_id: process.env.AUTH0_CLIENT_ID,
+    // returnTo: 'Don\'t set this'
   });
   logoutURL.search = searchString;
 

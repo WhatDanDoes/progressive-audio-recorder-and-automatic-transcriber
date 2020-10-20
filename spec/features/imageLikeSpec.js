@@ -258,4 +258,6 @@ describe('Liking an image', () => {
       });
     });
   });
+
+
 });

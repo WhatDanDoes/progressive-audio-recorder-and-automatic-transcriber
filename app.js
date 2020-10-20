@@ -27,10 +27,16 @@ const config = require(__dirname + '/config/config.json')[env];
 
 const sessionConfig = {
   name: 'wycliffe.photos',
-  secret: 'supersecretkey',
+  secret: process.env.AUTH0_CLIENT_SECRET, // This seemed convenient
   resave: false,
   saveUninitialized: false,
   unset: 'destroy',
+  cookie: {
+    maxAge: 1000 * 60 * 60,
+    httpOnly: false,
+    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+  },
   store: new MongoStore({ mongooseConnection: models }),
   cookie: {
     secure: true,
@@ -89,7 +95,6 @@ passport.serializeUser(function(agent, done) {
 
 passport.deserializeUser(function(id, done) {
   models.Agent.findById(id).then(function(agent) {
-
     return done(null, agent);
   }).catch(function(error) {
     return done(error);

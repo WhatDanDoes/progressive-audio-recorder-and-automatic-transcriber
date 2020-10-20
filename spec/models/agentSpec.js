@@ -71,11 +71,12 @@ describe('Agent', () => {
       const profile = { ..._profile, email: 'someotherguy@example.com' };
       expect(Object.keys(profile).length).toEqual(15);
       Agent.create(profile).then(obj => {
-        // +4 for created_at, canRead, _id, and __v fields
-        expect(Object.keys(obj).length).toEqual(Object.keys(profile).length + 4);
+        let asserted = false;
         for (let key in profile) {
           expect(obj[key]).toEqual(profile[key]);
+          asserted = true;
         }
+        expect(asserted).toBe(true);
         done();
       }).catch(error => {
         done.fail(error);
