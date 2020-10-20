@@ -2,6 +2,7 @@ require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const jsonwebtoken = require('jsonwebtoken');
 const models = require('./models');
@@ -38,11 +39,6 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
   },
   store: new MongoStore({ mongooseConnection: models }),
-  cookie: {
-    secure: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60
-  }
 };
 
 app.use(session(sessionConfig));
@@ -120,6 +116,7 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
