@@ -268,7 +268,7 @@ describe('authSpec', () => {
         ssoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .get('/v2/logout')
           .query({
-            client_id: process.env.AUTH0_CLIENT_ID,
+            returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
           })
           .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
         done();
@@ -296,14 +296,14 @@ describe('authSpec', () => {
             expect(loc.origin).toMatch(`https://${process.env.AUTH0_DOMAIN}`);
             expect(loc.hostname).toMatch(process.env.AUTH0_DOMAIN);
             expect(loc.pathname).toMatch('/v2/logout');
-            expect(loc.searchParams.get('client_id')).toMatch(process.env.AUTH0_CLIENT_ID);
             //
-            // If `client_id` is set without a `returnTo` the server returns the
-            // user to the first Allowed Logout URLs set in the Dashboard
+            // If `client_id` is not set the Auth0 server returns the
+            // agent to the first Allowed Logout URLs set in the Dashboard
             //
             // https://auth0.com/docs/api/authentication#logout
             //
-            expect(loc.searchParams.get('returnTo')).toBe(null);
+            expect(loc.searchParams.get('client_id')).toBe(null);
+            expect(loc.searchParams.get('returnTo')).toEqual(`${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`);
             done();
           });
       });
@@ -450,7 +450,7 @@ describe('authSpec', () => {
           nock(`https://${process.env.AUTH0_DOMAIN}`)
             .get('/v2/logout')
             .query({
-              client_id: process.env.AUTH0_CLIENT_ID,
+              returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
             })
             .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
 

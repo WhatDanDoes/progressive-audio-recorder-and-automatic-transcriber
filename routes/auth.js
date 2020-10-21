@@ -69,14 +69,16 @@ router.get('/logout', (req, res) => {
   );
 
   //
-  // If `client_id` is set without a `returnTo` the server returns the
-  // user to the first Allowed Logout URLs set in the Dashboard
+  // According to: https://auth0.com/docs/api/authentication#logout
   //
-  // https://auth0.com/docs/api/authentication#logout
+  // "If the client_id parameter is NOT included, the returnTo URL must be
+  // listed in the Allowed Logout URLs set at the tenant level"
+  //
+  // Go to: Tenant Settings > Advanced > Allowed Logout URLs
   //
   const searchString = querystring.stringify({
-    client_id: process.env.AUTH0_CLIENT_ID,
-    // returnTo: 'Don\'t set this'
+    //client_id: 'Don\'t set this',
+    returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
   });
   logoutURL.search = searchString;
 
