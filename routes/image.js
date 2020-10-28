@@ -112,7 +112,14 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
  */
 router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
-  res.render('image/show', { image: `${req.path}`, messages: req.flash(), agent: req.user, canWrite: canWrite });
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  models.Image.findOne({ path: filePath }).populate('photographer').then(image => {
+    res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
 });
 
 /**

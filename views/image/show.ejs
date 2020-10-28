@@ -1,21 +1,39 @@
 <% include ../_partials/head %>
   <% include ../_partials/messages %>
   <main>
-    <section class="image">
-      <img src="/uploads<%= image %>" />
-    </section>
-    <% if (canWrite) { %>
-      <section id="image-controls">
-        <form action="<%= `/image${image}?_method=DELETE` %>" method="post" id="delete-image-form">
-          <button id="delete-image" type="submit">Delete</button>
-        </form>
-        <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
-          <form action="<%= `/image${image}` %>" method="post" id="publish-image-form">
-            <button id="publish-image" type="submit">Publish</button>
-          </form>
-        <% } %>
+    <article class="post">
+      <header>
+        <img class="avatar" src="<%= image.photographer.get('picture') %>" />
+        <aside>
+          <div><%= image.photographer.get('nickname') %></div>
+          <time><%= image.updatedAt %></time>
+        </aside>
+        <span class="post-menu">
+          <i class="fas fa-ellipsis-h"></i>
+          <div class="dropdown-content">
+            <p>Flag post</p>
+          </div>
+        </span>
+      </header>
+      <section class="image">
+        <img src="/<%= image.path %>" />
       </section>
-    <% } %>
+      <% if (canWrite) { %>
+        <section id="image-controls">
+          <form action="<%= `/${image.path.replace('uploads', 'image')}?_method=DELETE` %>" method="post" id="delete-image-form">
+            <button id="delete-image" type="submit">Delete</button>
+          </form>
+          <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
+            <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" id="publish-image-form">
+              <button id="publish-image" type="submit">Publish</button>
+            </form>
+          <% } %>
+        </section>
+      <% } %>
+      <footer>
+        <div><i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)"></i></div>
+      </header>
+    </article>
   </main>
 <% include ../_partials/footer %>
 
