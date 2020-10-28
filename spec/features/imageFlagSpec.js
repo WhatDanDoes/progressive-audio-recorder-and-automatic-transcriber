@@ -144,7 +144,7 @@ describe('Flagging an image', () => {
             });
           });
 
-          it('redirects to home if the flag is successful', done => {
+          it('redirects to the referer if the flag is successful', done => {
             browser.pressButton('Flag post', err => {
               if (err) return done.fail(err);
 
@@ -154,7 +154,6 @@ describe('Flagging an image', () => {
               done();
             });
           });
-
 
           it('adds agent to list of flaggers and sets flagged attribute', done => {
             models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
@@ -180,6 +179,42 @@ describe('Flagging an image', () => {
               done.fail(err);
             });
           });
+
+          it('does not display the flagged image on the referer page', done => {
+            browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+              if (err) return done.fail(err);
+              browser.assert.element(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`)
+
+              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+                if (err) return done.fail(err);
+
+                browser.pressButton('Flag post', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.elements(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, 0)
+                  done();
+                });
+              });
+            });
+          });
+
+          it('redirects to the referer if the image is flagged', done => {
+            browser.pressButton('Flag post', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+
+              browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+                if (err) return done.fail(err);
+
+                browser.assert.text('.alert.alert-warning', 'Image flagged');
+                browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                done();
+              });
+            });
+          });
+
+
         });
 
         describe('readable resource', () => {
@@ -217,6 +252,40 @@ describe('Flagging an image', () => {
               });
             }).catch(err => {
               done.fail(err);
+            });
+          });
+
+          it('does not display the flagged image on the referer page', done => {
+            browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+              if (err) return done.fail(err);
+              browser.assert.element(`a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`)
+
+              browser.clickLink(`a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`, err => {
+                if (err) return done.fail(err);
+
+                browser.pressButton('Flag post', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.elements(`a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 0)
+                  done();
+                });
+              });
+            });
+          });
+
+          it('redirects to the referer if the image is flagged', done => {
+            browser.pressButton('Flag post', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+
+              browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                if (err) return done.fail(err);
+
+                browser.assert.text('.alert.alert-warning', 'Image flagged');
+                browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                done();
+              });
             });
           });
         });
@@ -286,12 +355,12 @@ describe('Flagging an image', () => {
           });
         });
 
-//        describe('sudo mode', () => {
-//
-//          afterEach(() => {
-//            delete process.env.SUDO;
-//          });
-//
+        describe('sudo mode', () => {
+
+          afterEach(() => {
+            delete process.env.SUDO;
+          });
+
 //          describe('set', () => {
 //            describe('non sudo agent', () => {
 //
@@ -425,7 +494,7 @@ describe('Flagging an image', () => {
 //              });
 //            });
 //          });
-//        });
+        });
       });
     });
   });
