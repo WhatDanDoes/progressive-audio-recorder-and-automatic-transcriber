@@ -71,13 +71,21 @@ describe('imageShowSpec', () => {
           { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
           { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
           { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
         ];
         models.Image.create(images).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.success();
-            done();
+
+            models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
+              agent = results;
+
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
           });
         }).catch(err => {
           done.fail(err);
@@ -96,9 +104,17 @@ describe('imageShowSpec', () => {
         browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
+
           browser.assert.element(`img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`);
+          browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+          browser.assert.element('article.post header aside div');
+          browser.assert.element('article.post header aside time');
+          browser.assert.element('article.post header span.post-menu');
+          browser.assert.element('article.post footer');
+          browser.assert.element('article.post footer i.like-button');
           browser.assert.element('#delete-image-form');
           browser.assert.element('#publish-image-form');
+
           done();
         });
       });

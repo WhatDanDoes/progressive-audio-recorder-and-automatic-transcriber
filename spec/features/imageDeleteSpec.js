@@ -200,7 +200,7 @@ describe('Deleting an image', () => {
 
         describe('readable resource', function() {
           beforeEach(function(done) {
-            browser.visit(`/image/${lanny.getAgentDirectory()}/image1.jpg`, (err) => {
+            browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
               if (err) return done.fail(err);
               browser.assert.success();
               done();

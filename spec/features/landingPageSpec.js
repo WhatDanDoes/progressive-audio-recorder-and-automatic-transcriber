@@ -235,7 +235,7 @@ describe('landing page', () => {
              * I just discovered that successive logins (as demonstrated here)
              * do not work. The subsequent login returns 403, but I have not
              * determined where the status is coming from. It does not appear to
-             * be coming from the app. I think it's coming from zombie.  *
+             * be coming from the app. I think it's coming from zombie.
              * Starting a new browser seems to fix everything, though test setup
              * is becoming quite verbose.
              *
