@@ -61,12 +61,6 @@ docker stop dev-mongo
 docker start dev-mongo
 ```
 
-Seed database:
-
-```
-node seed.js
-```
-
 Run server:
 
 ```
@@ -87,12 +81,6 @@ The _Dockerized_ production is meant to be deployed behind an `nginx-proxy`/`let
 
 ```
 docker-compose -f docker-compose.prod.yml up -d
-```
-
-Seed database:
-
-```
-docker-compose -f docker-compose.prod.yml run --rm node node seed.js NODE_ENV=production
 ```
 
 ### Database Operations
