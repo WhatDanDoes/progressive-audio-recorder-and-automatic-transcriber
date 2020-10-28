@@ -8,8 +8,11 @@ const jsonwebtoken = require('jsonwebtoken');
 const models = require('./models');
 
 const app = express();
+
 // Cookies won't be set in production unless you trust the proxy behind which this software runs
-app.set('trust proxy', 1);
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  app.set('trust proxy', 1);
+}
 
 /**
  * Squelch 413s, 2019-6-28 https://stackoverflow.com/a/36514330
@@ -34,12 +37,15 @@ const sessionConfig = {
   unset: 'destroy',
   cookie: {
     maxAge: 1000 * 60 * 60,
-    httpOnly: false,
-    sameSite: 'none',
-    secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
   },
   store: new MongoStore({ mongooseConnection: models }),
 };
+
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  sessionConfig.cookie.httpOnly = false;
+  sessionConfig.cookie.sameSite = 'none';
+  sessionConfig.cookie.secure = true;
+}
 
 app.use(session(sessionConfig));
 
