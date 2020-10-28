@@ -35,6 +35,10 @@ module.exports = function(mongoose) {
       type: Boolean,
       default: false
     },
+    flaggers: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Agent',
+    }],
     published: {
       type: Boolean,
       default: false
@@ -98,8 +102,28 @@ module.exports = function(mongoose) {
     });
   };
 
+  ImageSchema.methods.flag = function(agentId, done) {
+    if (typeof agentId === 'object') {
+      agentId = agentId._id
+    }
 
+    const flagIndex = this.flaggers.indexOf(agentId);
+    if (flagIndex > -1 ) {
+      this.flaggers.splice(agentId, 1);
+    }
+    else {
+      this.flaggers.push(agentId);
+    }
 
+    this.flagged = this.flaggers.length > 0;
+
+    this.save((err, image) => {
+      if (err) {
+        return done(err);
+      }
+      done(null, image);
+    });
+  };
 
   return ImageSchema;
 };
