@@ -12,7 +12,7 @@ var config    = require(__dirname + '/../config/config.json')[env];
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 var connectionStr = 'mongodb://' + config.host + ':27017/' + config.database; 
-mongoose.connect(connectionStr);
+mongoose.connect(connectionStr, {useNewUrlParser: true, useUnifiedTopology: true});
 
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
