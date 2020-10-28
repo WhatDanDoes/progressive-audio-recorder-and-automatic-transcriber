@@ -13,6 +13,7 @@ const ensureAuthorized = require('../lib/ensureAuthorized');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 const isMobile = require('is-mobile');
+const url = require('url');
 
 const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
@@ -152,6 +153,32 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+});
+
+/**
+ * PATCH /image/:domain/:agentId/:imageId/flag
+ */
+router.patch('/:domain/:agentId/:imageId/flag', ensureAuthorized, (req, res) => {
+  const origin = url.parse(req.get('referer'));
+  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}` : '/';
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+
+  models.Image.findOne({ path: filePath }).then(image => {
+    image.flag(req.user, (err, image) => {
+      if (err) {
+        req.flash('error', err.message);
+      }
+      else {
+        req.flash('success', 'Image flagged');
+      }
+
+      res.redirect(returnTo);
+    });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(returnTo);
   });
 });
 

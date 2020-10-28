@@ -11,7 +11,9 @@
         <span class="post-menu">
           <i class="fas fa-ellipsis-h"></i>
           <div class="dropdown-content">
-            <p>Flag post</p>
+            <form action="<%= `/${image.path.replace('uploads', 'image')}/flag?_method=PATCH` %>" method="post" id="flag-image-form">
+              <button id="flag-image" type="submit">Flag post</button>
+            </form>
           </div>
         </span>
       </header>
