@@ -48,7 +48,7 @@ function getAgentAlbum(page, req, res) {
 
   models.Agent.findOne({ email: `${req.params.agentId}@${req.params.domain}` }).then(agent => {
 
-    models.Image.find({ photographer: agent._id, published: false }).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
+    models.Image.find({ photographer: agent._id, published: false, flagged: false }).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
 
       let nextPage = 0,
           prevPage = page - 1;
@@ -116,6 +116,12 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
   models.Image.findOne({ path: filePath }).populate('photographer').then(image => {
+
+    if (image.flagged) {
+      req.flash('error', 'Image flagged');
+      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    }
+
     res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
   }).catch(err => {
     req.flash('error', err.message);

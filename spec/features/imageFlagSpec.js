@@ -207,7 +207,7 @@ describe('Flagging an image', () => {
               browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
                 if (err) return done.fail(err);
 
-                browser.assert.text('.alert.alert-warning', 'Image flagged');
+                browser.assert.text('.alert.alert-danger', 'Image flagged');
                 browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
                 done();
               });
@@ -282,7 +282,7 @@ describe('Flagging an image', () => {
               browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                 if (err) return done.fail(err);
 
-                browser.assert.text('.alert.alert-warning', 'Image flagged');
+                browser.assert.text('.alert.alert-danger', 'Image flagged');
                 browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
                 done();
               });
