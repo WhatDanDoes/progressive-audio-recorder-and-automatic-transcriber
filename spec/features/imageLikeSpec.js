@@ -202,7 +202,7 @@ describe('Liking an image', () => {
         it('changes the Liked font to indicate that you no longer like the post', done => {
           browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
           browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
-          browser.click('article.post footer i.like-button.fa-heart');//, err => {
+          browser.click('article.post footer i.like-button.fa-heart');
 
           // 2020-10-13 Not sure why browser.wait doesn't do anything...
           setTimeout(() => {
@@ -257,7 +257,141 @@ describe('Liking an image', () => {
         });
       });
     });
+
+    describe('from the show page', () => {
+      beforeEach(done => {
+        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+          if (err) done.fail(err);
+          browser.assert.success();
+          done();
+        });
+      });
+
+      it('changes the Liked font to indicate that you like the post', done => {
+        browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
+        browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
+
+        browser.click('article.post footer i.like-button.fa-heart');
+
+        // 2020-10-13 Not sure why browser.wait doesn't do anything...
+        setTimeout(() => {
+          browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
+          browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
+
+          done();
+        }, 500);
+      });
+
+      it('updates the database', done => {
+        models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
+          expect(images.length).toEqual(1);
+          expect(images[0].likes.length).toEqual(0);
+
+          browser.click('article.post footer i.like-button.fa-heart');
+
+          setTimeout(() => {
+            models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
+              expect(images.length).toEqual(1);
+              expect(images[0].likes.length).toEqual(1);
+              expect(images[0].likes[0]._id).toEqual(agent._id);
+
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          }, 500);
+
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+      it('maintains the liked status on refresh', done => {
+        browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
+        browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
+
+        browser.click('article.post footer i.like-button.fa-heart');
+
+        setTimeout(() => {
+          browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
+          browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
+
+          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+            if (err) return done.fail(err);
+
+            browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
+            browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
+
+            done();
+          });
+        }, 500);
+      });
+
+      describe('if already liked', () => {
+        beforeEach(done => {
+          browser.click('article.post footer i.like-button.fa-heart');
+          setTimeout(() => {
+            done();
+          }, 500);
+        });
+
+        it('changes the Liked font to indicate that you no longer like the post', done => {
+          browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
+          browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
+          browser.click('article.post footer i.like-button.fa-heart');
+
+          // 2020-10-13 Not sure why browser.wait doesn't do anything...
+          setTimeout(() => {
+            browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
+            browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
+
+            done();
+          }, 500);
+        });
+
+        it('updates the database', done => {
+          models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
+            expect(images.length).toEqual(1);
+            expect(images[0].likes.length).toEqual(1);
+            browser.click('article.post footer i.like-button.fa-heart');
+
+            setTimeout(() => {
+              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
+                expect(images.length).toEqual(1);
+                expect(images[0].likes.length).toEqual(0);
+
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }, 500);
+
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('maintains the unliked status on refresh', done => {
+          browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
+          browser.assert.elements('article.post footer i.like-button.far.fa-heart', 0);
+
+          browser.click('article.post footer i.like-button.fa-heart');
+
+          setTimeout(() => {
+            browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
+            browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
+
+            browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+              if (err) return done.fail(err);
+
+              browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
+              browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
+
+              done();
+            });
+          }, 500);
+        });
+      });
+    });
   });
-
-
 });

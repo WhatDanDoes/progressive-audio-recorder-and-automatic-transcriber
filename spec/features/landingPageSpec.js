@@ -102,7 +102,7 @@ describe('landing page', () => {
       });
     });
 
-    it('displays the published images without their stats', done => {
+    it('displays the published images without their stats or links', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
@@ -111,8 +111,11 @@ describe('landing page', () => {
         browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
         browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
 
+        // No links to show pic view
+        browser.assert.elements('article.post section.photo a', 0);
+
         browser.assert.elements('article.post header', 0);
-        browser.assert.elements(`article.post footer`, 0);
+        browser.assert.elements('article.post footer', 0);
 
         // No pagination
         browser.assert.elements('#next-page', 0);
@@ -232,7 +235,7 @@ describe('landing page', () => {
              * I just discovered that successive logins (as demonstrated here)
              * do not work. The subsequent login returns 403, but I have not
              * determined where the status is coming from. It does not appear to
-             * be coming from the app. I think it's coming from zombie.  *
+             * be coming from the app. I think it's coming from zombie.
              * Starting a new browser seems to fix everything, though test setup
              * is becoming quite verbose.
              *
@@ -323,7 +326,7 @@ describe('landing page', () => {
       });
     });
 
-    it('displays the published images and their stats', done => {
+    it('displays the published images with their stats and links', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
@@ -331,6 +334,10 @@ describe('landing page', () => {
         browser.assert.elements('article.post section.photo img', 2);
         browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
         browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+
+        // Links to show pic view
+        browser.assert.element(`article.post section.photo a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`);
+        browser.assert.element(`article.post section.photo a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
 
         // agent and lanny have the same picture src
         // 2020-10-8 This needs to be fleshed out as the layout is decided
