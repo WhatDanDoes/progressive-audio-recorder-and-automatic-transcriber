@@ -40,8 +40,8 @@ module.exports = function(mongoose) {
       ref: 'Agent',
     }],
     published: {
-      type: Boolean,
-      default: false
+      type: Schema.Types.Date,
+      default: null
     },
     notes: [{
       author: {
@@ -72,7 +72,7 @@ module.exports = function(mongoose) {
   };
 
   ImageSchema.methods.togglePublished = function(done) {
-    this.published = !this.published;
+    this.published = this.published ? null : new Date();
     this.save((err, image) => {
       if (err) {
         return done(err);

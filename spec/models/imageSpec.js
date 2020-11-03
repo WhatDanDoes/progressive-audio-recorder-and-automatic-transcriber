@@ -88,12 +88,12 @@ describe('Image', () => {
     it('sets the default fields to their default values', done => {
       expect(image.flagged).toBe(false);
       expect(image.flaggers).toEqual([]);
-      expect(image.published).toBe(false);
+      expect(image.published).toEqual(null);
       expect(image.likes).toEqual([]);
       image.save().then(obj => {
         expect(image.flagged).toBe(false);
         expect(image.flaggers).toEqual([]);
-        expect(image.published).toBe(false);
+        expect(image.published).toEqual(null);
         expect(image.likes).toEqual([]);
         expect(image.notes).toEqual([]);
         done();
@@ -259,15 +259,15 @@ describe('Image', () => {
      */
     describe('.togglePublished', () => {
       it('toggles the published property', done => {
-        expect(image.published).toBe(false);
+        expect(image.published).toEqual(null);
         // on
         image.togglePublished((err, image) => {
           if (err) return done.fail(err);
-          expect(image.published).toBe(true);
+          expect(image.published instanceof Date).toBe(true);
           // off
           image.togglePublished((err, image) => {
             if (err) return done.fail(err);
-            expect(image.published).toBe(false);
+            expect(image.published).toEqual(null);
             done();
           });
         });
