@@ -64,20 +64,31 @@ describe('Flagging an image', () => {
     });
   });
 
-  describe('from show view', () => {
+  describe('unauthenticated', () => {
+    it('does not allow flagging an image', done => {
+      request(app)
+        .patch(`/image/${agent.getAgentDirectory()}/image2.jpg/flag`)
+        .end((err, res) => {
+          if (err) return done.fail(err);
+          expect(res.status).toEqual(302);
+          expect(res.header.location).toEqual('/');
+          done();
+        });
+    });
 
-    describe('unauthenticated', () => {
-      it('does not allow flagging an image', done => {
-        request(app)
-          .patch(`/image/${agent.getAgentDirectory()}/image2.jpg/flag`)
-          .end((err, res) => {
-            if (err) return done.fail(err);
-            expect(res.status).toEqual(302);
-            expect(res.header.location).toEqual('/');
-            done();
-          });
+    it('doesn\'t allow viewing flagged resources', done => {
+      browser.visit('/image/flagged', err => {
+        if (err) return done.fail(err);
+        browser.assert.success();
+
+        browser.assert.url('/');
+        browser.assert.text('.alert.alert-danger', 'You need to login first');
+        done();
       });
     });
+  });
+
+  describe('from show view', () => {
 
     describe('authenticated', () => {
       beforeEach(done => {
@@ -179,12 +190,17 @@ describe('Flagging an image', () => {
             });
           });
 
+          /**
+           * Take note:
+           *
+           * Until broader administrative privileges can be established, a resource
+           * owner will be able to un-flag his own image outside of sudo mode
+           */
           it('disables the Publish button on the flagged image', done => {
             browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
               if (err) return done.fail(err);
               browser.assert.element(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`)
               browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image`, 'Publish');
-              browser.assert.elements(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image[disabled=true]`, 0);
 
               browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
                 if (err) return done.fail(err);
@@ -193,8 +209,7 @@ describe('Flagging an image', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`, 'Flagged');
-                  browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image[disabled=""]`);
+                  browser.assert.elements(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg/flag?_method=PATCH"][method="post"] button.publish-image`, 'Deflag');
                   done();
                 });
               });
@@ -357,17 +372,66 @@ describe('Flagging an image', () => {
 
         describe('sudo mode', () => {
 
+          beforeEach(done => {
+            browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+              if (err) return done.fail(err);
+
+              browser.clickLink(`a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`, err => {
+                if (err) return done.fail(err);
+
+                browser.pressButton('Flag post', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  done();
+                });
+              });
+            });
+          });
+
           afterEach(() => {
             delete process.env.SUDO;
           });
 
           describe('not set', () => {
-            it('doesn\'t allow access to the flagged endpoint', done => {
-              done.fail();
+            it('doesn\'t allow viewing flagged resources', done => {
+              browser.visit('/image/flagged', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+
+                browser.assert.url('/');
+                browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+                done();
+              });
             });
 
-            it('doesn\'t allow de-flagging an image', done => {
-              done.fail();
+            it('does not allow de-flagging the image', done => {
+              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+                expect(images[0].flagged).toBe(true);
+                expect(images[0].flaggers).toEqual([agent._id]);
+
+                request(app)
+                  .patch(`/image/${lanny.getAgentDirectory()}/lanny1.jpg/flag`)
+                  .set('Cookie', browser.cookies)
+                  .set('Referer', `"/image/${lanny.getAgentDirectory()}/lanny1.jpg"`)
+                  .expect(302)
+                  .end((err, res) => {
+                    if (err) return done.fail(err);
+
+                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                      expect(images.length).toEqual(1);
+                      expect(images[0].flagged).toBe(true);
+                      expect(images[0].flaggers).toEqual([agent._id]);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+              }).catch(err => {
+                done.fail(err);
+              });
             });
           });
 
@@ -380,36 +444,131 @@ describe('Flagging an image', () => {
               });
 
               it('doesn\'t allow viewing flagged resources', done => {
-                done.fail();
+                browser.assert.elements('a[href="/image/flagged"]', 0);
+                browser.visit('/image/flagged', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.url('/');
+                  browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+                  done();
+                });
               });
 
-              it('doesn\'t allow de-flagging an image', done => {
-                done.fail();
+              it('does not allow de-flagging the image', done => {
+                models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                  expect(images.length).toEqual(1);
+                  expect(images[0].flagged).toBe(true);
+                  expect(images[0].flaggers).toEqual([agent._id]);
+
+                  request(app)
+                    .patch(`/image/${lanny.getAgentDirectory()}/lanny1.jpg/flag`)
+                    .set('Cookie', browser.cookies)
+                    .set('Referer', `"/image/${lanny.getAgentDirectory()}/lanny1.jpg"`)
+                    .expect(302)
+                    .end((err, res) => {
+                      if (err) return done.fail(err);
+
+                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
+                        expect(images.length).toEqual(1);
+                        expect(images[0].flagged).toBe(true);
+                        expect(images[0].flaggers).toEqual([agent._id]);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
 
             describe('sudo agent', () => {
 
-              beforeEach(done => {
+              beforeEach(()=> {
                 process.env.SUDO = agent.email;
+              });
+
+              it('is allowed to view flagged images', done => {
                 browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
                   if (err) return done.fail(err);
                   browser.assert.success();
+                  browser.assert.text('.alert.alert-danger', 'Image flagged');
                   browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
                   done();
                 });
               });
 
-              it('allows viewing flagged resources', done => {
-                done.fail();
+              it('renders flagged resources with management UI', done => {
+                browser.visit('/image/flagged', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.elements('section.image img', 1);
+                  browser.assert.element(`.image a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
+                  browser.assert.element(`form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/flag?_method=PATCH"][method="post"]`);
+                  browser.assert.element(`form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg?_method=DELETE"]`);
+                  done();
+                });
               });
 
-              it('shows deflagged image on refer page', done => {
-                done.fail();
-              });
+              describe('deflagging', () => {
+                it('shows image on owner\'s page', done => {
+                  browser.visit(`/image/${lanny.getAgentDirectory()}`, (err) => {
+                    if (err) return done.fail(err);
 
-              it('does not allow image flagger to flag again', done => {
-                done.fail();
+                    browser.assert.elements(`.image a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 0);
+
+                    browser.visit('/image/flagged', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.elements(`form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/flag?_method=PATCH"][method="post"] button.publish-image`, 'Deflag');
+
+                      browser.pressButton('Deflag', err => {
+                        if (err) return done.fail(err);
+                        browser.assert.success();
+
+                        browser.visit(`/image/${lanny.getAgentDirectory()}`, (err) => {
+                          if (err) return done.fail(err);
+                          browser.assert.success();
+
+                          browser.assert.element(`.image a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
+                          done();
+                        });
+                      });
+                    });
+                  });
+                });
+
+                it('does not allow image flagger to flag again', done => {
+                  browser.visit('/image/flagged', err => {
+                    if (err) return done.fail(err);
+                    browser.assert.elements(`form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/flag?_method=PATCH"][method="post"] button.publish-image`, 'Deflag');
+
+                    browser.pressButton('Deflag', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      process.env.SUDO = 'lanny@example.com';
+
+                      browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                        if (err) return done.fail(err);
+                        browser.assert.element(`.image img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
+
+                        browser.pressButton('Flag post', err => {
+                          if (err) return done.fail(err);
+                          browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+
+                          browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
+                          browser.assert.element(`.image a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
+
+                          done();
+                        });
+                      });
+                    });
+                  });
+                });
               });
             });
           });
@@ -516,7 +675,6 @@ describe('Flagging an image', () => {
         });
 
         it('adds agent to list of flaggers and sets flagged attribute', done => {
-          //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`}).then(images => {
           models.Image.find({}).sort({updated_at: 1}).then(images => {
             expect(images.length).toEqual(6);
             expect(images[0].flagged).toBe(false);
@@ -526,7 +684,6 @@ describe('Flagging an image', () => {
               if (err) return done.fail(err);
               browser.assert.success();
 
-              //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`}).then(images => {
               models.Image.find({}).sort({updated_at: 1}).then(images => {
                 expect(images.length).toEqual(6);
                 expect(images[0].flagged).toBe(true);
@@ -564,17 +721,70 @@ describe('Flagging an image', () => {
 
         describe('sudo mode', () => {
 
+          let image;
+          beforeEach(done => {
+            models.Image.find({ published: { '$ne': null } }).sort({ published: 'desc' }).populate('photographer').then(images => {
+              image = images[0];
+
+              browser.visit('/', err => {
+                if (err) return done.fail(err);
+
+                browser.pressButton('Flag post', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  done();
+                });
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+
           afterEach(() => {
             delete process.env.SUDO;
           });
 
           describe('not set', () => {
-            it('doesn\'t allow access to the flagged endpoint', done => {
-              done.fail();
+
+            it('doesn\'t allow viewing flagged resources', done => {
+              browser.visit('/image/flagged', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+
+                browser.assert.url('/');
+                browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+                done();
+              });
             });
 
-            it('doesn\'t allow de-flagging an image', done => {
-              done.fail();
+            it('does not allow de-flagging the image', done => {
+              models.Image.find({ path: image.path }).then(images => {
+                expect(images.length).toEqual(1);
+                expect(images[0].flagged).toBe(true);
+                expect(images[0].flaggers).toEqual([agent._id]);
+
+                request(app)
+                  .patch(`/${image.path.replace('uploads', 'image')}/flag`)
+                  .set('Cookie', browser.cookies)
+                  .set('Referer', `/${image.path.replace('uploads', 'image')}`)
+                  .expect(302)
+                  .end((err, res) => {
+                    if (err) return done.fail(err);
+
+                    models.Image.find({ path: image.path }).then(images => {
+                      expect(images.length).toEqual(1);
+                      expect(images[0].flagged).toBe(true);
+                      expect(images[0].flaggers).toEqual([agent._id]);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+              }).catch(err => {
+                done.fail(err);
+              });
             });
           });
 
@@ -587,36 +797,130 @@ describe('Flagging an image', () => {
               });
 
               it('doesn\'t allow viewing flagged resources', done => {
-                done.fail();
+                browser.visit('/image/flagged', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.url('/');
+                  browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+                  done();
+                });
               });
 
-              it('doesn\'t allow de-flagging an image', done => {
-                done.fail();
+              it('does not allow de-flagging the image', done => {
+                models.Image.find({ path: image.path }).then(images => {
+                  expect(images.length).toEqual(1);
+                  expect(images[0].flagged).toBe(true);
+                  expect(images[0].flaggers).toEqual([agent._id]);
+
+                  request(app)
+                    .patch(`/${image.path.replace('uploads', 'image')}/flag`)
+                    .set('Cookie', browser.cookies)
+                    .set('Referer', `/${image.path.replace('uploads', 'image')}`)
+                    .expect(302)
+                    .end((err, res) => {
+                      if (err) return done.fail(err);
+
+                      models.Image.find({ path: image.path }).then(images => {
+                        expect(images.length).toEqual(1);
+                        expect(images[0].flagged).toBe(true);
+                        expect(images[0].flaggers).toEqual([agent._id]);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
 
             describe('sudo agent', () => {
 
-              beforeEach(done => {
+              beforeEach(() => {
                 process.env.SUDO = agent.email;
-                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
+              });
+
+              it('is allowed to view flagged images', done => {
+                browser.visit(`/${image.path.replace('uploads', 'image')}`, err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.text('.alert.alert-danger', 'Image flagged');
+                  browser.assert.url({ pathname: `/${image.path.replace('uploads', 'image')}` });
                   done();
                 });
               });
 
-              it('allows viewing flagged resources', done => {
-                done.fail();
+              it('renders flagged resources with management UI', done => {
+                browser.visit('/image/flagged', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.elements('section.image img', 1);
+                  browser.assert.element(`.image a[href="/${image.path.replace('uploads', 'image')}"] img[src="/${image.path}"]`);
+                  browser.assert.element(`form[action="/${image.path.replace('uploads', 'image')}/flag?_method=PATCH"][method="post"]`);
+                  browser.assert.element(`form[action="/${image.path.replace('uploads', 'image')}?_method=DELETE"]`);
+                  done();
+                });
               });
 
-              it('shows deflagged image on refer page', done => {
-                done.fail();
-              });
+              describe('deflagging', () => {
+                it('shows image on landing page', done => {
+                  browser.visit('/', (err) => {
+                    if (err) return done.fail(err);
 
-              it('does not allow image flagger to flag again', done => {
-                done.fail();
+                    browser.assert.elements(`.photo a[href="/${image.path.replace('uploads', 'image')}"] img[src="/${image.path}"]`, 0);
+
+                    browser.visit('/image/flagged', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.elements(`form[action="/${image.path.replace('uploads', 'image')}/flag?_method=PATCH"][method="post"] button.publish-image`, 'Deflag');
+
+                      browser.pressButton('Deflag', err => {
+                        if (err) return done.fail(err);
+                        browser.assert.success();
+
+                        browser.visit('/', err => {
+                          if (err) return done.fail(err);
+                          browser.assert.success();
+
+                          browser.assert.element(`.photo a[href="/${image.path.replace('uploads', 'image')}"] img[src="/${image.path}"]`);
+                          done();
+                        });
+                      });
+                    });
+                  });
+                });
+
+                it('does not allow image flagger to flag again', done => {
+                  browser.visit('/image/flagged', err => {
+                    if (err) return done.fail(err);
+                    browser.assert.elements(`form[action="/${image.path.replace('uploads', 'image')}flag?_method=PATCH"][method="post"] button.publish-image`, 'Deflag');
+
+                    browser.pressButton('Deflag', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      process.env.SUDO = 'lanny@example.com';
+
+                      browser.visit(`/${image.path.replace('uploads', 'image')}`, err => {
+                        if (err) return done.fail(err);
+                        browser.assert.element(`.image img[src="/${image.path}"]`);
+
+                        browser.pressButton('Flag post', err => {
+                          if (err) return done.fail(err);
+                          browser.assert.url({ pathname: `/image/${image.photographer.getAgentDirectory()}` });
+
+                          browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
+                          browser.assert.element(`.image a[href="/${image.path.replace('uploads', 'image')}"] img[src="/${image.path}"]`);
+
+                          done();
+                        });
+                      });
+                    });
+                  });
+                });
               });
             });
           });
