@@ -508,7 +508,7 @@ describe('Deleting an image', () => {
           });
 
           it('deletes the image from the file system', done => {
-            models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+            models.Image.find({ photographer: agent._id, published: null}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
               expect(mostRecentImage.length).toEqual(1);
 
               let filename = mostRecentImage[0].path.split('/');
@@ -630,24 +630,20 @@ describe('Deleting an image', () => {
               });
 
               it('points the database path to the public/images/uploads directory', done => {
-                //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
-                models.Image.find({ photographer: lanny._id, published: true}).then(images => {
+                models.Image.find({ photographer: lanny._id, published: { '$ne': null }}).then(images => {
                   expect(images.length).toEqual(0);
 
-                  //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
-                  models.Image.find({ photographer: lanny._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+                  models.Image.find({ photographer: lanny._id, published: null }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
                     expect(mostRecentImage.length).toEqual(1);
 
                     browser.pressButton('Delete', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
                       models.Image.find({ path: mostRecentImage[0].path }).then(images => {
                         expect(images.length).toEqual(0);
 
-                        //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
-                        models.Image.find({ photographer: lanny._id, published: true}).then(images => {
+                        models.Image.find({ photographer: lanny._id, published: { '$ne': null }}).then(images => {
                           expect(images.length).toEqual(0);
 
                           done();
