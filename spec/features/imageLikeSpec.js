@@ -64,7 +64,6 @@ describe('Liking an image', () => {
     });
   });
 
-
   describe('unauthenticated', () => {
     it('does not allow liking an image', done => {
       request(app)
@@ -98,7 +97,7 @@ describe('Liking an image', () => {
         });
 
         const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
+          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
           { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
           { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
           { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
@@ -147,14 +146,14 @@ describe('Liking an image', () => {
       });
 
       it('updates the database', done => {
-        models.Image.find({ published: true }).then(images => {
+        models.Image.where('published').ne(null).then(images => {
           expect(images.length).toEqual(1);
           expect(images[0].likes.length).toEqual(0);
 
           browser.click('article.post footer i.like-button.fa-heart');
 
           setTimeout(() => {
-            models.Image.find({ published: true }).then(images => {
+            models.Image.where('published').ne(null).then(images => {
               expect(images.length).toEqual(1);
               expect(images[0].likes.length).toEqual(1);
               expect(images[0].likes[0]._id).toEqual(agent._id);
@@ -214,13 +213,13 @@ describe('Liking an image', () => {
         });
 
         it('updates the database', done => {
-          models.Image.find({ published: true }).then(images => {
+          models.Image.where('published').ne(null).then(images => {
             expect(images.length).toEqual(1);
             expect(images[0].likes.length).toEqual(1);
             browser.click('article.post footer i.like-button.fa-heart');
 
             setTimeout(() => {
-              models.Image.find({ published: true }).then(images => {
+              models.Image.where('published').ne(null).then(images => {
                 expect(images.length).toEqual(1);
                 expect(images[0].likes.length).toEqual(0);
 
