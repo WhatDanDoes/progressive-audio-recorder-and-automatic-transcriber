@@ -613,7 +613,7 @@ describe('Publishing an image', () => {
         mock.restore();
       });
 
-      it('renders forms to allow an agent to delete an image', () => {
+      it('renders forms to allow an agent to publish an image', () => {
         browser.assert.elements('.publish-image-form', 3);
         browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`);
         browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image2.jpg"][method="post"]`);
