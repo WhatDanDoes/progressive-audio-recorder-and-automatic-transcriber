@@ -10,8 +10,7 @@ const MAX_IMGS = parseInt(process.env.MAX_IMGS);
  */
 
 function getMainPhotoRoll(page, req, res) {
-  models.Image.find({ published: true }).populate('photographer').skip(MAX_IMGS * (page - 1)).limit(MAX_IMGS).sort({ updatedAt: 'desc' }).then(images => {
-
+  models.Image.find({ published: { '$ne': null }, flagged: false }).populate('photographer').skip(MAX_IMGS * (page - 1)).limit(MAX_IMGS).sort({ published: 'desc' }).then(images => {
     let nextPage = page + 1,
         prevPage = page - 1;
     if (images.length < MAX_IMGS) {

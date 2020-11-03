@@ -48,7 +48,11 @@ function getAgentAlbum(page, req, res) {
 
   models.Agent.findOne({ email: `${req.params.agentId}@${req.params.domain}` }).then(agent => {
 
-    models.Image.find({ photographer: agent._id, published: false, flagged: false }).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
+    const query = { photographer: agent._id };
+    if (agent.email !== req.user.email || (process.env.SUDO && req.user.email !== process.env.SUDO)) {
+      query.flagged = false;
+    }
+    models.Image.find(query).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
 
       let nextPage = 0,
           prevPage = page - 1;
@@ -133,7 +137,6 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
  * POST /image/:domain/:agentId/:imageId
  */
 router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
-
   let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   if (process.env.SUDO && req.user.email !== process.env.SUDO) {
@@ -148,7 +151,7 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
 
   models.Image.findOne({ path: filePath }).then(image => {
-    image.published = true;
+    image.published = new Date();
     image.save().then(image => {
       req.flash('success', 'Image published');
       res.redirect('/');
