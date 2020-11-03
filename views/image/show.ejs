@@ -2,21 +2,7 @@
   <% include ../_partials/messages %>
   <main>
     <article class="post">
-      <header>
-        <img class="avatar" src="<%= image.photographer.get('picture') %>" />
-        <aside>
-          <div><%= image.photographer.get('nickname') %></div>
-          <time><%= image.updatedAt %></time>
-        </aside>
-        <span class="post-menu">
-          <i class="fas fa-ellipsis-h"></i>
-          <div class="dropdown-content">
-            <form action="<%= `/${image.path.replace('uploads', 'image')}/flag?_method=PATCH` %>" method="post" id="flag-image-form">
-              <button id="flag-image" type="submit">Flag post</button>
-            </form>
-          </div>
-        </span>
-      </header>
+      <% include _header %>
       <section class="image">
         <img src="/<%= image.path %>" />
       </section>
