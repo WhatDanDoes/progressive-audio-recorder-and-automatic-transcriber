@@ -675,7 +675,7 @@ describe('Flagging an image', () => {
         });
 
         it('adds agent to list of flaggers and sets flagged attribute', done => {
-          models.Image.find({}).sort({updated_at: 1}).then(images => {
+          models.Image.find({}).sort({updated_at: 'desc'}).then(images => {
             expect(images.length).toEqual(6);
             expect(images[0].flagged).toBe(false);
             expect(images[0].flaggers).toEqual([]);
@@ -684,7 +684,7 @@ describe('Flagging an image', () => {
               if (err) return done.fail(err);
               browser.assert.success();
 
-              models.Image.find({}).sort({updated_at: 1}).then(images => {
+              models.Image.find({}).sort({updated_at: 'desc'}).then(images => {
                 expect(images.length).toEqual(6);
                 expect(images[0].flagged).toBe(true);
                 expect(images[0].flaggers).toEqual([agent._id]);
