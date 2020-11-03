@@ -123,6 +123,9 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
 
     if (image.flagged) {
       req.flash('error', 'Image flagged');
+      if (process.env.SUDO === req.user.email) {
+        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+      }
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     }
 
@@ -175,16 +178,33 @@ router.patch('/:domain/:agentId/:imageId/flag', ensureAuthorized, (req, res) => 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
 
   models.Image.findOne({ path: filePath }).then(image => {
-    image.flag(req.user, (err, image) => {
-      if (err) {
-        req.flash('error', err.message);
-      }
-      else {
-        req.flash('success', 'Image flagged');
-      }
 
+    if (image.flagged && process.env.SUDO && req.user.email === process.env.SUDO) {
+      image.flagged = false;
+      image.save().then(result => {
+        req.flash('success', 'Image deflagged');
+      }).catch(err => {
+        req.flash('error', err.message);
+      }).finally(() => {
+        res.redirect(returnTo);
+      });
+    }
+    else if (image.flaggers.indexOf(req.user._id.toString()) > -1) {
+      req.flash('error', 'This post has administrative approval');
       res.redirect(returnTo);
-    });
+    }
+    else {
+      image.flag(req.user, (err, image) => {
+        if (err) {
+          req.flash('error', err.message);
+        }
+        else {
+          req.flash('success', 'Image flagged');
+        }
+
+        res.redirect(returnTo);
+      });
+    }
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect(returnTo);
@@ -278,56 +298,6 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
 });
 
 /**
- * PUT /image
- */
-//router.put('/:id', (req, res) => {
-//  if (!req.isAuthenticated()) { return res.sendStatus(401); }
-//
-//  // Can only edit if a reviewer or submitter (except approval)
-//  models.Agent.findById(req.user._id).then((agent) => {
-//    models.Image.findById(req.params.id).populate('files album').then((image) => {
-//      // Approved images cannot be changed unless dis-approved by a reviewer
-//      let disapproved = false;
-//      let approvalChange = req.body.approved !== undefined;
-//      let notReviewer = agent.reviewables.indexOf(image.album._id.toString()) == -1;
-//      if (image.approved) {
-//        if (notReviewer) return res.sendStatus(403);
-//        if (!approvalChange) disapproved = true;
-//        else {
-//          req.flash('error', 'Cannot update an approved image');
-//          return res.render('image/show', { image: image, agent: agent, messages: req.flash() });
-//        }
-//      }
-//
-//      let notSubmitter = image.agent.toString() != agent._id.toString();
-//      if (notSubmitter && notReviewer) return res.sendStatus(403);
-//      if (notReviewer && approvalChange) return res.sendStatus(403);
-//
-//      image = Object.assign(image, req.body);
-//      if (!req.body.approved) image.approved = false;
-//      let sum = image.tookPlaceAt.getTimezoneOffset() * 60000 + Date.parse(image.tookPlaceAt); // [min*60000 = ms]
-//      models.Image.findOneAndUpdate({ _id: req.params.id }, image, { new: true, runValidators: true }).then((image) => {
-//        if (disapproved) {
-//          req.flash('info', 'Image de-approved. It can now be edited.');
-//          res.redirect('/image/' + image._id);
-//        }
-//        else {
-//          req.flash('info', 'Image successfully updated');
-//          res.redirect('/album/' + image.album);
-//        }
-//      }).catch((error) => {
-//        return res.render('image/show', { image: image, agent: agent, messages: error });
-//      });
-//    }).catch((error) => {
-//      return res.sendStatus(501);
-//    });
-//  }).catch((error) => {
-//    return res.sendStatus(501);
-//  });
-//});
-//
-
-/**
  * DELETE /image/:domain/:agentId/:imageId
  */
 router.delete('/:domain/:agentId/:imageId', ensureAuthorized, function(req, res) {
@@ -349,7 +319,34 @@ router.delete('/:domain/:agentId/:imageId', ensureAuthorized, function(req, res)
       res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     });
   }).catch(err => {
-    req.flash('error', err.mesage);
+    req.flash('error', err.message);
+    res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+});
+
+/**
+ * GET /image/flagged
+ */
+router.get('/flagged', (req, res) => {
+  if (!req.isAuthenticated()) {
+    req.flash('error', 'You need to login first');
+    return res.redirect('/');
+  }
+
+  if (!process.env.SUDO || process.env.SUDO !== req.user.email) {
+    req.flash('error', 'You are not authorized to access that resource');
+    return res.redirect('/');
+  }
+
+  models.Image.find({ flagged: true }).then(images => {
+    res.render('image/flagged', {
+      images: images,
+      messages: req.flash(),
+      agent: req.user,
+    });
+
+  }).catch(err => {
+    req.flash('error', err.message);
     res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   });
 });
