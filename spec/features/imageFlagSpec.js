@@ -64,7 +64,6 @@ describe('Flagging an image', () => {
     });
   });
 
-
   describe('from show view', () => {
 
     describe('unauthenticated', () => {
@@ -128,7 +127,7 @@ describe('Flagging an image', () => {
         browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element('#flag-image-form');
+          browser.assert.element('.flag-image-form');
           browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg/flag?_method=PATCH"][method="post"]`);
           done();
         });
@@ -180,10 +179,12 @@ describe('Flagging an image', () => {
             });
           });
 
-          it('does not display the flagged image on the referer page', done => {
+          it('disables the Publish button on the flagged image', done => {
             browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
               if (err) return done.fail(err);
               browser.assert.element(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`)
+              browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image`, 'Publish');
+              browser.assert.elements(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image[disabled=true]`, 0);
 
               browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
                 if (err) return done.fail(err);
@@ -192,7 +193,8 @@ describe('Flagging an image', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.elements(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, 0)
+                  browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`, 'Flagged');
+                  browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"] button.publish-image[disabled=""]`);
                   done();
                 });
               });
@@ -213,8 +215,6 @@ describe('Flagging an image', () => {
               });
             });
           });
-
-
         });
 
         describe('readable resource', () => {
@@ -227,7 +227,7 @@ describe('Flagging an image', () => {
           });
 
           it('shows a flag button', () => {
-            browser.assert.element('#flag-image-form');
+            browser.assert.element('.flag-image-form');
           });
 
           it('adds agent to list of flaggers and sets flagged attribute', done => {
@@ -290,16 +290,16 @@ describe('Flagging an image', () => {
           });
         });
 
-        describe('unauthorized resource', function() {
+        describe('unauthorized resource', () => {
           let troy;
-          beforeEach(function(done) {
-            models.Agent.findOne({ email: 'troy@example.com' }).then(function(result) {
+          beforeEach(done => {
+            models.Agent.findOne({ email: 'troy@example.com' }).then(result => {
               troy = result;
 
               expect(agent.canRead.length).toEqual(1);
               expect(agent.canRead[0]).not.toEqual(troy._id);
 
-              mkdirp(`uploads/${troy.getAgentDirectory()}`, (err) => {
+              mkdirp(`uploads/${troy.getAgentDirectory()}`, err => {
                 fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.jpg`, fs.readFileSync('spec/files/troll.jpg'));
 
                 const images = [
@@ -307,7 +307,7 @@ describe('Flagging an image', () => {
                 ];
                 models.Image.create(images).then(results => {
 
-                  browser.visit(`/image/${troy.getAgentDirectory()}/troy1.jpg`, function(err) {
+                  browser.visit(`/image/${troy.getAgentDirectory()}/troy1.jpg`, err => {
                     if (err) return done.fail(err);
                     done();
                   });
@@ -315,7 +315,7 @@ describe('Flagging an image', () => {
                   done.fail(err);
                 });
               });
-            }).catch(function(error) {
+            }).catch(error => {
               done.fail(error);
             });
           });
@@ -361,139 +361,58 @@ describe('Flagging an image', () => {
             delete process.env.SUDO;
           });
 
-//          describe('set', () => {
-//            describe('non sudo agent', () => {
-//
-//              beforeEach(() => {
-//                process.env.SUDO = 'lanny@example.com';
-//                expect(process.env.SUDO).not.toEqual(agent.email);
-//              });
-//
-//              it('doesn\'t render the Flag button', done => {
-//                browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
-//                  if (err) return done.fail(err);
-//
-//                  browser.assert.success();
-//                  browser.assert.elements('#flag-image-form', 0);
-//                  done();
-//                });
-//              });
-//
-//              it('redirects to the original directory', done => {
-//                request(app)
-//                  .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
-//                  .set('Cookie', browser.cookies)
-//                  .expect(302)
-//                  .end((err, res) => {
-//                    if (err) return done.fail(err);
-//
-//                    expect(res.header.location).toEqual(`/image/${agent.getAgentDirectory()}/image2.jpg`);
-//                    done();
-//                  });
-//              });
-//
-//              it('does not modify the database record\'s path property', done => {
-//                models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
-//                  expect(images.length).toEqual(0);
-//
-//                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
-//                    expect(images.length).toEqual(1);
-//                    expect(images[0].flagged).toBe(false);
-//
-//                    request(app)
-//                      .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
-//                      .set('Cookie', browser.cookies)
-//                      .expect(302)
-//                      .end(function(err, res) {
-//                        if (err) return done.fail(err);
-//
-//                        models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
-//                          expect(images.length).toEqual(1);
-//                          expect(images[0].flagged).toBe(false);
-//
-//                          models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
-//                            expect(images.length).toEqual(0);
-//
-//                            done();
-//                          }).catch(err => {
-//                            done.fail(err);
-//                          });
-//                        }).catch(err => {
-//                          done.fail(err);
-//                        });
-//                    });
-//                  }).catch(err => {
-//                    done.fail(err);
-//                  });
-//                }).catch(err => {
-//                  done.fail(err);
-//                });
-//              });
-//            });
-//
-//            describe('sudo agent', () => {
-//
-//              beforeEach(done => {
-//                process.env.SUDO = agent.email;
-//                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
-//                  if (err) return done.fail(err);
-//                  browser.assert.success();
-//                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
-//                  done();
-//                });
-//              });
-//
-//              it('renders the Flag button', () => {
-//                browser.assert.element('#flag-image-form');
-//              });
-//
-//              it('redirects home (i.e., the main photo roll)', done => {
-//                browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
-//                browser.pressButton('Flag', err => {
-//                  if (err) return done.fail(err);
-//                  browser.assert.success();
-//
-//                  browser.assert.url({ pathname: '/' });
-//                  done();
-//                });
-//              });
-//
-//              it('does not point the database path to the public/images/uploads directory', done => {
-//                models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-//                  expect(images.length).toEqual(0);
-//
-//                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-//                    expect(images.length).toEqual(1);
-//                    expect(images[0].flagged).toBe(false);
-//
-//                    browser.pressButton('Flag', err => {
-//                      if (err) return done.fail(err);
-//                      browser.assert.success();
-//
-//                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-//                        expect(images.length).toEqual(1);
-//                        expect(images[0].flagged).toBe(true);
-//
-//                        models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-//                          expect(images.length).toEqual(0);
-//
-//                          done();
-//                        }).catch(err => {
-//                          done.fail(err);
-//                        });
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    });
-//                  }).catch(err => {
-//                    done.fail(err);
-//                  });
-//                }).catch(err => {
-//                  done.fail(err);
-//                });
-//              });
-//            });
-//          });
+          describe('not set', () => {
+            it('doesn\'t allow access to the flagged endpoint', done => {
+              done.fail();
+            });
+
+            it('doesn\'t allow de-flagging an image', done => {
+              done.fail();
+            });
+          });
+
+          describe('set', () => {
+            describe('non sudo agent', () => {
+
+              beforeEach(() => {
+                process.env.SUDO = 'lanny@example.com';
+                expect(process.env.SUDO).not.toEqual(agent.email);
+              });
+
+              it('doesn\'t allow viewing flagged resources', done => {
+                done.fail();
+              });
+
+              it('doesn\'t allow de-flagging an image', done => {
+                done.fail();
+              });
+            });
+
+            describe('sudo agent', () => {
+
+              beforeEach(done => {
+                process.env.SUDO = agent.email;
+                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  done();
+                });
+              });
+
+              it('allows viewing flagged resources', done => {
+                done.fail();
+              });
+
+              it('shows deflagged image on refer page', done => {
+                done.fail();
+              });
+
+              it('does not allow image flagger to flag again', done => {
+                done.fail();
+              });
+            });
+          });
         });
       });
     });
@@ -501,371 +420,208 @@ describe('Flagging an image', () => {
 
   describe('from index view', () => {
 
-//    describe('authenticated', () => {
-//      beforeEach(done => {
-//        stubAuth0Sessions(agent.email, DOMAIN, err => {
-//          if (err) done.fail(err);
-//
-//          mockAndUnmock({
-//            [`uploads/${agent.getAgentDirectory()}`]: {
-//              'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//              'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//              'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//            },
-//            [`uploads/${lanny.getAgentDirectory()}`]: {
-//              'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//              'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//              'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
-//            },
-//            'public/images/uploads': {}
-//          });
-//
-//          const images = [
-//            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-//            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-//            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-//            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-//            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-//            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
-//          ];
-//          models.Image.create(images).then(results => {
-//
-//            browser.clickLink('Login', err => {
-//              if (err) done.fail(err);
-//              browser.assert.success();
-//              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-//              done();
-//            });
-//          }).catch(err => {
-//            done.fail(err);
-//          });
-//        });
-//      });
-//
-//      afterEach(() => {
-//        mock.restore();
-//      });
-//
-//      it('renders forms to allow an agent to delete an image', () => {
-//        browser.assert.elements('.flag-image-form', 3);
-//        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`);
-//        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image2.jpg"][method="post"]`);
-//        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image3.jpg"][method="post"]`);
-//      });
-//
-//      describe('flagging', () => {
-//        describe('owner resource', () => {
-//          beforeEach(() => {
-//            browser.assert.elements('#flag-image-form', 0);
-//            browser.assert.elements('.flag-image-form', 3);
-//          });
-//
-//          it('redirects to home if the flag is successful', done => {
-//            //
-//            // Careful here... this is pressing the first button. There are three Flag buttons
-//            //
-//            // If this flakes out somehow, remember this:
-//            //   browser.document.forms[0].submit();
-//            //
-//            // 2020-10-2 https://stackoverflow.com/a/40264336/1356582
-//            //
-//
-//            browser.pressButton('Flag', err => {
-//              if (err) return done.fail(err);
-//
-//              browser.assert.success();
-//              browser.assert.text('.alert.alert-success', 'Image flagged');
-//              browser.assert.url({ pathname: '/' });
-//              done();
-//            });
-//          });
-//
-//          it('does not delete the image from the agent\'s directory', function(done) {
-//            models.Image.find({ photographer: agent._id, flagged: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-//              expect(mostRecentImage.length).toEqual(1);
-//
-//              let filename = mostRecentImage[0].path.split('/');
-//              filename = filename[filename.length - 1];
-//
-//              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//                if (err) return done.fail(err);
-//                expect(files.length).toEqual(3);
-//                expect(files.includes(filename)).toBe(true);
-//
-//                // Cf., Flag notes above
-//                browser.pressButton('Flag', function(err) {
-//                  if (err) return done.fail(err);
-//                  browser.assert.success();
-//
-//                  fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//                    if (err) return done.fail(err);
-//                    expect(files.length).toEqual(3);
-//                    expect(files.includes(filename)).toBe(true);
-//
-//                    done();
-//                  });
-//                });
-//              });
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          });
-//
-//          it('does not add the image to the public/images/uploads directory', function(done) {
-//            models.Image.find({ photographer: agent._id, flagged: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-//              expect(mostRecentImage.length).toEqual(1);
-//
-//              let filename = mostRecentImage[0].path.split('/');
-//              filename = filename[filename.length - 1];
-//
-//              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//                if (err) return done.fail(err);
-//                expect(files.length).toEqual(3);
-//                expect(files.includes(filename)).toBe(true);
-//
-//                // Cf., Flag notes above
-//                browser.pressButton('Flag', function(err) {
-//                  if (err) return done.fail(err);
-//                  browser.assert.success();
-//
-//                  fs.readdir(`public/images/uploads`, (err, files) => {
-//                    if (err) return done.fail(err);
-//                    expect(files.length).toEqual(0);
-//                    expect(files.includes(filename)).toBe(false);
-//
-//                    done();
-//                  });
-//                });
-//              });
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          });
-//
-//          it('does not point the database path to the public/images/uploads directory', done => {
-//            models.Image.find({ photographer: agent._id, flagged: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-//              expect(mostRecentImage.length).toEqual(1);
-//
-//              let filename = mostRecentImage[0].path.split('/');
-//              filename = filename[filename.length - 1];
-//
-//              models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-//                expect(images.length).toEqual(0);
-//
-//                models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(images => {
-//                  expect(images.length).toEqual(1);
-//                  expect(images[0].flagged).toBe(false);
-//
-//                  browser.pressButton('Flag', err => {
-//                    if (err) return done.fail(err);
-//                    browser.assert.success();
-//
-//                    models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(images => {
-//                      expect(images.length).toEqual(1);
-//                      expect(images[0].flagged).toBe(true);
-//
-//                      models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-//                        expect(images.length).toEqual(0);
-//
-//                        done();
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    }).catch(err => {
-//                      done.fail(err);
-//                    });
-//                  });
-//                }).catch(err => {
-//                  done.fail(err);
-//                });
-//              }).catch(err => {
-//                done.fail(err);
-//              });
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          });
-//        });
-//
-//        describe('readable resource', () => {
-//          beforeEach(done => {
-//            browser.visit(`/image/${lanny.getAgentDirectory()}`, (err) => {
-//              if (err) return done.fail(err);
-//              browser.assert.success();
-//              done();
-//            });
-//          });
-//
-//          it('does not show a flag button', () => {
-//            browser.assert.elements('#flag-image-form', 0);
-//            browser.assert.elements('.flag-image-form', 0);
-//          });
-//
-//          it('does not remove the image from the agent\'s directory', function(done) {
-//            fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-//              if (err) return done.fail(err);
-//              expect(files.length).toEqual(3);
-//              expect(files.includes('lanny1.jpg')).toBe(true);
-//              expect(files.includes('lanny2.jpg')).toBe(true);
-//              expect(files.includes('lanny3.jpg')).toBe(true);
-//
-//              request(app)
-//                .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
-//                .set('Cookie', browser.cookies)
-//                .end(function(err, res) {
-//                  if (err) return done.fail(err);
-//                  expect(res.status).toEqual(302);
-//                  expect(res.header.location).toEqual(`/image/${lanny.getAgentDirectory()}`);
-//
-//                  fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-//                    if (err) return done.fail(err);
-//                    expect(files.length).toEqual(3);
-//                    expect(files.includes('lanny1.jpg')).toBe(true);
-//                    expect(files.includes('lanny2.jpg')).toBe(true);
-//                    expect(files.includes('lanny3.jpg')).toBe(true);
-//
-//                    fs.readdir(`public/images/uploads`, (err, files) => {
-//                      if (err) return done.fail(err);
-//                      expect(files.length).toEqual(0);
-//                      expect(files.includes('image1.jpg')).toBe(false);
-//                      expect(files.includes('image2.jpg')).toBe(false);
-//                      expect(files.includes('image3.jpg')).toBe(false);
-//
-//                      done();
-//                    });
-//                  });
-//                });
-//            });
-//          });
-//
-//          it('does not modify the database record\'s path property', done => {
-//            models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-//              expect(images.length).toEqual(0);
-//
-//              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-//                expect(images.length).toEqual(1);
-//                expect(images[0].flagged).toBe(false);
-//
-//                request(app)
-//                  .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
-//                  .set('Cookie', browser.cookies)
-//                  .expect(302)
-//                  .end(function(err, res) {
-//                    if (err) return done.fail(err);
-//
-//                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-//                      expect(images.length).toEqual(1);
-//                      expect(images[0].flagged).toBe(false);
-//
-//                      models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-//                        expect(images.length).toEqual(0);
-//
-//                        done();
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    }).catch(err => {
-//                      done.fail(err);
-//                    });
-//                });
-//              }).catch(err => {
-//                done.fail(err);
-//              });
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          });
-//        });
-//
-//        describe('sudo mode', () => {
-//
-//          afterEach(() => {
-//            delete process.env.SUDO;
-//          });
-//
-//          describe('set', () => {
-//            describe('non sudo agent', () => {
-//
-//              beforeEach(() => {
-//                process.env.SUDO = 'lanny@example.com';
-//                expect(process.env.SUDO).not.toEqual(agent.email);
-//              });
-//
-//              it('doesn\'t render the Flag buttons', done => {
-//                browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
-//                  browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-//                  browser.assert.elements('#flag-image-form', 0);
-//                  browser.assert.elements('.flag-image-form', 0);
-//                  done();
-//                });
-//              });
-//            });
-//
-//            describe('sudo agent', () => {
-//
-//              beforeEach(done => {
-//                process.env.SUDO = agent.email;
-//                browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
-//                  if (err) return done.fail(err);
-//                  browser.assert.success();
-//                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
-//                  done();
-//                });
-//              });
-//
-//              it('renders the Flag button', () => {
-//                browser.assert.success();
-//                browser.assert.elements('#flag-image-form', 0);
-//                browser.assert.elements('.flag-image-form', 3);
-//              });
-//
-//              it('does not point the database path to the public/images/uploads directory', done => {
-//                models.Image.find({ photographer: lanny._id, flagged: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-//                  expect(mostRecentImage.length).toEqual(1);
-//
-//                  let filename = mostRecentImage[0].path.split('/');
-//                  filename = filename[filename.length - 1];
-//
-//                  models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-//                    expect(images.length).toEqual(0);
-//
-//                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(images => {
-//                      expect(images.length).toEqual(1);
-//                      expect(images[0].flagged).toBe(false);
-//
-//                      browser.pressButton('Flag', err => {
-//                        if (err) return done.fail(err);
-//                        browser.assert.success();
-//
-//                        models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(images => {
-//                          expect(images.length).toEqual(1);
-//                          expect(images[0].flagged).toBe(true);
-//
-//                          models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-//                            expect(images.length).toEqual(0);
-//
-//                            done();
-//                          }).catch(err => {
-//                            done.fail(err);
-//                          });
-//                        }).catch(err => {
-//                          done.fail(err);
-//                        });
-//                      });
-//                    }).catch(err => {
-//                      done.fail(err);
-//                    });
-//                  }).catch(err => {
-//                    done.fail(err);
-//                  });
-//                }).catch(err => {
-//                  done.fail(err);
-//                });
-//              });
-//            });
-//          });
-//        });
-//      });
-//    });
+    describe('unauthenticated', () => {
+      it('does not show the flag button', done => {
+        browser.visit('/', err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+
+          browser.assert.elements('.flag-image', 0);
+          done();
+        });
+      });
+    });
+
+    describe('authenticated', () => {
+      beforeEach(done => {
+        stubAuth0Sessions(agent.email, DOMAIN, err => {
+          if (err) done.fail(err);
+
+          mockAndUnmock({
+            [`uploads/${agent.getAgentDirectory()}`]: {
+              'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            },
+            [`uploads/${lanny.getAgentDirectory()}`]: {
+              'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            },
+            'public/images/uploads': {}
+          });
+
+          const images = [
+            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
+            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: new Date() },
+            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: new Date() },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: new Date() },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+          ];
+          models.Image.create(images).then(results => {
+
+            browser.clickLink('Login', err => {
+              if (err) done.fail(err);
+              browser.assert.success();
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+      });
+
+      afterEach(() => {
+        mock.restore();
+      });
+
+      it('renders forms to allow an agent to flag images', done => {
+        browser.visit('/', err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+          browser.assert.elements('.flag-image-form', 4);
+          browser.assert.elements('button.flag-image', 4);
+          done();
+        });
+      });
+
+      describe('flagging', () => {
+        beforeEach(done => {
+          browser.visit('/', err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        });
+
+        it('redirects to home if the flag is successful', done => {
+          //
+          // Careful here... this is pressing the first button. There are four Flag buttons
+          //
+          // If this flakes out somehow, remember this:
+          //   browser.document.forms[0].submit();
+          //
+          // 2020-10-2 https://stackoverflow.com/a/40264336/1356582
+          //
+
+          browser.pressButton('Flag post', err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+            browser.assert.text('.alert.alert-success', 'Image flagged');
+            browser.assert.url({ pathname: '/' });
+            done();
+          });
+        });
+
+        it('adds agent to list of flaggers and sets flagged attribute', done => {
+          //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`}).then(images => {
+          models.Image.find({}).sort({updated_at: 1}).then(images => {
+            expect(images.length).toEqual(6);
+            expect(images[0].flagged).toBe(false);
+            expect(images[0].flaggers).toEqual([]);
+
+            browser.pressButton('Flag post', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+
+              //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`}).then(images => {
+              models.Image.find({}).sort({updated_at: 1}).then(images => {
+                expect(images.length).toEqual(6);
+                expect(images[0].flagged).toBe(true);
+                expect(images[0].flaggers).toEqual([agent._id]);
+
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('does not display the flagged image on the referer page', done => {
+          // Need to know what's at the top of the roll
+          models.Image.find({ published: { '$ne': null } }).sort({ published: 'desc' }).then(images => {
+
+            browser.assert.url('/');
+            browser.assert.element(`a[href="/${images[0].path.replace('uploads', 'image')}"]`)
+            browser.pressButton('Flag post', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+
+              browser.assert.url('/');
+              browser.assert.elements(`a[href="/${images[0].path.replace('uploads', 'image')}"]`, 0)
+              done();
+            });
+
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        describe('sudo mode', () => {
+
+          afterEach(() => {
+            delete process.env.SUDO;
+          });
+
+          describe('not set', () => {
+            it('doesn\'t allow access to the flagged endpoint', done => {
+              done.fail();
+            });
+
+            it('doesn\'t allow de-flagging an image', done => {
+              done.fail();
+            });
+          });
+
+          describe('set', () => {
+            describe('non sudo agent', () => {
+
+              beforeEach(() => {
+                process.env.SUDO = 'lanny@example.com';
+                expect(process.env.SUDO).not.toEqual(agent.email);
+              });
+
+              it('doesn\'t allow viewing flagged resources', done => {
+                done.fail();
+              });
+
+              it('doesn\'t allow de-flagging an image', done => {
+                done.fail();
+              });
+            });
+
+            describe('sudo agent', () => {
+
+              beforeEach(done => {
+                process.env.SUDO = agent.email;
+                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  done();
+                });
+              });
+
+              it('allows viewing flagged resources', done => {
+                done.fail();
+              });
+
+              it('shows deflagged image on refer page', done => {
+                done.fail();
+              });
+
+              it('does not allow image flagger to flag again', done => {
+                done.fail();
+              });
+            });
+          });
+        });
+      });
+    });
   });
 });
