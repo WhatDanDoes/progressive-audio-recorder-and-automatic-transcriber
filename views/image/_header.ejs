@@ -1,0 +1,16 @@
+<header>
+  <img class="avatar" src="<%= image.photographer.get('picture') %>" />
+  <aside>
+    <div><%= image.photographer.get('nickname') %></div>
+    <time><%= image.updatedAt %></time>
+  </aside>
+  <span class="post-menu">
+    <i class="fas fa-ellipsis-h"></i>
+    <div class="dropdown-content">
+      <form action="<%= `/${image.path.replace('uploads', 'image')}/flag?_method=PATCH` %>" method="post" class="flag-image-form">
+        <button class="flag-image" type="submit">Flag post</button>
+      </form>
+    </div>
+  </span>
+</header>
+
