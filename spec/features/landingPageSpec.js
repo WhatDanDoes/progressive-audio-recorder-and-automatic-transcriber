@@ -67,10 +67,10 @@ describe('landing page', () => {
       });
 
       const images = [
-        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
-        { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: false },
-        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: true },
-        { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: false },
+        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
+        { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: null },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: new Date() },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: null },
       ];
 
       models.Image.create(images).then(results => {
@@ -90,7 +90,7 @@ describe('landing page', () => {
     });
 
     it('displays a message if there are no images to view', done => {
-      models.Image.remove({ published: true }).then(results => {
+      models.Image.remove({ published: { '$ne': null } }).then(results => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -134,7 +134,7 @@ describe('landing page', () => {
               images = [];
           for (let i = 0; i < 70; i++) {
             files[`lanny${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-            images.push({ path: `uploads/${lanny.getAgentDirectory()}/lanny${i}.jpg`, photographer: agent._id, published: true });
+            images.push({ path: `uploads/${lanny.getAgentDirectory()}/lanny${i}.jpg`, photographer: agent._id, published: new Date() });
           }
 
           mockAndUnmock({ [`uploads/${lanny.getAgentDirectory()}`]: files });
@@ -261,10 +261,10 @@ describe('landing page', () => {
                 });
 
                 const images = [
-                  { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: true },
-                  { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: false },
-                  { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: true },
-                  { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: false },
+                  { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
+                  { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: null },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: new Date() },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: null },
                 ];
 
                 models.Image.create(images).then(results => {
@@ -365,7 +365,7 @@ describe('landing page', () => {
               images = [];
           for (let i = 0; i < 70; i++) {
             files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-            images.push({ path: `public/images/uploads/image${i}.jpg`, photographer: agent._id, published: true });
+            images.push({ path: `public/images/uploads/image${i}.jpg`, photographer: agent._id, published: new Date() });
           }
 
           mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
