@@ -21,7 +21,7 @@ function like(path, el) {
   .then(image => {
     if (image.likes.length) {
       var pluralized = image.likes.length === 1 ? 'note' : 'notes';
-      el.textContent = image.likes.length + ' ' + pluralized;
+      el.textContent = ' ' + image.likes.length + ' ' + pluralized;
     }
     else {
       el.textContent = '';
