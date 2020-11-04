@@ -72,6 +72,7 @@ describe('imageShowSpec', () => {
           { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
           { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
           { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: new Date() },
         ];
         models.Image.create(images).then(results => {
 
@@ -134,20 +135,44 @@ describe('imageShowSpec', () => {
     });
 
     describe('unauthorized', () => {
-      it('does not allow an agent to view an album for which he has not been granted access', done => {
-        models.Agent.findOne({ email: 'troy@example.com' }).then(troy => {
-          expect(agent.canRead.length).toEqual(1);
-          expect(agent.canRead[0]).not.toEqual(troy._id);
-
-          browser.visit(`/image/${troy.getAgentDirectory()}/somepic.jpg`, err => {
-            if (err) return done.fail(err);
-            browser.assert.redirected();
-            browser.assert.url({ pathname: '/'});
-            browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-            done();
-          });
+      beforeEach(done => {
+        // No permissions
+        agent.canRead.pop();
+        agent.save().then(agent => {
+          expect(agent.canRead.length).toEqual(0);
+          done();
         }).catch(error => {
           done.fail(error);
+        });
+      });
+
+      it('does not allow an agent to view an album for which he has not been granted access', done => {
+        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+          if (err) return done.fail(err);
+          browser.assert.redirected();
+          browser.assert.url({ pathname: '/'});
+          browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+          done();
+        });
+      });
+
+      it('allows an agent to view a published image', done => {
+        // Unpublished
+        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+          browser.assert.url({ pathname: '/'});
+          browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+
+          // Published in setup above
+          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny2.jpg`, err => {
+            if (err) return done.fail(err);
+
+            browser.assert.elements('.alert.alert-danger', 0);
+            browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny2.jpg"]`);
+            browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny2.jpg` });
+            done();
+          });
         });
       });
     });

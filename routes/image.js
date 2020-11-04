@@ -115,11 +115,20 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
 /**
  * GET /image/:domain/:agentId/:imageId
  */
-router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
+router.get('/:domain/:agentId/:imageId', (req, res) => {
+  if (!req.isAuthenticated()) {
+    req.flash('error', 'You need to login first');
+    return res.redirect('/');
+  }
+
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
   models.Image.findOne({ path: filePath }).populate('photographer').then(image => {
+
+    if (image.published && !image.flagged) {
+      return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+    }
 
     if (image.flagged) {
       req.flash('error', 'Image flagged');
@@ -129,7 +138,17 @@ router.get('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     }
 
-    res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+    req.user.getReadables((err, readables) => {
+      if (err) {
+        req.flash('error', err.message);
+        return res.redirect('/');
+      }
+      if (readables.includes(`${req.params.domain}/${req.params.agentId}`)) {
+        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+      }
+      req.flash('error', 'You are not authorized to access that resource');
+      return res.redirect('/');
+    });
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
