@@ -450,7 +450,7 @@ describe('Flagging an image', () => {
                 expect(process.env.SUDO).not.toEqual(agent.email);
               });
 
-              it('shows a link to flagged resource page', done => {
+              it('does not show a link to flagged resource page', done => {
                 browser.visit('/', (err) => {
                   browser.assert.elements('a[href="/image/flagged"]', 0);
                   done();
