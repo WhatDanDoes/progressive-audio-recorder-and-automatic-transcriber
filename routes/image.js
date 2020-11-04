@@ -52,7 +52,7 @@ function getAgentAlbum(page, req, res) {
     if (agent.email !== req.user.email || (process.env.SUDO && req.user.email !== process.env.SUDO)) {
       query.flagged = false;
     }
-    models.Image.find(query).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ updatedAt: 'desc' }).then(images => {
+    models.Image.find(query).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ createdAt: 'desc' }).then(images => {
 
       let nextPage = 0,
           prevPage = page - 1;
