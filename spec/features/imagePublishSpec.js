@@ -994,6 +994,74 @@ describe('Publishing an image', () => {
                   done.fail(err);
                 });
               });
+
+              describe('unpublishing', () => {
+                let image;
+                beforeEach(done => {
+                  models.Image.find({ photographer: lanny._id }).sort({updatedAt: 'desc'}).then(images => {
+                    image = images[0];
+                    browser.pressButton('Publish', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+                      done();
+                    });
+                  });
+                });
+
+                it('shows an unpublish button on the agent\'s photo roll', () => {
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                  browser.assert.text(`form[action="/${image.path.replace('uploads', 'image')}"] button.publish-image`, 'Unpublish');
+                });
+
+                it('shows an unpublish button on the image\'s show view', done => {
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                  browser.clickLink(`a[href="/${image.path.replace('uploads', 'image')}"]`, err => {
+                    if (err) return done.fail(err);
+                    browser.assert.success();
+                    browser.assert.text('#publish-image-form button#publish-image', 'Unpublish');
+                    done();
+                  });
+                });
+
+                it('sets the image\'s published property to null in the database', done => {
+                  models.Image.find({ _id: image._id}).then(images => {
+                    expect(images.length).toEqual(1);
+                    expect(images[0].published).not.toEqual(null);
+
+                    browser.pressButton('Unpublish', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      models.Image.find({ _id: image._id}).then(images => {
+                        expect(images.length).toEqual(1);
+                        expect(images[0].published).toEqual(null);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+
+                it('redirects to the referring page', done => {
+                  browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+                    if (err) return done.fail(err);
+                    browser.assert.success();
+
+                    browser.pressButton('Unpublish', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                      done();
+                    });
+                  });
+                });
+              });
+
             });
           });
         });
