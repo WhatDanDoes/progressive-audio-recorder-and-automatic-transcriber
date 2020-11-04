@@ -130,6 +130,41 @@ describe('Liking an image', () => {
         });
       });
 
+      it('displays the pluralized note count', done => {
+        browser.assert.text('article.post footer i.like-button', '');
+
+        models.Image.where('published').ne(null).then(images => {
+          expect(images.length).toEqual(1);
+          expect(images[0].likes.length).toEqual(0);
+
+          images[0].likes.push(lanny._id);
+          images[0].save().then(res => {
+
+            browser.visit('/', err => {
+              if (err) return done.fail(err);
+
+              browser.assert.text('article.post footer i.like-button', '1 note');
+
+              images[0].likes.push(agent._id);
+              images[0].save().then(res => {
+                browser.visit('/', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('article.post footer i.like-button', '2 notes');
+                  done();
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
       it('changes the Liked font to indicate that you like the post', done => {
         browser.assert.elements('article.post footer i.like-button.far.fa-heart', 1);
         browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
@@ -188,6 +223,43 @@ describe('Liking an image', () => {
             done();
           });
         }, 500);
+      });
+
+      it('displays the note count', done => {
+        browser.assert.text('article.post footer i.like-button', '');
+        browser.click('article.post footer i.like-button.fa-heart');
+        setTimeout(() => {
+          browser.assert.text('article.post footer i.like-button', '1 note');
+          done();
+        }, 500);
+      });
+
+      it('displays the pluralized note count', done => {
+        models.Image.where('published').ne(null).then(images => {
+          expect(images.length).toEqual(1);
+          expect(images[0].likes.length).toEqual(0);
+
+          images[0].likes.push(lanny._id);
+          images[0].save().then(res => {
+
+            browser.visit('/', err => {
+              if (err) return done.fail(err);
+
+              browser.assert.text('article.post footer i.like-button', '1 note');
+
+              browser.click('article.post footer i.like-button.fa-heart');
+              setTimeout(() => {
+                browser.assert.text('article.post footer i.like-button', '2 notes');
+                done();
+              }, 500);
+
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
       });
 
       describe('if already liked', () => {
@@ -252,6 +324,15 @@ describe('Liking an image', () => {
 
               done();
             });
+          }, 500);
+        });
+
+        it('resets the note count', done => {
+          browser.assert.text('article.post footer i.like-button', '1 note');
+          browser.click('article.post footer i.like-button.fa-heart');
+          setTimeout(() => {
+            browser.assert.text('article.post footer i.like-button', '');
+            done();
           }, 500);
         });
       });

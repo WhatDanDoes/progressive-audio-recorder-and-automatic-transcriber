@@ -238,7 +238,7 @@ router.patch('/:domain/:agentId/:imageId/like', (req, res) => {
       image.likes.splice(likeIndex, 1);
     }
     image.save().then(result => {
-      res.status(201).json({ message: 'Liked' });
+      res.status(201).json(result);
     }).catch(err => {
       req.flash('error', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
