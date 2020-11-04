@@ -144,13 +144,13 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('redirects to home if the publish is successful', done => {
+          it('redirects to referring page if the publish is successful', done => {
             browser.pressButton('Publish', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
               browser.assert.text('.alert.alert-success', 'Image published');
-              browser.assert.url({ pathname: '/' });
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
               done();
             });
           });
@@ -229,6 +229,71 @@ describe('Publishing an image', () => {
               });
             }).catch(err => {
               done.fail(err);
+            });
+          });
+
+          describe('unpublishing', () => {
+            beforeEach(done => {
+              browser.pressButton('Publish', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                done();
+              });
+            });
+
+            it('shows an unpublish button on the agent\'s photo roll', done => {
+              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}"]`, err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+
+                browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"] button.publish-image`, 'Unpublish');
+                done();
+              });
+            });
+
+            it('shows an unpublish button on the image\'s show view', () => {
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+              browser.assert.text('#publish-image-form button#publish-image', 'Unpublish');
+            });
+
+            it('sets the image\'s published property to null in the database', done => {
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+
+              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                expect(images.length).toEqual(1);
+                expect(images[0].published).not.toEqual(null);
+
+                browser.pressButton('Unpublish', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
+                    expect(images.length).toEqual(1);
+                    expect(images[0].published).toEqual(null);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
+
+            it('redirects to the referring page', done => {
+              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}"]`, err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+
+                browser.pressButton('Unpublish', err => {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                  done();
+                });
+              });
             });
           });
         });
@@ -514,13 +579,13 @@ describe('Publishing an image', () => {
                 browser.assert.element('#publish-image-form');
               });
 
-              it('redirects home (i.e., the main photo roll)', done => {
+              it('redirects to the referer page', done => {
                 browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.url({ pathname: '/' });
+                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
                   done();
                 });
               });
@@ -627,7 +692,7 @@ describe('Publishing an image', () => {
             browser.assert.elements('.publish-image-form', 3);
           });
 
-          it('redirects to home if the publish is successful', done => {
+          it('redirects to referer if the publish is successful', done => {
             //
             // Careful here... this is pressing the first button. There are three Publish buttons
             //
@@ -642,7 +707,7 @@ describe('Publishing an image', () => {
 
               browser.assert.success();
               browser.assert.text('.alert.alert-success', 'Image published');
-              browser.assert.url({ pathname: '/' });
+              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
               done();
             });
           });

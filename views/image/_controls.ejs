@@ -12,7 +12,7 @@
             <% } else { %>
               <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" class="publish-image-form">
                 <button class="publish-image" type="submit">
-                  Publish
+                  <%= image.published ? 'Unpublish' : 'Publish' %>
                 </button>
               </form>
             <% } %>

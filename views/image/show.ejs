@@ -13,7 +13,9 @@
           </form>
           <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
             <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" id="publish-image-form">
-              <button id="publish-image" type="submit">Publish</button>
+              <button id="publish-image" type="submit">
+                <%= image.published ? 'Unpublish' : 'Publish' %>
+              </button>
             </form>
           <% } %>
         </section>

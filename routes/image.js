@@ -154,10 +154,18 @@ router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
 
   models.Image.findOne({ path: filePath }).then(image => {
-    image.published = new Date();
-    image.save().then(image => {
+    const origin = url.parse(req.get('referer'));
+
+    if (image.published) {
+      image.published = null;
+      req.flash('success', 'Image unpublished');
+    }
+    else {
+      image.published = new Date();
       req.flash('success', 'Image published');
-      res.redirect('/');
+    }
+    image.save().then(image => {
+      res.redirect(origin.pathname || '/');
     }).catch(err => {
       req.flash('error', err.message);
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
