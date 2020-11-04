@@ -394,6 +394,13 @@ describe('Flagging an image', () => {
           });
 
           describe('not set', () => {
+            it('shows a link to flagged resource page', done => {
+              browser.visit('/', (err) => {
+                browser.assert.elements('a[href="/image/flagged"]', 0);
+                done();
+              });
+            });
+
             it('doesn\'t allow viewing flagged resources', done => {
               browser.visit('/image/flagged', err => {
                 if (err) return done.fail(err);
@@ -443,6 +450,13 @@ describe('Flagging an image', () => {
                 expect(process.env.SUDO).not.toEqual(agent.email);
               });
 
+              it('shows a link to flagged resource page', done => {
+                browser.visit('/', (err) => {
+                  browser.assert.elements('a[href="/image/flagged"]', 0);
+                  done();
+                });
+              });
+
               it('doesn\'t allow viewing flagged resources', done => {
                 browser.assert.elements('a[href="/image/flagged"]', 0);
                 browser.visit('/image/flagged', err => {
@@ -489,6 +503,13 @@ describe('Flagging an image', () => {
 
               beforeEach(()=> {
                 process.env.SUDO = agent.email;
+              });
+
+              it('shows a link to flagged resource page', done => {
+                browser.visit('/', (err) => {
+                  browser.assert.element('a[href="/image/flagged"]');
+                  done();
+                });
               });
 
               it('is allowed to view flagged images', done => {
