@@ -20,15 +20,7 @@
           <% } %>
           </section>
           <% if (agent) { %>
-            <footer>
-              <div>
-                <i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)">
-                  <% if (image.likes.length) { %>
-                    <%= image.likes.length %> note<%= image.likes.length === 1 ? '' : 's' %>
-                  <% } %>
-                </i>
-              </div>
-            </header>
+            <% include image/_footer %>
           <% } %>
         </article>
       <% } %>
