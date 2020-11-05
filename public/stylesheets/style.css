@@ -596,3 +596,45 @@ article.post header aside time {
   font-size: .5em;
   font-style: italic;
 }
+
+
+/**
+ * Accordion
+ *
+ * 2020-11-5
+ * https://supfort.com/pure-css-accordion-without-javascript
+ */
+.accordion input[type="checkbox"] {
+  display: none;
+}
+
+.accordion label {
+  display: inline-block;
+  padding: 0px 22px;
+  margin: 0 0 1px 0;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: ease .5s;
+  float: right;
+}
+
+.accordion label:hover {
+  background: #4E8774;
+  color: #fff;
+}
+
+.accordion .content {
+  background: #E2E5F6;
+  padding: 10px 25px;
+  border: 1px solid #A7A7A7;
+  margin: 0 0 1px 0;
+  border-radius: 3px;
+}
+
+.accordion input + label + .content {
+  display: none;
+}
+
+.accordion input:checked + label + .content {
+  display: block;
+}
