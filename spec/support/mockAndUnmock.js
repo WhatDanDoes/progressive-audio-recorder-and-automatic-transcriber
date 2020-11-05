@@ -29,6 +29,7 @@ module.exports = function(mock) {
       'views/image/flagged.ejs': fs.readFileSync('views/image/flagged.ejs'),
       'views/image/index.ejs': fs.readFileSync('views/image/index.ejs'),
       'views/image/show.ejs': fs.readFileSync('views/image/show.ejs'),
+      'views/image/_footer.ejs': fs.readFileSync('views/image/_footer.ejs'),
       'views/image/_header.ejs': fs.readFileSync('views/image/_header.ejs'),
       'views/image/_pager.ejs': fs.readFileSync('views/image/_pager.ejs'),
       'views/error.ejs': fs.readFileSync('views/error.ejs'),
