@@ -116,6 +116,7 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
  * GET /image/:domain/:agentId/:imageId
  */
 router.get('/:domain/:agentId/:imageId', (req, res) => {
+console.log('HERE');
   if (!req.isAuthenticated()) {
     req.flash('error', 'You need to login first');
     return res.redirect('/');
@@ -125,6 +126,8 @@ router.get('/:domain/:agentId/:imageId', (req, res) => {
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
   models.Image.findOne({ path: filePath }).populate('photographer').then(image => {
+console.log('image');
+console.log(image);
 
     if (image.published && !image.flagged) {
       return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
@@ -375,6 +378,43 @@ router.get('/flagged', (req, res) => {
   }).catch(err => {
     req.flash('error', err.message);
     res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+});
+
+/**
+ * POST /image/:domain/:agentId/:imageId/note
+ */
+router.post('/:domain/:agentId/:imageId/note', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'You are not logged in' });
+  }
+
+  const origin = url.parse(req.get('referer'));
+  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}` : '/';
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  models.Image.findOne({ path: filePath }).then(image => {
+
+    image.notes.push({
+      author: req.user,
+      text: req.body.text
+    });
+
+    image.save().then(result => {
+      req.flash('success', 'Note posted');
+      return res.redirect(returnTo);
+    }).catch(err => {
+      if (RegExp('Empty note not saved').test(err.message)) {
+        req.flash('error', 'Empty note not saved');
+      }
+      else {
+        req.flash('error', err.message);
+      }
+      return res.redirect(returnTo);
+    });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
