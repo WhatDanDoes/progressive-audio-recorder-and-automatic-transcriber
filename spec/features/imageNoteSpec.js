@@ -270,6 +270,46 @@ describe('Writing note on an image', () => {
           });
         });
       });
+
+      it('maintains note count when like is toggled', done => {
+        browser.assert.text('article.post footer i.like-button', '');
+
+        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.pressButton('Post', err => {
+          if (err) return done.fail(err);
+
+          browser.assert.text('article.post footer i.like-button', '1 note');
+
+          browser.fill('textarea', 'Greetings');
+          browser.pressButton('Post', err => {
+            if (err) return done.fail(err);
+
+            browser.assert.text('article.post footer i.like-button', '2 notes');
+
+            // Like
+            browser.click('article.post footer i.like-button.fa-heart');
+            setTimeout(() => {
+              browser.assert.text('article.post footer i.like-button', '3 notes');
+
+              // Un-Like
+              browser.click('article.post footer i.like-button.fa-heart');
+              setTimeout(() => {
+                browser.assert.text('article.post footer i.like-button', '2 notes');
+
+                // Re-Like
+                browser.click('article.post footer i.like-button.fa-heart');
+                setTimeout(() => {
+                  browser.assert.text('article.post footer i.like-button', '3 notes');
+
+                  done();
+                }, 250);
+              }, 250);
+            }, 250);
+          });
+        });
+      });
+
+
     });
   });
 });

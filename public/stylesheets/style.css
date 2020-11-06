@@ -577,6 +577,7 @@ article.post header .post-menu:hover .dropdown-content {
 }
 
 /* 2020-10-8 https://www.w3schools.com/howto/howto_css_image_avatar.asp */
+section.note header img.avatar,
 article.post header img.avatar {
   vertical-align: top;
   width: 10%;

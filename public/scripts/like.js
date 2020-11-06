@@ -19,9 +19,10 @@ function like(path, el) {
     return res.json();
   })
   .then(image => {
-    if (image.likes.length) {
-      var pluralized = image.likes.length === 1 ? 'note' : 'notes';
-      el.textContent = ' ' + image.likes.length + ' ' + pluralized;
+    var totalNotes = image.likes.length + image.notes.length;
+    if (totalNotes) {
+      var pluralized = totalNotes === 1 ? 'note' : 'notes';
+      el.textContent = ' ' + totalNotes + ' ' + pluralized;
     }
     else {
       el.textContent = '';
