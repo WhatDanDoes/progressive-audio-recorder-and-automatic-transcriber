@@ -7,18 +7,7 @@
         <img src="/<%= image.path %>" />
       </section>
       <% if (canWrite) { %>
-        <section id="image-controls">
-          <form action="<%= `/${image.path.replace('uploads', 'image')}?_method=DELETE` %>" method="post" id="delete-image-form">
-            <button id="delete-image" type="submit">Delete</button>
-          </form>
-          <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
-            <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" id="publish-image-form">
-              <button id="publish-image" type="submit">
-                <%= image.published ? 'Unpublish' : 'Publish' %>
-              </button>
-            </form>
-          <% } %>
-        </section>
+        <% include _controls %>
       <% } %>
       <% include _footer %>
     </article>
@@ -33,7 +22,6 @@
           </header>
         </section>
       <% } %>
-
     </article>
   </main>
 <% include ../_partials/footer %>

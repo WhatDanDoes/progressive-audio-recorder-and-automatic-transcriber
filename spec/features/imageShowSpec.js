@@ -113,8 +113,8 @@ describe('imageShowSpec', () => {
           browser.assert.element('article.post header span.post-menu');
           browser.assert.element('article.post footer');
           browser.assert.element('article.post footer i.like-button');
-          browser.assert.element('#delete-image-form');
-          browser.assert.element('#publish-image-form');
+          browser.assert.element('.delete-image-form');
+          browser.assert.element('.publish-image-form');
 
           done();
         });
@@ -128,7 +128,7 @@ describe('imageShowSpec', () => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
-          browser.assert.elements('#delete-image-form', 0);
+          browser.assert.elements('.delete-image-form', 0);
           done();
         });
       });

@@ -64,7 +64,6 @@ describe('Publishing an image', () => {
     });
   });
 
-
   describe('from show view', () => {
 
     describe('unauthenticated', () => {
@@ -128,7 +127,7 @@ describe('Publishing an image', () => {
         browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element('#publish-image-form');
+          browser.assert.element('.publish-image-form');
           browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`);
           done();
         });
@@ -253,7 +252,7 @@ describe('Publishing an image', () => {
 
             it('shows an unpublish button on the image\'s show view', () => {
               browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
-              browser.assert.text('#publish-image-form button#publish-image', 'Unpublish');
+              browser.assert.text('.publish-image-form button.publish-image', 'Unpublish');
             });
 
             it('sets the image\'s published property to null in the database', done => {
@@ -308,7 +307,7 @@ describe('Publishing an image', () => {
           });
 
           it('does not show a publish button', () => {
-            browser.assert.elements('#publish-image-form', 0);
+            browser.assert.elements('.publish-image-form', 0);
           });
 
           it('does not remove the image from the agent\'s directory', done => {
@@ -506,7 +505,7 @@ describe('Publishing an image', () => {
                   if (err) return done.fail(err);
 
                   browser.assert.success();
-                  browser.assert.elements('#publish-image-form', 0);
+                  browser.assert.elements('.publish-image-form', 0);
                   done();
                 });
               });
@@ -576,7 +575,7 @@ describe('Publishing an image', () => {
               });
 
               it('renders the Publish button', () => {
-                browser.assert.element('#publish-image-form');
+                browser.assert.element('.publish-image-form');
               });
 
               it('redirects to the referer page', done => {
@@ -688,7 +687,6 @@ describe('Publishing an image', () => {
       describe('publishing', () => {
         describe('owner resource', () => {
           beforeEach(() => {
-            browser.assert.elements('#publish-image-form', 0);
             browser.assert.elements('.publish-image-form', 3);
           });
 
@@ -829,7 +827,6 @@ describe('Publishing an image', () => {
           });
 
           it('does not show a publish button', () => {
-            browser.assert.elements('#publish-image-form', 0);
             browser.assert.elements('.publish-image-form', 0);
           });
 
@@ -926,7 +923,6 @@ describe('Publishing an image', () => {
               it('doesn\'t render the Publish buttons', done => {
                 browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
                   browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-                  browser.assert.elements('#publish-image-form', 0);
                   browser.assert.elements('.publish-image-form', 0);
                   done();
                 });
@@ -947,7 +943,6 @@ describe('Publishing an image', () => {
 
               it('renders the Publish button', () => {
                 browser.assert.success();
-                browser.assert.elements('#publish-image-form', 0);
                 browser.assert.elements('.publish-image-form', 3);
               });
 
@@ -1018,7 +1013,7 @@ describe('Publishing an image', () => {
                   browser.clickLink(`a[href="/${image.path.replace('uploads', 'image')}"]`, err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
-                    browser.assert.text('#publish-image-form button#publish-image', 'Unpublish');
+                    browser.assert.text('.publish-image-form button.publish-image', 'Unpublish');
                     done();
                   });
                 });
