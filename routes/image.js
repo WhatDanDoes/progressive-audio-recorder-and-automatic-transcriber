@@ -116,7 +116,6 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
  * GET /image/:domain/:agentId/:imageId
  */
 router.get('/:domain/:agentId/:imageId', (req, res) => {
-console.log('HERE');
   if (!req.isAuthenticated()) {
     req.flash('error', 'You need to login first');
     return res.redirect('/');
@@ -125,9 +124,7 @@ console.log('HERE');
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
-  models.Image.findOne({ path: filePath }).populate('photographer').then(image => {
-console.log('image');
-console.log(image);
+  models.Image.findOne({ path: filePath }).populate('photographer').populate({ path: 'notes', populate: { path: 'author', model: 'Agent' }}).then(image => {
 
     if (image.published && !image.flagged) {
       return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });

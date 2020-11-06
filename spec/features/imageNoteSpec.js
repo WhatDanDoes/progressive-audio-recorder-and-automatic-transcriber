@@ -250,12 +250,11 @@ describe('Writing note on an image', () => {
         });
       });
 
-      fit('displays the new note in a list', done => {
+      it('displays the new note in a list', done => {
         browser.assert.elements('article.notes section.note', 0);
 
         browser.fill('textarea', 'Groovy, baby! Yeah!');
         browser.pressButton('Post', err => {
-console.log(browser.html());
           if (err) return done.fail(err);
 
           browser.assert.elements('article.notes section.note', 1);
@@ -271,9 +270,6 @@ console.log(browser.html());
           });
         });
       });
-
-
-
     });
   });
 });
