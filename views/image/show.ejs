@@ -6,21 +6,21 @@
       <section class="image">
         <img src="/<%= image.path %>" />
       </section>
+      <% include _feedbackControls %>
+      <section class="notes">
+        <% for (let note of image.notes) { %>
+          <article class="note">
+            <header>
+              <img class="avatar" src="<%= note.author.get('picture') %>" />
+              <aside>
+                <div><%= note.author.get('nickname') %></div>
+              </aside>
+            </header>
+          </article>
+        <% } %>
+      </section>
       <% if (canWrite) { %>
         <% include _controls %>
-      <% } %>
-      <% include _footer %>
-    </article>
-    <article class="notes">
-      <% for (let note of image.notes) { %>
-        <section class="note">
-          <header>
-            <img class="avatar" src="<%= note.author.get('picture') %>" />
-            <aside>
-              <div><%= note.author.get('nickname') %></div>
-            </aside>
-          </header>
-        </section>
       <% } %>
     </article>
   </main>

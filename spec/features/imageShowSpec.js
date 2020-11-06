@@ -111,8 +111,8 @@ describe('imageShowSpec', () => {
           browser.assert.element('article.post header aside div');
           browser.assert.element('article.post header aside time');
           browser.assert.element('article.post header span.post-menu');
-          browser.assert.element('article.post footer');
-          browser.assert.element('article.post footer i.like-button');
+          browser.assert.element('article.post section.feedback-controls');
+          browser.assert.element('article.post section.feedback-controls i.like-button');
           browser.assert.element('.delete-image-form');
           browser.assert.element('.publish-image-form');
 

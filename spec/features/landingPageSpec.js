@@ -115,7 +115,7 @@ describe('landing page', () => {
         browser.assert.elements('article.post section.photo a', 0);
 
         browser.assert.elements('article.post header', 0);
-        browser.assert.elements('article.post footer', 0);
+        browser.assert.elements('article.post section.feedback-controls', 0);
 
         // No pagination
         browser.assert.elements('#next-page', 0);
@@ -345,8 +345,8 @@ describe('landing page', () => {
         browser.assert.elements(`article.post header aside div`, 2);
         browser.assert.elements(`article.post header aside time`, 2);
         browser.assert.elements(`article.post header span.post-menu`, 2);
-        browser.assert.elements(`article.post footer`, 2);
-        browser.assert.elements(`article.post footer i.like-button`, 2);
+        browser.assert.elements(`article.post section.feedback-controls`, 2);
+        browser.assert.elements(`article.post section.feedback-controls i.like-button`, 2);
 
         // No pagination
         browser.assert.elements('#next-page', 0);

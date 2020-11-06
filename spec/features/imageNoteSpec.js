@@ -133,22 +133,22 @@ describe('Writing note on an image', () => {
 
       it('provides a text field in which to write a note', done => {
         browser.assert.element('article.post');
-        browser.assert.element('article.post footer span.accordion i.far.fa-comment');
-        browser.assert.element(`article.post footer span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
-        browser.assert.element(`article.post footer span.accordion textarea[name="text"][maxlength="500"]`);
-        browser.assert.text(`article.post footer span.accordion form button[type="submit"]`, 'Post');
+        browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
+        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
+        browser.assert.text(`article.post section.feedback-controls span.accordion form button[type="submit"]`, 'Post');
 
         done();
       });
 
       it('does not add a note if the text is empty', done => {
-        browser.assert.text('article.post footer i.like-button', '');
+        browser.assert.text('article.post section.feedback-controls i.like-button', '');
         browser.fill('textarea', '  ');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
           browser.assert.text('.alert.alert-danger', 'Empty note not saved');
-          browser.assert.text('article.post footer i.like-button', '');
+          browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
           done();
         });
@@ -168,19 +168,19 @@ describe('Writing note on an image', () => {
       });
 
       it('adds the note to total likes and pluralizes note count', done => {
-        browser.assert.text('article.post footer i.like-button', '');
+        browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
         browser.fill('textarea', 'Groovy, baby! Yeah!');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
-          browser.assert.text('article.post footer i.like-button', '1 note');
+          browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
           browser.fill('textarea', 'Greetings');
           browser.pressButton('Post', err => {
             if (err) return done.fail(err);
 
-            browser.assert.text('article.post footer i.like-button', '2 notes');
+            browser.assert.text('article.post section.feedback-controls i.like-button', '2 notes');
             done();
           });
         });
@@ -199,22 +199,22 @@ describe('Writing note on an image', () => {
       it('provides a text field in which to write a note', done => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
         browser.assert.element('article.post');
-        browser.assert.element('article.post footer span.accordion i.far.fa-comment');
-        browser.assert.element(`article.post footer span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
-        browser.assert.element(`article.post footer span.accordion textarea[name="text"][maxlength="500"]`);
-        browser.assert.text(`article.post footer span.accordion form button[type="submit"]`, 'Post');
+        browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
+        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
+        browser.assert.text(`article.post section.feedback-controls span.accordion form button[type="submit"]`, 'Post');
 
         done();
       });
 
       it('does not add a note if the text is empty', done => {
-        browser.assert.text('article.post footer i.like-button', '');
+        browser.assert.text('article.post section.feedback-controls i.like-button', '');
         browser.fill('textarea', '  ');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
           browser.assert.text('.alert.alert-danger', 'Empty note not saved');
-          browser.assert.text('article.post footer i.like-button', '');
+          browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
           done();
         });
@@ -232,19 +232,19 @@ describe('Writing note on an image', () => {
       });
 
       it('adds the note to total likes and pluralizes note count', done => {
-        browser.assert.text('article.post footer i.like-button', '');
+        browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
         browser.fill('textarea', 'Groovy, baby! Yeah!');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
-          browser.assert.text('article.post footer i.like-button', '1 note');
+          browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
           browser.fill('textarea', 'Greetings');
           browser.pressButton('Post', err => {
             if (err) return done.fail(err);
 
-            browser.assert.text('article.post footer i.like-button', '2 notes');
+            browser.assert.text('article.post section.feedback-controls i.like-button', '2 notes');
             done();
           });
         });
@@ -257,49 +257,51 @@ describe('Writing note on an image', () => {
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
-          browser.assert.elements('article.notes section.note', 1);
-          browser.assert.elements('article.notes section.note header .avatar', 1);
+          browser.assert.elements('section.notes article.note', 1);
+          browser.assert.elements('section.notes article.note header img.avatar', 1);
+          browser.assert.elements('section.notes article.note header aside', 1);
 
           browser.fill('textarea', 'Greetings');
           browser.pressButton('Post', err => {
             if (err) return done.fail(err);
 
-            browser.assert.elements('article.notes section.note', 2);
-            browser.assert.elements('article.notes section.note header .avatar', 2);
+            browser.assert.elements('section.notes article.note', 2);
+            browser.assert.elements('section.notes article.note header img.avatar', 2);
+            browser.assert.elements('section.notes article.note header aside', 2);
             done();
           });
         });
       });
 
       it('maintains note count when like is toggled', done => {
-        browser.assert.text('article.post footer i.like-button', '');
+        browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
         browser.fill('textarea', 'Groovy, baby! Yeah!');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
-          browser.assert.text('article.post footer i.like-button', '1 note');
+          browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
           browser.fill('textarea', 'Greetings');
           browser.pressButton('Post', err => {
             if (err) return done.fail(err);
 
-            browser.assert.text('article.post footer i.like-button', '2 notes');
+            browser.assert.text('article.post section.feedback-controls i.like-button', '2 notes');
 
             // Like
-            browser.click('article.post footer i.like-button.fa-heart');
+            browser.click('article.post section.feedback-controls i.like-button.fa-heart');
             setTimeout(() => {
-              browser.assert.text('article.post footer i.like-button', '3 notes');
+              browser.assert.text('article.post section.feedback-controls i.like-button', '3 notes');
 
               // Un-Like
-              browser.click('article.post footer i.like-button.fa-heart');
+              browser.click('article.post section.feedback-controls i.like-button.fa-heart');
               setTimeout(() => {
-                browser.assert.text('article.post footer i.like-button', '2 notes');
+                browser.assert.text('article.post section.feedback-controls i.like-button', '2 notes');
 
                 // Re-Like
-                browser.click('article.post footer i.like-button.fa-heart');
+                browser.click('article.post section.feedback-controls i.like-button.fa-heart');
                 setTimeout(() => {
-                  browser.assert.text('article.post footer i.like-button', '3 notes');
+                  browser.assert.text('article.post section.feedback-controls i.like-button', '3 notes');
 
                   done();
                 }, 250);
