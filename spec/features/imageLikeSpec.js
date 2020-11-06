@@ -177,7 +177,7 @@ describe('Liking an image', () => {
           browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
 
           done();
-        }, 500);
+        }, 250);
       });
 
       it('updates the database', done => {
@@ -197,7 +197,7 @@ describe('Liking an image', () => {
             }).catch(err => {
               done.fail(err);
             });
-          }, 500);
+          }, 250);
 
         }).catch(err => {
           done.fail(err);
@@ -222,7 +222,7 @@ describe('Liking an image', () => {
 
             done();
           });
-        }, 500);
+        }, 250);
       });
 
       it('displays the note count', done => {
@@ -231,7 +231,7 @@ describe('Liking an image', () => {
         setTimeout(() => {
           browser.assert.text('article.post footer i.like-button', '1 note');
           done();
-        }, 500);
+        }, 250);
       });
 
       it('displays the pluralized note count', done => {
@@ -251,7 +251,7 @@ describe('Liking an image', () => {
               setTimeout(() => {
                 browser.assert.text('article.post footer i.like-button', '2 notes');
                 done();
-              }, 500);
+              }, 250);
 
             });
           }).catch(err => {
@@ -267,7 +267,7 @@ describe('Liking an image', () => {
           browser.click('article.post footer i.like-button.fa-heart');
           setTimeout(() => {
             done();
-          }, 500);
+          }, 250);
         });
 
         it('changes the Liked font to indicate that you no longer like the post', done => {
@@ -281,7 +281,7 @@ describe('Liking an image', () => {
             browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
 
             done();
-          }, 500);
+          }, 250);
         });
 
         it('updates the database', done => {
@@ -299,7 +299,7 @@ describe('Liking an image', () => {
               }).catch(err => {
                 done.fail(err);
               });
-            }, 500);
+            }, 250);
 
           }).catch(err => {
             done.fail(err);
@@ -324,7 +324,7 @@ describe('Liking an image', () => {
 
               done();
             });
-          }, 500);
+          }, 250);
         });
 
         it('resets the note count', done => {
@@ -333,7 +333,7 @@ describe('Liking an image', () => {
           setTimeout(() => {
             browser.assert.text('article.post footer i.like-button', '');
             done();
-          }, 500);
+          }, 250);
         });
       });
     });
@@ -394,7 +394,7 @@ describe('Liking an image', () => {
           browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 1);
 
           done();
-        }, 500);
+        }, 250);
       });
 
       it('updates the database', done => {
@@ -414,7 +414,7 @@ describe('Liking an image', () => {
             }).catch(err => {
               done.fail(err);
             });
-          }, 500);
+          }, 250);
 
         }).catch(err => {
           done.fail(err);
@@ -439,7 +439,7 @@ describe('Liking an image', () => {
 
             done();
           });
-        }, 500);
+        }, 250);
       });
 
       describe('if already liked', () => {
@@ -447,7 +447,7 @@ describe('Liking an image', () => {
           browser.click('article.post footer i.like-button.fa-heart');
           setTimeout(() => {
             done();
-          }, 500);
+          }, 250);
         });
 
         it('changes the Liked font to indicate that you no longer like the post', done => {
@@ -461,7 +461,7 @@ describe('Liking an image', () => {
             browser.assert.elements('article.post footer i.like-button.fas.fa-heart', 0);
 
             done();
-          }, 500);
+          }, 250);
         });
 
         it('updates the database', done => {
@@ -479,7 +479,7 @@ describe('Liking an image', () => {
               }).catch(err => {
                 done.fail(err);
               });
-            }, 500);
+            }, 250);
 
           }).catch(err => {
             done.fail(err);
@@ -504,7 +504,7 @@ describe('Liking an image', () => {
 
               done();
             });
-          }, 500);
+          }, 250);
         });
       });
     });
