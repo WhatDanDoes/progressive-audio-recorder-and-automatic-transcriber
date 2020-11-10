@@ -326,8 +326,6 @@ describe('Writing note on an image', () => {
           });
         });
       });
-
-
     });
   });
 });
