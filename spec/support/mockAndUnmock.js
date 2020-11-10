@@ -30,6 +30,7 @@ module.exports = function(mock) {
       'views/image/index.ejs': fs.readFileSync('views/image/index.ejs'),
       'views/image/show.ejs': fs.readFileSync('views/image/show.ejs'),
       'views/image/_feedbackControls.ejs': fs.readFileSync('views/image/_feedbackControls.ejs'),
+      'views/image/_noteControls.ejs': fs.readFileSync('views/image/_noteControls.ejs'),
       'views/image/_header.ejs': fs.readFileSync('views/image/_header.ejs'),
       'views/image/_pager.ejs': fs.readFileSync('views/image/_pager.ejs'),
       'views/error.ejs': fs.readFileSync('views/error.ejs'),
