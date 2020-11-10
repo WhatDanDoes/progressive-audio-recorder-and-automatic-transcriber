@@ -340,10 +340,15 @@ describe('Liking an image', () => {
 
     describe('from the show page', () => {
       beforeEach(done => {
-        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
-          if (err) done.fail(err);
-          browser.assert.success();
-          done();
+        models.Agent.findOne({ _id: agent._id }).then(result => {
+          agent = result;
+          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        }).catch(err => {
+          done.fail(err);
         });
       });
 
@@ -394,6 +399,43 @@ describe('Liking an image', () => {
           browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 1);
 
           done();
+        }, 250);
+      });
+
+      it('maintains the Liked font on page reload', done => {
+        browser.assert.elements('article.post section.feedback-controls i.like-button.far.fa-heart', 1);
+        browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 0);
+
+        browser.click('article.post section.feedback-controls i.like-button.fa-heart');
+
+        // 2020-10-13 Not sure why browser.wait doesn't do anything...
+        setTimeout(() => {
+          browser.assert.elements('article.post section.feedback-controls i.like-button.far.fa-heart', 0);
+          browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 1);
+          browser.reload(err => {
+            if (err) return done.fail(err);
+
+            browser.assert.elements('article.post section.feedback-controls i.like-button.far.fa-heart', 0);
+            browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 1);
+            done();
+          });
+        }, 250);
+      });
+
+      it('adds the like to the list of notes on page load', done => {
+        browser.assert.elements('article.post section.likes header aside', 0);
+
+        browser.click('article.post section.feedback-controls i.like-button.fa-heart');
+
+        // 2020-10-13 Not sure why browser.wait doesn't do anything...
+        setTimeout(() => {
+          browser.reload(err => {
+            if (err) return done.fail(err);
+            browser.assert.elements('article.post section.likes header aside i.fas.fa-heart', 1);
+            browser.assert.text('article.post section.likes header aside', `${agent.get('nickname')} s this`);
+
+            done();
+          });
         }, 250);
       });
 

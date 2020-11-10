@@ -1,6 +1,6 @@
             <section class='feedback-controls'>
               <div>
-                <i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)">
+                <i class="like-button <%= image.likes.find(l => l.email === agent.email) ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)">
                   <% if (image.likes.length + image.notes.length) { %>
                     <%= image.likes.length + image.notes.length %> note<%= image.likes.length + image.notes.length === 1 ? '' : 's' %>
                   <% } %>
