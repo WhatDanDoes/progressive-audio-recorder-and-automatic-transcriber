@@ -418,4 +418,43 @@ router.post('/:domain/:agentId/:imageId/note', (req, res) => {
   });
 });
 
+/**
+ * DELETE /image/:domain/:agentId/:imageId/note/:noteId
+ */
+router.delete('/:domain/:agentId/:imageId/note/:noteId', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'You are not logged in' });
+  }
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  models.Image.findOne({ path: filePath }).then(image => {
+
+    const note = image.notes.find(n => n._id.toString() === req.params.noteId);
+
+    if (req.user._id.toString() !== image.photographer.toString() &&
+        req.user._id.toString() !== note.author.toString() &&
+        process.env.SUDO !== req.user.email) {
+        return res.status(403).json({ message: 'You are not authorized to access that resource' });
+    }
+
+    image.notes.id(req.params.noteId).remove();
+
+    const origin = url.parse(req.get('referer'));
+    const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}` : '/';
+
+    image.save().then(result => {
+      req.flash('success', 'Note deleted');
+      return res.redirect(returnTo);
+    }).catch(err => {
+      req.flash('error', err.message);
+      return res.redirect(returnTo);
+    });
+  }).catch(err => {
+    req.flash('error', err.message);
+    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+  });
+});
+
+
+
 module.exports = router;
