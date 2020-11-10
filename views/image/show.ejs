@@ -23,10 +23,15 @@
         <% for (let note of image.notes) { %>
           <article class="note">
             <header>
+              <% if (note.author._id.toString() === agent._id.toString() ||
+                     image.photographer._id.toString() === agent._id.toString() ||
+                     (process.env.SUDO && process.env.SUDO === agent.email)) { %>
+                <% include _noteControls %>
+              <% } %>
               <img class="avatar" src="<%= note.author.get('picture') %>" />
               <aside>
                 <span><%= note.author.get('nickname') %></span>
-                <span class="note-content"><%= note.text %></span>
+                <div class="note-content"><%= note.text %></div>
               </aside>
             </header>
           </article>
