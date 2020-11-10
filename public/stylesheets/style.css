@@ -598,6 +598,22 @@ article.post header aside time {
   font-style: italic;
 }
 
+/**
+ * Image like
+ */
+article.like {
+  margin-bottom: 1em;
+}
+
+/**
+ * Image note
+ */
+article.note .note-content {
+  margin: .5em;
+  padding: .5em;
+  background-color: #d9d9d9;
+  border-radius: 3px;
+}
 
 /**
  * Accordion
@@ -639,3 +655,34 @@ article.post header aside time {
 .accordion input:checked + label + .content {
   display: block;
 }
+
+/**
+ * Note controls
+ */
+
+article.note {
+  margin-bottom: 2em;
+}
+
+
+article.note header .note-menu {
+  position: relative;
+  display: inline-block;
+  float: right;
+}
+
+article.note header .note-menu .dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+  z-index: 1;
+  right: 0;
+}
+
+article.note header .note-menu:hover .dropdown-content {
+  display: block;
+}
+
