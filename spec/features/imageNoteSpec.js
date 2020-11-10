@@ -185,6 +185,22 @@ describe('Writing note on an image', () => {
           });
         });
       });
+
+      it('displays note content on image show', done => {
+        browser.assert.elements('article.post section.notes', 0);
+
+        browser.fill('textarea', 'Greetings');
+        browser.pressButton('Post', err => {
+          if (err) return done.fail(err);
+
+          browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+            if (err) return done.fail(err);
+  
+            browser.assert.text('article.post section.notes header aside .note-content', 'Greetings');
+            done();
+          });
+        });
+      });
     });
 
     describe('from the show page', () => {
