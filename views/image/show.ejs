@@ -7,18 +7,6 @@
         <img src="/<%= image.path %>" />
       </section>
       <% include _feedbackControls %>
-      <section class="likes">
-        <% for (let like of image.likes) { %>
-          <article class="like">
-            <header>
-              <img class="avatar" src="<%= like.get('picture') %>" />
-              <aside>
-                <div><%= like.get('nickname') %> <i class="fas fa-heart">s</i> this</div>
-              </aside>
-            </header>
-          </article>
-        <% } %>
-      </section>
       <section class="notes">
         <% for (let note of image.notes) { %>
           <article class="note">
@@ -32,6 +20,18 @@
               <aside>
                 <span><%= note.author.get('nickname') %></span>
                 <div class="note-content"><%= note.text %></div>
+              </aside>
+            </header>
+          </article>
+        <% } %>
+      </section>
+      <section class="likes">
+        <% for (let like of image.likes) { %>
+          <article class="like">
+            <header>
+              <img class="avatar" src="<%= like.get('picture') %>" />
+              <aside>
+                <div><%= like.get('nickname') %> <i class="fas fa-heart">s</i> this</div>
               </aside>
             </header>
           </article>
