@@ -128,7 +128,7 @@ describe('Deleting an image', () => {
         browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element('#delete-image-form');
+          browser.assert.element('.delete-image-form');
           browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg?_method=DELETE"]`);
           done();
         });
@@ -208,7 +208,7 @@ describe('Deleting an image', () => {
           });
 
           it('does not show a delete button', () => {
-            browser.assert.elements('#delete-image-form', 0);
+            browser.assert.elements('.delete-image-form', 0);
           });
 
           it('does not delete the image from the file system', function(done) {
@@ -363,8 +363,7 @@ describe('Deleting an image', () => {
               it('renders the Delete buttons for the agent\'s own image', done => {
                 browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, (err) => {
                   browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
-                  browser.assert.elements('#delete-image-form', 1);
-                  browser.assert.elements('.delete-image-form', 0);
+                  browser.assert.elements('.delete-image-form', 1);
                   done();
                 });
               });
@@ -372,7 +371,6 @@ describe('Deleting an image', () => {
               it('does not render the Delete buttons for the another agent\'s image', done => {
                 browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
                   browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
-                  browser.assert.elements('#delete-image-form', 0);
                   browser.assert.elements('.delete-image-form', 0);
                   done();
                 });
@@ -393,8 +391,7 @@ describe('Deleting an image', () => {
 
               it('renders the Delete button', () => {
                 browser.assert.success();
-                browser.assert.elements('#delete-image-form', 1);
-                browser.assert.elements('.delete-image-form', 0);
+                browser.assert.elements('.delete-image-form', 1);
               });
 
               it('deletes the database record associated with the image', done => {
@@ -485,7 +482,6 @@ describe('Deleting an image', () => {
 
       it('renders a form to allow an agent to delete an image', () => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-        browser.assert.elements('#delete-image-form', 0);
         browser.assert.elements('.delete-image-form', 3);
         browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg?_method=DELETE"]`);
       });
@@ -508,7 +504,7 @@ describe('Deleting an image', () => {
           });
 
           it('deletes the image from the file system', done => {
-            models.Image.find({ photographer: agent._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+            models.Image.find({ photographer: agent._id, published: null}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
               expect(mostRecentImage.length).toEqual(1);
 
               let filename = mostRecentImage[0].path.split('/');
@@ -548,7 +544,6 @@ describe('Deleting an image', () => {
           });
 
           it('does not show a delete button', () => {
-            browser.assert.elements('#delete-image-form', 0);
             browser.assert.elements('.delete-image-form', 0);
           });
         });
@@ -595,7 +590,6 @@ describe('Deleting an image', () => {
               it('renders the Delete buttons for the agent\'s own images', done => {
                 browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
                   browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-                  browser.assert.elements('#delete-image-form', 0);
                   browser.assert.elements('.delete-image-form', 3);
                   done();
                 });
@@ -604,7 +598,6 @@ describe('Deleting an image', () => {
               it('does not render the Delete buttons for the another agent\'s images', done => {
                 browser.visit(`/image/${lanny.getAgentDirectory()}`, (err) => {
                   browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
-                  browser.assert.elements('#delete-image-form', 0);
                   browser.assert.elements('.delete-image-form', 0);
                   done();
                 });
@@ -625,29 +618,24 @@ describe('Deleting an image', () => {
 
               it('renders the Publish button', () => {
                 browser.assert.success();
-                browser.assert.elements('#delete-image-form', 0);
                 browser.assert.elements('.delete-image-form', 3);
               });
 
               it('points the database path to the public/images/uploads directory', done => {
-                //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
-                models.Image.find({ photographer: lanny._id, published: true}).then(images => {
+                models.Image.find({ photographer: lanny._id, published: { '$ne': null }}).then(images => {
                   expect(images.length).toEqual(0);
 
-                  //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
-                  models.Image.find({ photographer: lanny._id, published: false}).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
+                  models.Image.find({ photographer: lanny._id, published: null }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
                     expect(mostRecentImage.length).toEqual(1);
 
                     browser.pressButton('Delete', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      //models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`}).then(images => {
                       models.Image.find({ path: mostRecentImage[0].path }).then(images => {
                         expect(images.length).toEqual(0);
 
-                        //models.Image.find({ path: `public/images/uploads/lanny3.jpg`}).then(images => {
-                        models.Image.find({ photographer: lanny._id, published: true}).then(images => {
+                        models.Image.find({ photographer: lanny._id, published: { '$ne': null }}).then(images => {
                           expect(images.length).toEqual(0);
 
                           done();

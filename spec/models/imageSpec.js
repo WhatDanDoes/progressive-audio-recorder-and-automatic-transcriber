@@ -87,11 +87,13 @@ describe('Image', () => {
 
     it('sets the default fields to their default values', done => {
       expect(image.flagged).toBe(false);
-      expect(image.published).toBe(false);
+      expect(image.flaggers).toEqual([]);
+      expect(image.published).toEqual(null);
       expect(image.likes).toEqual([]);
       image.save().then(obj => {
         expect(image.flagged).toBe(false);
-        expect(image.published).toBe(false);
+        expect(image.flaggers).toEqual([]);
+        expect(image.published).toEqual(null);
         expect(image.likes).toEqual([]);
         expect(image.notes).toEqual([]);
         done();
@@ -181,14 +183,17 @@ describe('Image', () => {
     describe('.toggleFlagged', () => {
       it('toggles the flagged property', done => {
         expect(image.flagged).toBe(false);
+        expect(image.flaggers).toEqual([]);
         // on
         image.toggleFlagged((err, image) => {
           if (err) return done.fail(err);
           expect(image.flagged).toBe(true);
+          expect(image.flaggers).toEqual([]);
           // off
           image.toggleFlagged((err, image) => {
             if (err) return done.fail(err);
             expect(image.flagged).toBe(false);
+            expect(image.flaggers).toEqual([]);
             done();
           });
         });
@@ -196,19 +201,73 @@ describe('Image', () => {
     });
 
     /**
+     * #flag
+     */
+    describe('#flag', () => {
+      beforeEach(done => {
+        agent.save().then(obj => {
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+      it('adds agent to list of agents who flagged this image', done => {
+        expect(image.flagged).toBe(false);
+        expect(image.flaggers.length).toEqual(0);
+        // flag
+        image.flag(agent, (err, image) => {
+          if (err) return done.fail(err);
+          expect(image.flagged).toBe(true);
+          expect(image.flaggers.length).toEqual(1);
+          expect(image.flaggers[0]).toEqual(agent._id);
+          // unflag
+          image.flag(agent, (err, image) => {
+            if (err) return done.fail(err);
+            expect(image.flagged).toBe(false);
+            expect(image.flaggers.length).toEqual(0);
+
+            done();
+          });
+        });
+      });
+
+      it('adds agent to list of agents who flagged this image if passed an agent _id', done => {
+        expect(image.flagged).toBe(false);
+        expect(image.flaggers.length).toEqual(0);
+        // like
+        image.flag(agent._id, (err, image) => {
+          if (err) return done.fail(err);
+          expect(image.flagged).toBe(true);
+          expect(image.flaggers.length).toEqual(1);
+          expect(image.flaggers[0]).toEqual(agent._id);
+          // unlike
+          image.flag(agent._id, (err, image) => {
+            if (err) return done.fail(err);
+            expect(image.flagged).toBe(false);
+            expect(image.flaggers.length).toEqual(0);
+
+            done();
+          });
+        });
+      });
+    });
+
+
+    /**
      * #togglePublished
      */
     describe('.togglePublished', () => {
       it('toggles the published property', done => {
-        expect(image.published).toBe(false);
+        expect(image.published).toEqual(null);
         // on
         image.togglePublished((err, image) => {
           if (err) return done.fail(err);
-          expect(image.published).toBe(true);
+          expect(image.published instanceof Date).toBe(true);
           // off
           image.togglePublished((err, image) => {
             if (err) return done.fail(err);
-            expect(image.published).toBe(false);
+            expect(image.published).toEqual(null);
             done();
           });
         });

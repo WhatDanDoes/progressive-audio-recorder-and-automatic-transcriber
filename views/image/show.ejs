@@ -2,37 +2,44 @@
   <% include ../_partials/messages %>
   <main>
     <article class="post">
-      <header>
-        <img class="avatar" src="<%= image.photographer.get('picture') %>" />
-        <aside>
-          <div><%= image.photographer.get('nickname') %></div>
-          <time><%= image.updatedAt %></time>
-        </aside>
-        <span class="post-menu">
-          <i class="fas fa-ellipsis-h"></i>
-          <div class="dropdown-content">
-            <p>Flag post</p>
-          </div>
-        </span>
-      </header>
+      <% include _header %>
       <section class="image">
         <img src="/<%= image.path %>" />
       </section>
+      <% include _feedbackControls %>
+      <section class="notes">
+        <% for (let note of image.notes) { %>
+          <article class="note">
+            <header>
+              <% if (note.author._id.toString() === agent._id.toString() ||
+                     image.photographer._id.toString() === agent._id.toString() ||
+                     (process.env.SUDO && process.env.SUDO === agent.email)) { %>
+                <% include _noteControls %>
+              <% } %>
+              <img class="avatar" src="<%= note.author.get('picture') %>" />
+              <aside>
+                <span><%= note.author.get('nickname') %></span>
+                <div class="note-content"><%= note.text %></div>
+              </aside>
+            </header>
+          </article>
+        <% } %>
+      </section>
+      <section class="likes">
+        <% for (let like of image.likes) { %>
+          <article class="like">
+            <header>
+              <img class="avatar" src="<%= like.get('picture') %>" />
+              <aside>
+                <div><%= like.get('nickname') %> <i class="fas fa-heart">s</i> this</div>
+              </aside>
+            </header>
+          </article>
+        <% } %>
+      </section>
       <% if (canWrite) { %>
-        <section id="image-controls">
-          <form action="<%= `/${image.path.replace('uploads', 'image')}?_method=DELETE` %>" method="post" id="delete-image-form">
-            <button id="delete-image" type="submit">Delete</button>
-          </form>
-          <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
-            <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" id="publish-image-form">
-              <button id="publish-image" type="submit">Publish</button>
-            </form>
-          <% } %>
-        </section>
+        <% include _controls %>
       <% } %>
-      <footer>
-        <div><i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)"></i></div>
-      </header>
     </article>
   </main>
 <% include ../_partials/footer %>

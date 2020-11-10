@@ -1,0 +1,9 @@
+  <span class="note-menu">
+    <i class="fas fa-ellipsis-h"></i>
+    <div class="dropdown-content">
+      <form action="<%= `/${image.path.replace('uploads', 'image')}/note/${note._id}?_method=DELETE` %>" method="post" class="delete-image-note">
+        <button class="delete-note" type="submit">Delete</button>
+      </form>
+    </div>
+  </span>
+

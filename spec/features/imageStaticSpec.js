@@ -84,7 +84,7 @@ describe('imageStaticSpec', () => {
         const images = [
           { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
           { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: true },
+          { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: new Date() },
           { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
         ];
         models.Image.create(images).then(results => {
@@ -126,7 +126,7 @@ describe('imageStaticSpec', () => {
       });
 
       it('allows an agent to view a static image file that has been published', done => {
-        models.Image.find({ published: true }).then(published => {
+        models.Image.find({ published: { '$ne': null } }).then(published => {
           expect(published.length).toEqual(1);
           request(app)
             .get(`/${published[0].path}`)
@@ -158,7 +158,7 @@ describe('imageStaticSpec', () => {
       });
 
       it('does not allow an agent to view a static image file that has been not been published', done => {
-        models.Image.find({ published: false, photographer: troy._id}).then(unpublished => {
+        models.Image.find({ published: null, photographer: troy._id}).then(unpublished => {
           expect(unpublished.length).toEqual(1);
           request(app)
             .get(`/${unpublished[0].path}`)
@@ -194,7 +194,7 @@ describe('imageStaticSpec', () => {
       const images = [
         { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
         { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-        { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: true },
+        { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: new Date() },
         { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
       ];
       models.Image.create(images).then(results => {
@@ -216,7 +216,7 @@ describe('imageStaticSpec', () => {
     });
 
     it('finds a static image file that has been published', done => {
-      models.Image.find({ published: true }).then(published => {
+      models.Image.find({ published: { '$ne': null } }).then(published => {
         expect(published.length).toEqual(1);
         request(app)
           .get(`/${published[0].path}`)

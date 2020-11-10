@@ -16,7 +16,17 @@ function like(path, el) {
         el.classList.add('far');
       }
     }
-
+    return res.json();
+  })
+  .then(image => {
+    var totalNotes = image.likes.length + image.notes.length;
+    if (totalNotes) {
+      var pluralized = totalNotes === 1 ? 'note' : 'notes';
+      el.textContent = ' ' + totalNotes + ' ' + pluralized;
+    }
+    else {
+      el.textContent = '';
+    }
   }).catch(err => {
     console.error(err);
   });

@@ -8,19 +8,7 @@
       <% for (let image of images) { %>
         <article class="post">
           <% if (agent) { %>
-            <header>
-              <img class="avatar" src="<%= image.photographer.get('picture') %>" />
-              <aside>
-                <div><%= image.photographer.get('nickname') %></div>
-                <time><%= image.updatedAt %></time>
-              </aside>
-              <span class="post-menu">
-                <i class="fas fa-ellipsis-h"></i>
-                <div class="dropdown-content">
-                  <p>Flag post</p>
-                </div>
-              </span>
-            </header>
+            <% include image/_header %>
           <% } %>
           <section class="photo">
           <% if (agent) { %>
@@ -32,14 +20,12 @@
           <% } %>
           </section>
           <% if (agent) { %>
-            <footer>
-              <div><i class="like-button <%= image.likes.indexOf(agent._id) > -1 ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)"></i></div>
-            </header>
+            <% include image/_feedbackControls %>
           <% } %>
         </article>
       <% } %>
       <% include _partials/pager %>
     <% } %>
-  </main> 
+  </main>
 <% include _partials/footer %>
 
