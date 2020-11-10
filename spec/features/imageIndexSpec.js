@@ -129,7 +129,8 @@ describe('imageIndexSpec', () => {
 
       it('allows an agent to view his own album', () => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.elements('section.image img', 3);
+        browser.assert.elements('article.post section.image img', 3);
+        browser.assert.elements('article.post section.image-controls', 3);
       });
 
       it('allows an agent to view an album he can read', done => {
