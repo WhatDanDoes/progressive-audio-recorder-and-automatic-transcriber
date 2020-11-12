@@ -20,6 +20,7 @@
     "http-errors": "~1.6.3",
     "is-mobile": "^2.2.2",
     "jsonwebtoken": "^8.5.1",
+    "marked": "^1.2.3",
     "method-override": "^3.0.0",
     "mkdirp": "^0.5.1",
     "mongoose": "^5.10.9",
