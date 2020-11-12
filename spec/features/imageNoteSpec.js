@@ -167,6 +167,60 @@ describe('Writing note on an image', () => {
         });
       });
 
+      it('preserves newline characters in the database', done => {
+        let newlines = 'Why\n\nThe\n\nFace\n\n?';
+        browser.fill('textarea', newlines);
+        browser.pressButton('Post', err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+
+          models.Image.find({ published: { $ne: null } }).populate('notes').then(images => {
+            expect(images.length).toEqual(1);
+            expect(images[0].notes.length).toEqual(1);
+            expect(images[0].notes[0].text).toEqual(newlines);
+
+            done();
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+      });
+
+      it('preserves newline characters on the display', done => {
+        let newlines = 'Why\n\nThe\n\nFace\n\n?';
+        browser.fill('textarea', newlines);
+        browser.pressButton('Post', err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+
+          browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+            browser.assert.text('.note-content p:first-child', 'Why');
+            browser.assert.text('.note-content p:nth-child(2)', 'The');
+            browser.assert.text('.note-content p:nth-child(3)', 'Face');
+            browser.assert.text('.note-content p:last-child', '?');
+            done();
+          });
+        });
+      });
+
+      it('applies markdown to the note content', done => {
+        let newlines = '# Why\n\n_The_\n\n ## Face\n\n?';
+        browser.fill('textarea', newlines);
+        browser.pressButton('Post', err => {
+          if (err) return done.fail(err);
+          browser.assert.success();
+
+          browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+            browser.assert.text('.note-content h1', 'Why');
+            browser.assert.text('.note-content em', 'The');
+            browser.assert.text('.note-content h2', 'Face');
+            done();
+          });
+        });
+      });
+
+
+
       it('adds the note to total likes and pluralizes note count', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 

@@ -14,6 +14,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const isMobile = require('is-mobile');
 const url = require('url');
+const marked = require('marked');
 
 const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
@@ -130,13 +131,13 @@ router.get('/:domain/:agentId/:imageId', (req, res) => {
     .populate({ path: 'notes', populate: { path: 'author', model: 'Agent' }}).then(image => {
 
     if (image.published && !image.flagged) {
-      return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+      return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
     }
 
     if (image.flagged) {
       req.flash('error', 'Image flagged');
       if (process.env.SUDO === req.user.email) {
-        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
       }
       return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
     }
@@ -147,7 +148,7 @@ router.get('/:domain/:agentId/:imageId', (req, res) => {
         return res.redirect('/');
       }
       if (readables.includes(`${req.params.domain}/${req.params.agentId}`)) {
-        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite });
+        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
       }
       req.flash('error', 'You are not authorized to access that resource');
       return res.redirect('/');

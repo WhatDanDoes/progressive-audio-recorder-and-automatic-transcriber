@@ -19,7 +19,7 @@
               <img class="avatar" src="<%= note.author.get('picture') %>" />
               <aside>
                 <span><%= note.author.get('nickname') %></span>
-                <div class="note-content"><%= note.text %></div>
+                <div class="note-content"><%- marked(note.text) %></div>
               </aside>
             </header>
           </article>
