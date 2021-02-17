@@ -309,7 +309,8 @@ describe('landing page', () => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.text('#page h1 a', process.env.TITLE); done();
+        browser.assert.text('#page h1 a', process.env.TITLE);
+        done();
       });
     });
 
