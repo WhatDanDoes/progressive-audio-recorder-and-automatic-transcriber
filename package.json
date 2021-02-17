@@ -1,5 +1,5 @@
 {
-  "name": "basic-photo-server",
+  "name": "auth0-photo-server",
   "version": "0.0.0",
   "private": true,
   "scripts": {
