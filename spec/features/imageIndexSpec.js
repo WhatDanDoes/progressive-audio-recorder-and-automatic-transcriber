@@ -92,40 +92,58 @@ describe('imageIndexSpec', () => {
     });
 
     describe('authorized', () => {
-      it('displays an Android deep link with JWT if browser is mobile', done => {
-        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-        // See `GET /image/:domain/:agentId`
-        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 
+      it('displays an Android deep link with JWT if browser is mobile', done => {
         browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
         browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
 
           browser.assert.success();
           browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-          browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
           browser.assert.element('.deep-link');
+          browser.assert.element('form[action="/image"][method="post"]');
+          browser.assert.element('input[type="file"][accept="image/*"]');
           done();
         });
       });
 
-      it('does not display an Android deep link if browser is not mobile', done => {
-        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-        // See `GET /image/:domain/:agentId`
-        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
-
-        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
-
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-          browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
-          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
-          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
-
-          done();
-        });
-      });
+      //
+      // Removing augmented native app...
+      //
+//      it('displays an Android deep link with JWT if browser is mobile', done => {
+//        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
+//        // See `GET /image/:domain/:agentId`
+//        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
+//
+//        browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
+//        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+//          if (err) return done.fail(err);
+//
+//          browser.assert.success();
+//          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+//          browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+//          browser.assert.element('.deep-link');
+//          done();
+//        });
+//      });
+//
+//      it('does not display an Android deep link if browser is not mobile', done => {
+//        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
+//        // See `GET /image/:domain/:agentId`
+//        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
+//
+//        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+//          if (err) return done.fail(err);
+//          browser.assert.success();
+//
+//          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+//          browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
+//          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
+//          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
+//
+//          done();
+//        });
+//      });
 
       it('allows an agent to view his own album', () => {
         browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
