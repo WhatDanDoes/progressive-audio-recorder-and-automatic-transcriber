@@ -112,9 +112,19 @@ describe('agentIndexSpec', () => {
         browser.assert.text('h2', `Hello, ${agent.email}`);
       });
 
-      it('displays an Android deep link with JWT', () => {
-        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+      //
+      // Removing augmented native app...
+      //
+//      it('displays an Android deep link with JWT', () => {
+//        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+//      });
+
+      it('displays an add-photo form', () => {
+        browser.assert.element('.deep-link');
+        browser.assert.element('form[action="/image"][method="post"]');
+        browser.assert.element('input[type="file"][accept="image/*"]');
       });
+
 
       it('shows a list of albums the agent can read', () => {
         expect(agent.canRead.length).toEqual(1);
