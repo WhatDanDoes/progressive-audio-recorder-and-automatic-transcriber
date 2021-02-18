@@ -546,6 +546,13 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
   box-shadow: .25em .25em rgb(0,0,0,0.2);
 }
 
+/* 2021-2-18 https://dev.to/ibn_abubakre/styling-file-inputs-like-a-boss-mhm */
+#photos-input {
+  opacity: 0;
+  width: 0.1px;
+  height: 0.1px;
+  position: absolute;
+}
 
 /**
  * Image post
