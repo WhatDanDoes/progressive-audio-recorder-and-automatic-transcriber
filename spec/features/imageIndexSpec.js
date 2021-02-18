@@ -102,7 +102,9 @@ describe('imageIndexSpec', () => {
           browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
           browser.assert.element('.deep-link');
           browser.assert.element('form[action="/image"][method="post"]');
-          browser.assert.element('input[type="file"][accept="image/*"]');
+          browser.assert.element('input[id="photos-input"][type="file"][accept="image/*"]');
+          browser.assert.text('label[for="photos-input"]', 'Add photos');
+          browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
           done();
         });
       });

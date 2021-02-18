@@ -1,7 +1,11 @@
     <% if (isMobile) { %>
       <section class="deep-link">
         <form action="/image" method="post">
-          <input type="file" accept="image/*">
+          <input id="photos-input" type="file" accept="image/*">
+          <label for="photos-input">
+            <img src="/images/bpe-logo.png"><br>
+            Add photos
+          </label>
         </form>
       </section>
     <% } else { %>
