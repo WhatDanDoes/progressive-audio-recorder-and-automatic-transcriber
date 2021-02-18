@@ -1,7 +1,7 @@
     <% if (isMobile) { %>
       <section class="deep-link">
-        <form action="/image" method="post">
-          <input id="photos-input" type="file" accept="image/*">
+        <form action="/image" method="post" id="photos-form">
+          <input id="photos-input" type="file" accept="image/*" name="docs">
           <label for="photos-input">
             <img src="/images/bpe-logo.png"><br>
             Add photos
@@ -9,8 +9,13 @@
         </form>
       </section>
     <% } else { %>
-      <section class="center">
-        <h2>This web app is augmented with a native Android app</h2>
-        <h3>Login from your tablet or phone to send photos</h3>
+      <section class="deep-link">
+        <form action="/image" method="post" id="photos-form">
+          <input id="photos-input" type="file" accept="image/*" name="docs">
+            <label for="photos-input">
+              <img src="/images/bpe-logo.png"><br>
+              Add photos
+            </label>
+        </form>
       </section>
     <% } %>
