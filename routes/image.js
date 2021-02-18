@@ -275,7 +275,15 @@ router.patch('/:domain/:agentId/:imageId/like', (req, res) => {
 /**
  * POST /image
  */
-router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
+router.post('/', upload.array('docs', 8), function(req, res, next) {
+    // If coming from the native app
+    if (req.headers['accept'] === 'application/json') {
+      return jwtAuth(req, res, next);
+    }
+    // Non-native app authorization
+    ensureAuthorized(req, res, next);
+  }, (req, res) => {
+
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
