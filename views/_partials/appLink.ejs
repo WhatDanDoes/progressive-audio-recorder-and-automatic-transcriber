@@ -1,9 +1,8 @@
     <% if (isMobile) { %>
       <section class="deep-link">
-        <a href="bpe://bpe?token=<%= token %>&domain=<%= encodeURIComponent(process.env.DOMAIN) %>">
-          <img src="/images/bpe-logo.png">
-          <p>Add photos</p>
-        </a>
+        <form action="/image" method="post">
+          <input type="file" accept="image/*">
+        </form>
       </section>
     <% } else { %>
       <section class="center">
