@@ -13,6 +13,7 @@ module.exports = function(mock) {
     mock({
       ...mocks,
       'public/scripts/like.js': fs.readFileSync('public/scripts/like.js'),
+      'public/scripts/upload.js': fs.readFileSync('public/scripts/upload.js'),
       'spec/files/troll.jpg': fs.readFileSync('spec/files/troll.jpg'),
       'spec/files/troll.png': fs.readFileSync('spec/files/troll.png'),
       'views/index.ejs': fs.readFileSync('views/index.ejs'),
