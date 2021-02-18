@@ -47,7 +47,7 @@ describe('imageIndexSpec', () => {
   });
 
   afterEach(function(done) {
-    models.mongoose.connection.db.dropDatabase().then(function(err, result) {
+    models.mongoose.connection.db.dropDatabase().then(result => {
       done();
     }).catch(function(err) {
       done.fail(err);
