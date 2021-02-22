@@ -390,48 +390,186 @@ describe('upload image', () => {
         });
       });
 
-//      it('does not write a file to the file system', done => {
-//        fs.readdir('uploads', (err, files) => {
+      it('does not write a file to the file system', done => {
+        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+          if (err) {
+            return done.fail(err);
+          }
+          expect(files.length).toEqual(0);
+
+          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+              if (err) {
+                return done.fail(err);
+              }
+              expect(files.length).toEqual(0);
+              done();
+            });
+          });
+        });
+      });
+
+      it('does not create a database record', done => {
+        models.Image.find({}).then(images => {
+          expect(images.length).toEqual(0);
+          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+            models.Image.find({}).then(images => {
+              expect(images.length).toEqual(0);
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+    });
+
+    describe('authenticated access', () => {
+      it('displays a friendly message upon successful receipt of file', done => {
+        browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+          browser.assert.redirected();
+          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+          browser.assert.text('.alert.alert-success', 'Image received');
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+//      it('writes the file to the disk on agent\'s first access', done => {
+//        fs.readdir(`uploads/`, (err, files) => {
+//          if (err) {
+//            return done.fail(err);
+//          }
+//          expect(files.length).toEqual(0);
+//
+//          request(app)
+//            .post('/image')
+//            .set('Accept', 'application/json')
+//            .field('token', token)
+//            .attach('docs', 'spec/files/troll.jpg')
+//            .expect(201)
+//            .end(function(err, res) {
+//              if (err) {
+//                return done.fail(err);
+//              }
+//              expect(res.body.message).toEqual('Image received');
+//
+//              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+//
+//                if (err) {
+//                  return done.fail(err);
+//                }
+//                expect(files.length).toEqual(1);
+//
+//                done();
+//              });
+//          });
+//        });
+//      });
+//
+//      it('writes multiple attached files to disk', done => {
+//        fs.readdir(`uploads`, (err, files) => {
 //          if (err) {
 //            return done.fail(err);
 //          }
 //          expect(files.length).toEqual(0);
 //          request(app)
 //            .post('/image')
+//            .set('Accept', 'application/json')
+//            .field('token', token)
 //            .attach('docs', 'spec/files/troll.jpg')
+//            .attach('docs', 'spec/files/troll.png')
 //            .expect('Content-Type', /json/)
-//            .expect(401)
+//            .expect(201)
 //            .end(function(err, res) {
 //              if (err) {
 //                return done.fail(err);
 //              }
-//
-//              fs.readdir('uploads', (err, files) => {
+//              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 //                if (err) {
 //                  return done.fail(err);
 //                }
-//                expect(files.length).toEqual(0);
+//                expect(files.length).toEqual(2);
+//
 //                done();
+//              });
+//            });
+//          });
+//      });
+//
+//      it('writes the file to the disk on agent\'s subsequent accesses', done => {
+//        fs.readdir(`uploads/`, (err, files) => {
+//          if (err) {
+//            return done.fail(err);
+//          }
+//          expect(files.length).toEqual(0);
+//
+//          request(app)
+//            .post('/image')
+//            .set('Accept', 'application/json')
+//            .field('token', token)
+//            .attach('docs', 'spec/files/troll.jpg')
+//            .expect(201)
+//            .end(function(err, res) {
+//              if (err) {
+//                return done.fail(err);
+//              }
+//              expect(res.body.message).toEqual('Image received');
+//
+//              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+//
+//                if (err) {
+//                  return done.fail(err);
+//                }
+//                expect(files.length).toEqual(1);
+//
+//                request(app)
+//                  .post('/image')
+//                  .set('Accept', 'application/json')
+//                  .field('token', token)
+//                  .attach('docs', 'spec/files/troll.jpg')
+//                  .expect(201)
+//                  .end(function(err, res) {
+//                    if (err) {
+//                      return done.fail(err);
+//                    }
+//                    expect(res.body.message).toEqual('Image received');
+//
+//                    fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+//
+//                      if (err) {
+//                        return done.fail(err);
+//                      }
+//                      expect(files.length).toEqual(2);
+//
+//                      done();
+//                    });
+//                  });
 //              });
 //            });
 //        });
 //      });
 //
-//      it('does not create a database record', done => {
+//      it('creates a database record', done => {
 //        models.Image.find({}).then(images => {
 //          expect(images.length).toEqual(0);
 //          request(app)
 //            .post('/image')
+//            .set('Accept', 'application/json')
+//            .field('token', token)
 //            .attach('docs', 'spec/files/troll.jpg')
-//            .expect('Content-Type', /json/)
-//            .expect(401)
+//            .expect(201)
 //            .end(function(err, res) {
 //              if (err) {
 //                return done.fail(err);
 //              }
 //
 //              models.Image.find({}).then(images => {
-//                expect(images.length).toEqual(0);
+//                expect(images.length).toEqual(1);
+//                expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 //
 //                done();
 //              }).catch(err => {
@@ -442,9 +580,54 @@ describe('upload image', () => {
 //          done.fail(err);
 //        });
 //      });
+//
+//      it('writes a database record for each attached file', done => {
+//        models.Image.find({}).then(images => {
+//          expect(images.length).toEqual(0);
+//
+//          request(app)
+//            .post('/image')
+//            .set('Accept', 'application/json')
+//            .field('token', token)
+//            .attach('docs', 'spec/files/troll.jpg')
+//            .attach('docs', 'spec/files/troll.png')
+//            .expect('Content-Type', /json/)
+//            .expect(201)
+//            .end(function(err, res) {
+//              if (err) {
+//                return done.fail(err);
+//              }
+//              models.Image.find({}).then(images => {
+//                expect(images.length).toEqual(2);
+//                expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+//                expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+//
+//                done();
+//              }).catch(err => {
+//                done.fail(err);
+//              });
+//            });
+//        }).catch(err => {
+//          done.fail(err);
+//        });
+//      });
+//
+//
+//      it('returns a 400 error if no image is defined', done => {
+//        request(app)
+//          .post('/image')
+//          .set('Accept', 'application/json')
+//          .field('token', token)
+//          .expect('Content-Type', /json/)
+//          .expect(400)
+//          .end(function(err, res) {
+//            if (err) {
+//              return done.fail(err);
+//            }
+//            expect(res.body.message).toEqual('No image provided');
+//            done();
+//          });
+//      });
     });
-
-
-
   });
 });
