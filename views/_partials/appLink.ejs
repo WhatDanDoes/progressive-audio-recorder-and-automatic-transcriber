@@ -1,6 +1,6 @@
     <% if (isMobile) { %>
       <section class="deep-link">
-        <form action="/image" method="post" id="photos-form">
+        <form action="/image" method="post" id="photos-form" enctype="multipart/form-data">
           <input id="photos-input" type="file" accept="image/*" name="docs">
           <label for="photos-input">
             <img src="/images/bpe-logo.png"><br>
@@ -10,7 +10,7 @@
       </section>
     <% } else { %>
       <section class="deep-link">
-        <form action="/image" method="post" id="photos-form">
+        <form action="/image" method="post" id="photos-form" enctype="multipart/form-data">
           <input id="photos-input" type="file" accept="image/*" name="docs">
             <label for="photos-input">
               <img src="/images/bpe-logo.png"><br>
