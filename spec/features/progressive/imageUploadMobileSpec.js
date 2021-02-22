@@ -154,8 +154,11 @@ describe('image mobile upload', () => {
               }]);
             });
           },
-
-          getUserMedia: () => { console.log('getting user media!!!'); }
+          getUserMedia: () => {
+            return new Promise((resolve, reject) => {
+              resolve('howdy!');
+            });
+          }
         };
 
         Browser.extend(function(browser) {
@@ -181,6 +184,7 @@ describe('image mobile upload', () => {
     });
 
     describe('camera available', () => {
+
       const mediaDevices = {
         enumerateDevices: () => {
           return new Promise((resolve, reject) => {
@@ -204,7 +208,12 @@ describe('image mobile upload', () => {
             }]);
           });
         },
-        getUserMedia: () => { console.log('getting user media!!!'); }
+        getUserMedia: () => {
+          return new Promise((resolve, reject) => {
+            resolve('howdy!');
+          });
+        }
+
       };
 
 
@@ -232,24 +241,71 @@ describe('image mobile upload', () => {
           });
         });
       });
-    });
 
-    describe('with no access', () => {
+      describe('access', () => {
 
-      beforeEach(done => {
-        done();
+        let browser;
+        beforeEach(done => {
+          spyOn(mediaDevices, 'getUserMedia').and.callThrough();
+
+          /**
+           * Mock browser MediaDevices interface
+           */
+          Browser.extend(function(browser) {
+            browser.on('response', (req, res) => {
+              if (browser.window) {
+                browser.window.navigator.mediaDevices = mediaDevices;
+              }
+            });
+          });
+
+          browser = new Browser();
+          browser.visit('/', err => {
+            if (err) return done.fail(err);
+
+            browser.clickLink('Login', err => {
+              if (err) return done.fail(err);
+              browser.assert.element('#camera-button');
+              browser.assert.elements('#photos-form', 0);
+              done();
+            });
+          });
+        });
+
+        it('requests the appropriate media access permissions ', done => {
+          browser.click('#camera-button').then(res => {
+            expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: false, video: true });
+            done();
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        describe('not granted', () => {
+          it('reverts to the basic image upload form', done => {
+            browser.click('#camera-button').then(res => {
+              browser.assert.element('#camera-button');
+              browser.assert.elements('#photos-form', 0);
+              browser.assert.elements('video#player',0 );
+
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+        });
+
+        describe('granted', () => {
+          it('reveals the video player element', done => {
+            browser.click('#camera-button').then(res => {
+              browser.assert.element('video#player');
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+        });
       });
-
-      it('asks for access on click', done => {
-        done.fail();
-      });
-    });
-
-    describe('with access', () => {
-      it('does not ask for access on click', done => {
-        done.fail();
-      });
-
     });
   });
 
