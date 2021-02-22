@@ -181,36 +181,37 @@ describe('image mobile upload', () => {
     });
 
     describe('camera available', () => {
+      const mediaDevices = {
+        enumerateDevices: () => {
+          return new Promise((resolve, reject) => {
+            resolve([{
+              deviceId: "",
+              groupId: "someaudioinputgroupid",
+              kind: "audioinput",
+              label: ""
+            },
+            {
+              deviceId: "",
+              groupId: "default",
+              kind: "audiooutput",
+              label: ""
+            },
+            {
+              deviceId: "",
+              groupId: "somecrazyvideoinputgroupid",
+              kind: "videoinput",
+              label: ""
+            }]);
+          });
+        },
+        getUserMedia: () => { console.log('getting user media!!!'); }
+      };
+
+
       it('displays the progressive, Javascript-driven browser camera', done => {
         /**
          * Mock browser MediaDevices interface
          */
-        const mediaDevices = {
-          enumerateDevices: () => {
-            return new Promise((resolve, reject) => {
-              resolve([{
-                deviceId: "",
-                groupId: "someaudioinputgroupid",
-                kind: "audioinput",
-                label: ""
-              },
-              {
-                deviceId: "",
-                groupId: "default",
-                kind: "audiooutput",
-                label: ""
-              },
-              {
-                deviceId: "",
-                groupId: "somecrazyvideoinputgroupid",
-                kind: "videoinput",
-                label: ""
-              }]);
-            });
-          },
-          getUserMedia: () => { console.log('getting user media!!!'); }
-        };
-
         Browser.extend(function(browser) {
           browser.on('response', (req, res) => {
             if (browser.window) {
@@ -231,6 +232,24 @@ describe('image mobile upload', () => {
           });
         });
       });
+    });
+
+    describe('with no access', () => {
+
+      beforeEach(done => {
+        done();
+      });
+
+      it('asks for access on click', done => {
+        done.fail();
+      });
+    });
+
+    describe('with access', () => {
+      it('does not ask for access on click', done => {
+        done.fail();
+      });
+
     });
   });
 
