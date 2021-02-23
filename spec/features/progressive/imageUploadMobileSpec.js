@@ -213,7 +213,6 @@ describe('image mobile upload', () => {
             resolve('howdy!');
           });
         }
-
       };
 
 
