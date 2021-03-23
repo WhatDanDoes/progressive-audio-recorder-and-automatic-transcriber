@@ -280,12 +280,26 @@ describe('image mobile upload', () => {
           });
         });
 
+        /**
+         * If camera access is blocked, there will be no active stream
+         *
+         *
+         */
         describe('not granted', () => {
+          beforeEach(() => {
+            mediaDevices.getUserMedia = () => {
+              return new Promise((resolve, reject) => {
+                reject('denied!');
+              });
+            };
+          });
+
           it('reverts to the basic image upload form', done => {
             browser.click('#camera-button').then(res => {
-              browser.assert.element('#camera-button');
-              browser.assert.elements('#photos-form', 0);
-              browser.assert.elements('video#player',0 );
+
+              browser.assert.element('#photos-form');
+              browser.assert.elements('#camera-button', 0);
+              browser.assert.elements('video#player', 0);
 
               done();
             }).catch(err => {
@@ -294,7 +308,18 @@ describe('image mobile upload', () => {
           });
         });
 
+        /**
+         * If camera access is granted, there will be an active stream
+         */
         describe('granted', () => {
+          beforeEach(() => {
+            mediaDevices.getUserMedia = () => {
+              return new Promise((resolve, reject) => {
+                resolve('streaming!');
+              });
+            };
+          });
+
           it('reveals the video player element', done => {
             browser.click('#camera-button').then(res => {
               browser.assert.element('video#player');
