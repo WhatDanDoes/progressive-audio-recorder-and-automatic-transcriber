@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function(event) {
-  var supported = 'mediaDevices' in navigator;
+  const supported = 'mediaDevices' in navigator;
 
   if (supported) {
     // Does this device have a camera?
@@ -8,29 +8,35 @@ document.addEventListener('DOMContentLoaded', function(event) {
         /**
          * Swap out basic image upload form
          */
-        var section = document.querySelector('.deep-link');
-        var defaultImageForm = section.innerHTML;
+        const section = document.querySelector('.deep-link');
+        const defaultImageForm = section.innerHTML;
         section.innerHTML = `
           <div id="camera-button">
             <img src="/images/bpe-logo.png"><br>
             Add photos
           </div>
+        `;
+
+        section.insertAdjacentHTML('afterend', `
           <div id="camera">
             <video id="player" autoplay></video>
             <canvas id="viewer"></canvas>
             <nav id="shooter">
-              <button id="reverse-camera"></button>
-              <button id="capture"></button>
-              <button id="go-back"></button>
+              <button id="reverse-camera">Reverse</button>
+              <button id="capture">Capture</button>
+              <button id="go-back">Back</button>
             </nav>
             <nav id="sender">
-              <button id="send"></button>
-              <button id="cancel"></button>
+              <button id="send">Send</button>
+              <button id="cancel">Cancel</button>
             </nav>
           </div>
-        `;
+        `);
 
-        section.addEventListener('click', function(evt) {
+        const camera = document.getElementById('camera');
+
+        const launchCameraButton = document.getElementById('camera-button');
+        launchCameraButton.addEventListener('click', function(evt) {
           const constraints = {
             audio: false,
             video: true,
@@ -39,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             console.log('stream', stream);
 
-            const camera = document.getElementById('camera');
             const player = document.getElementById('player');
             const viewer = document.getElementById('viewer');
             const shooter = document.getElementById('shooter');
@@ -72,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
           }).catch(function(err) {
             console.error(err);
             section.innerHTML = defaultImageForm;
+            camera.remove();
           });
         });
       }
