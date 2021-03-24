@@ -716,10 +716,10 @@ article.note header .note-menu:hover .dropdown-content {
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 3;
+  z-index: 4;
 }
 
-#camera #player nav#shooter {
+#camera nav#shooter {
   position: fixed;
   display: none;
   width: 100%;
@@ -727,10 +727,10 @@ article.note header .note-menu:hover .dropdown-content {
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 3;
+  z-index: 5;
 }
 
-#camera #player nav#sender {
+#camera nav#sender {
   position: fixed;
   display: none;
   width: 100%;
@@ -738,5 +738,5 @@ article.note header .note-menu:hover .dropdown-content {
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 3;
+  z-index: 5;
 }
