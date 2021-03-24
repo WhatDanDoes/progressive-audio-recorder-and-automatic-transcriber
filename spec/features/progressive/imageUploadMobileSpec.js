@@ -212,13 +212,14 @@ describe('image mobile upload', () => {
         },
         getUserMedia: () => {
           return new Promise((resolve, reject) => {
-            resolve('howdy!');
+            resolve({
+              dummy: 'howdy!',
+            });
           });
         }
       };
 
-
-      it('displays the progressive, Javascript-driven browser camera', done => {
+      it('displays the progressive, Javascript-driven browser camera launcher', done => {
         /**
          * Mock browser MediaDevices interface
          */
@@ -275,7 +276,12 @@ describe('image mobile upload', () => {
 
         it('requests the appropriate media access permissions ', done => {
           browser.click('#camera-button').then(res => {
-            expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: false, video: true });
+            expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({
+              audio: false,
+              video: {
+                facingMode: 'environment'
+              }
+            });
             done();
           }).catch(err => {
             done.fail(err);
@@ -284,8 +290,6 @@ describe('image mobile upload', () => {
 
         /**
          * If camera access is blocked, there will be no active stream
-         *
-         *
          */
         describe('not granted', () => {
           beforeEach(() => {
@@ -357,6 +361,8 @@ describe('image mobile upload', () => {
 
             describe('#reverse-camera button', () => {
               describe('exists', () => {
+
+                let videoTrackSpy;
                 beforeEach(done => {
                   mediaDevices.enumerateDevices = () => {
                     return new Promise((resolve, reject) => {
@@ -389,6 +395,23 @@ describe('image mobile upload', () => {
                     });
                   };
 
+                  videoTrackSpy = jasmine.createSpy('stop');
+                  mediaDevices.getUserMedia = () => {
+                    return new Promise((resolve, reject) => {
+                      resolve({
+                        dummy: 'This device has at least two cameras!',
+                        getVideoTracks: () => [
+                          {
+                            stop: videoTrackSpy
+                          },
+                          {
+                            stop: videoTrackSpy
+                          }
+                        ]
+                      });
+                    });
+                  };
+
                   browser.reload(err => {
                     if (err) return done.fail(err);
                     done();
@@ -401,6 +424,67 @@ describe('image mobile upload', () => {
                     browser.assert.style('div#camera nav#shooter button#reverse-camera', 'display', 'block');
 
                     done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+
+                it('stops any existing streams', done => {
+                  expect(videoTrackSpy.calls.count()).toEqual(0);
+                  browser.click('#camera-button').then(res => {
+                    browser.click('#reverse-camera').then(res => {
+                      expect(videoTrackSpy.calls.count()).toEqual(2);
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+
+                /**
+                 * 2021-3-24
+                 *
+                 * Briefly considered reorganizing client side javascript with
+                 * exports in order to make this more testable. It added a bunch
+                 * of complications, especially concerning low browser adoption.
+                 *
+                 * I just need to prove the right method is being called. I'll
+                 * set an `aria-label` to determine the call and its parameters.
+                 * And thus, _behavioural_ testing takes the prize.
+                 *
+                 * ... didn't see the `capture` attribute!
+                 */
+                it('toggles the video constraint and restarts the camera', done => {
+                  browser.assert.element('div#camera nav#shooter button#reverse-camera');
+
+                  browser.click('#camera-button').then(res => {
+                    browser.click('#reverse-camera').then(res => {
+                      browser.assert.element('div#camera nav#shooter button#reverse-camera[aria-label="user"][capture="user"]');
+                      browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'aria-label', 'user');
+                      browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'capture', 'user');
+
+                      browser.click('#reverse-camera').then(res => {
+                        browser.assert.element('div#camera nav#shooter button#reverse-camera[aria-label="environment"][capture="environment"]');
+                        browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'aria-label', 'environment');
+                        browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'capture', 'environment');
+
+                        browser.click('#reverse-camera').then(res => {
+                          browser.assert.element('div#camera nav#shooter button#reverse-camera[aria-label="user"][capture="user"]');
+                          browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'aria-label', 'user');
+                          browser.assert.attribute('div#camera nav#shooter button#reverse-camera', 'capture', 'user');
+
+                          done();
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
                   }).catch(err => {
                     done.fail(err);
                   });

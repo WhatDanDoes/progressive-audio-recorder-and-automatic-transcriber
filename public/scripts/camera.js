@@ -9,6 +9,13 @@ document.addEventListener('DOMContentLoaded', function(event) {
       devices = devices.filter(d => d.kind === 'videoinput');
       if (devices.length) {
 
+        const mediaConstraints = {
+          audio: false,
+          video: {
+            facingMode: 'environment'
+          }
+        };
+
         /**
          * Swap out basic image upload form...
          */
@@ -20,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             Add photos
           </div>
         `;
+        const launchCameraButton = document.getElementById('camera-button');
 
         // ... for camera and components
         section.insertAdjacentHTML('afterend', `
@@ -38,6 +46,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
           </div>
         `);
 
+        const camera = document.getElementById('camera');
+
         /**
          * Launch the camera
          *
@@ -45,16 +55,31 @@ document.addEventListener('DOMContentLoaded', function(event) {
          */
         function launchCamera(constraints) {
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-            console.log('stream', stream);
 
             const player = document.getElementById('player');
             const viewer = document.getElementById('viewer');
             const shooter = document.getElementById('shooter');
             const sender = document.getElementById('sender');
             const context = viewer.getContext('2d');
-            const reverseButton = document.getElementById('reverse-camera');
-//            const captureButton = document.getElementById('capture');
 
+            // Reverse button is only relevant if there is more than one video input
+            const reverseButton = document.getElementById('reverse-camera');
+            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
+            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
+
+            if (devices.length > 1) {
+              function reverseHandler(evt) {
+                player.srcObject.getVideoTracks().forEach(track => track.stop());
+                mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
+                reverseButton.removeEventListener('click', reverseHandler);
+                launchCameraButton.click();
+              }
+              reverseButton.addEventListener('click', reverseHandler);
+            }
+
+            /**
+             *
+             */
             function setInitialCameraState() {
               camera.style.display = 'block';
               player.style.display = 'block';
@@ -70,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
               }
             };
 
+//            const captureButton = document.getElementById('capture');
 //            captureButton.addEventListener('click', () => {
 //              // Draw the video frame to the canvas.
 //              context.drawImage(player, 0, 0, canvas.width, canvas.height);
@@ -87,16 +113,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
           });
         };
 
-        const camera = document.getElementById('camera');
-
-        const launchCameraButton = document.getElementById('camera-button');
         launchCameraButton.addEventListener('click', function(evt) {
-          const constraints = {
-            audio: false,
-            video: true,
-          };
-
-          launchCamera(constraints);
+          launchCamera(mediaConstraints);
         });
       }
     }).catch(function(err) {
