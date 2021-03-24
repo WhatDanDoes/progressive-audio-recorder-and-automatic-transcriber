@@ -15,28 +15,38 @@ document.addEventListener('DOMContentLoaded', function(event) {
             <img src="/images/bpe-logo.png"><br>
             Add photos
           </div>
-          <video id="player" controls autoplay></video>
-          <canvas id="canvas" width=320 height=240></canvas>
+          <div id="camera">
+            <video id="player" autoplay></video>
+            <canvas id="viewer"></canvas>
+            <nav id="shooter"></nav>
+            <nav id="sender"></nav>
+          </div>
         `;
 
         section.addEventListener('click', function(evt) {
-console.log('evt');
-console.log(evt);
-          //const player = document.getElementById('player');
-
           const constraints = {
             audio: false,
             video: true,
           };
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-            section.insertAdjacentHTML =
             console.log('stream', stream);
 
+            const camera = document.getElementById('camera');
             const player = document.getElementById('player');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            const captureButton = document.getElementById('capture');
+            const viewer = document.getElementById('viewer');
+            const shooter = document.getElementById('shooter');
+            const sender = document.getElementById('sender');
+            const context = viewer.getContext('2d');
+//            const captureButton = document.getElementById('capture');
+
+            function setInitialCameraState() {
+              camera.style.display = 'block';
+              player.style.display = 'block';
+              shooter.style.display = 'block';
+              viewer.style.display = 'none';
+              sender.style.display = 'none';
+            }
 
 //            const constraints = {
 //              video: true,
@@ -49,6 +59,8 @@ console.log(evt);
 
             // Attach the video stream to the video element and autoplay.
             player.srcObject = stream;
+
+            setInitialCameraState();
 
           }).catch(function(err) {
             console.error(err);
