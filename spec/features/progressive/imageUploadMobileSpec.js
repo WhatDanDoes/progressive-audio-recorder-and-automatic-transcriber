@@ -332,9 +332,14 @@ describe('image mobile upload', () => {
               browser.assert.style('div#camera video#player', 'display', 'block');
 
               browser.assert.element('div#camera nav#shooter');
+              browser.assert.element('div#camera nav#shooter button#reverse-camera');
+              browser.assert.element('div#camera nav#shooter button#capture');
+              browser.assert.element('div#camera nav#shooter button#go-back');
               browser.assert.style('div#camera nav#shooter', 'display', 'block');
 
               browser.assert.element('div#camera nav#sender');
+              browser.assert.element('div#camera nav#sender button#send');
+              browser.assert.element('div#camera nav#sender button#cancel');
               browser.assert.style('div#camera nav#sender', 'display', 'none');
 
               browser.assert.element('div#camera canvas#viewer');

@@ -18,8 +18,15 @@ document.addEventListener('DOMContentLoaded', function(event) {
           <div id="camera">
             <video id="player" autoplay></video>
             <canvas id="viewer"></canvas>
-            <nav id="shooter"></nav>
-            <nav id="sender"></nav>
+            <nav id="shooter">
+              <button id="reverse-camera"></button>
+              <button id="capture"></button>
+              <button id="go-back"></button>
+            </nav>
+            <nav id="sender">
+              <button id="send"></button>
+              <button id="cancel"></button>
+            </nav>
           </div>
         `;
 
