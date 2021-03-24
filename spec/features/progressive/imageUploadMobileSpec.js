@@ -96,7 +96,7 @@ describe('image mobile upload', () => {
 
       let executed = false;
       let re = new RegExp('camera\.js');
-      let browser = new Browser();
+      let browser = new Browser({ loadCss: true });
 
       browser.on('evaluated', (code, result, filename) => {
         if (re.test(filename)) {
@@ -125,6 +125,8 @@ describe('image mobile upload', () => {
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.element('#photos-form');
+            browser.assert.element('#photos-form[action="/image"]');
+            browser.assert.element('#photos-form[action="/image"] #photos-input[type="file"]');
             browser.assert.elements('#camera-button', 0);
             done();
           });
@@ -350,6 +352,121 @@ describe('image mobile upload', () => {
               done.fail(err);
             });
           });
+
+          describe('#shooter controls', () => {
+
+            describe('#reverse-camera button', () => {
+              describe('exists', () => {
+                beforeEach(done => {
+                  mediaDevices.enumerateDevices = () => {
+                    return new Promise((resolve, reject) => {
+                      resolve([
+                        {
+                          deviceId: "",
+                          groupId: "someaudioinputgroupid",
+                          kind: "audioinput",
+                          label: ""
+                        },
+                        {
+                          deviceId: "",
+                          groupId: "default",
+                          kind: "audiooutput",
+                          label: ""
+                        },
+                        {
+                          deviceId: "",
+                          groupId: "somecrazyvideoinputgroupid",
+                          kind: "videoinput",
+                          label: ""
+                        },
+                        {
+                          deviceId: "",
+                          groupId: "somefrontviewcrazyvideoinputgroupid",
+                          kind: "videoinput",
+                          label: ""
+                        }
+                      ]);
+                    });
+                  };
+
+                  browser.reload(err => {
+                    if (err) return done.fail(err);
+                    done();
+                  });
+                });
+
+                it('displays a reverse-camera button', done => {
+                  browser.click('#camera-button').then(res => {
+                    browser.assert.element('div#camera nav#shooter button#reverse-camera');
+                    browser.assert.style('div#camera nav#shooter button#reverse-camera', 'display', 'block');
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              });
+
+              describe('does not exist', () => {
+                 beforeEach(done => {
+                  mediaDevices.enumerateDevices = () => {
+                    return new Promise((resolve, reject) => {
+                      resolve([
+                        {
+                          deviceId: "",
+                          groupId: "someaudioinputgroupid",
+                          kind: "audioinput",
+                          label: ""
+                        },
+                        {
+                          deviceId: "",
+                          groupId: "default",
+                          kind: "audiooutput",
+                          label: ""
+                        },
+                        {
+                          deviceId: "",
+                          groupId: "somecrazyvideoinputgroupid",
+                          kind: "videoinput",
+                          label: ""
+                        }
+                      ]);
+                    });
+                  };
+
+                  browser.reload(err => {
+                    if (err) return done.fail(err);
+                    done();
+                  });
+                });
+
+                it('does not display a reverse-camera button', done => {
+                  browser.click('#camera-button').then(res => {
+                    browser.assert.element('div#camera nav#shooter button#reverse-camera');
+                    browser.assert.style('div#camera nav#shooter button#reverse-camera', 'display', 'none');
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              });
+            });
+
+            describe('#capture button', () => {
+            });
+
+            describe('#go-back button', () => {
+            });
+          });
+
+          describe('#sender controls', () => {
+            describe('#send button', () => {
+            });
+
+            describe('#cancel button', () => {
+            });
+          });
         });
       });
     });
@@ -373,7 +490,7 @@ describe('image mobile upload', () => {
         });
       });
 
-      browser = new Browser({ waitDuration: '30s', loadCss: false });
+      browser = new Browser({ waitDuration: '30s', loadCss: true });
       //browser.debug();
 
       models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {

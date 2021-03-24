@@ -4,9 +4,13 @@ document.addEventListener('DOMContentLoaded', function(event) {
   if (supported) {
     // Does this device have a camera?
     navigator.mediaDevices.enumerateDevices().then(function(devices) {
-      if (devices.some(d => d.kind === 'videoinput')) {
+
+      // If mobile, it probably has at least a front and back camera
+      devices = devices.filter(d => d.kind === 'videoinput');
+      if (devices.length) {
+
         /**
-         * Swap out basic image upload form
+         * Swap out basic image upload form...
          */
         const section = document.querySelector('.deep-link');
         const defaultImageForm = section.innerHTML;
@@ -17,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
           </div>
         `;
 
+        // ... for camera and components
         section.insertAdjacentHTML('afterend', `
           <div id="camera">
             <video id="player" autoplay></video>
@@ -33,15 +38,12 @@ document.addEventListener('DOMContentLoaded', function(event) {
           </div>
         `);
 
-        const camera = document.getElementById('camera');
-
-        const launchCameraButton = document.getElementById('camera-button');
-        launchCameraButton.addEventListener('click', function(evt) {
-          const constraints = {
-            audio: false,
-            video: true,
-          };
-
+        /**
+         * Launch the camera
+         *
+         * @param Object - user media constraints
+         */
+        function launchCamera(constraints) {
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             console.log('stream', stream);
 
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             const shooter = document.getElementById('shooter');
             const sender = document.getElementById('sender');
             const context = viewer.getContext('2d');
+            const reverseButton = document.getElementById('reverse-camera');
 //            const captureButton = document.getElementById('capture');
 
             function setInitialCameraState() {
@@ -58,11 +61,14 @@ document.addEventListener('DOMContentLoaded', function(event) {
               shooter.style.display = 'block';
               viewer.style.display = 'none';
               sender.style.display = 'none';
-            }
 
-//            const constraints = {
-//              video: true,
-//            };
+              if (devices.length > 1) {
+                reverseButton.style.display = 'block';
+              }
+              else {
+                reverseButton.style.display = 'none';
+              }
+            };
 
 //            captureButton.addEventListener('click', () => {
 //              // Draw the video frame to the canvas.
@@ -79,6 +85,18 @@ document.addEventListener('DOMContentLoaded', function(event) {
             section.innerHTML = defaultImageForm;
             camera.remove();
           });
+        };
+
+        const camera = document.getElementById('camera');
+
+        const launchCameraButton = document.getElementById('camera-button');
+        launchCameraButton.addEventListener('click', function(evt) {
+          const constraints = {
+            audio: false,
+            video: true,
+          };
+
+          launchCamera(constraints);
         });
       }
     }).catch(function(err) {
