@@ -289,7 +289,7 @@ describe('image mobile upload', () => {
           beforeEach(() => {
             mediaDevices.getUserMedia = () => {
               return new Promise((resolve, reject) => {
-                reject('denied!');
+                reject('Camera access denied!');
               });
             };
           });
@@ -315,14 +315,31 @@ describe('image mobile upload', () => {
           beforeEach(() => {
             mediaDevices.getUserMedia = () => {
               return new Promise((resolve, reject) => {
-                resolve('streaming!');
+                resolve('Camera access allowed. Streaming!');
               });
             };
           });
 
-          it('reveals the video player element', done => {
+          it('reveals the camera markup with picture shooter controls', done => {
+            browser.assert.element('div#camera');
+            // Shouldn't the value be 'none'?
+            browser.assert.style('div#camera', 'display', '');
+
             browser.click('#camera-button').then(res => {
-              browser.assert.element('video#player');
+              browser.assert.style('div#camera', 'display', 'block');
+
+              browser.assert.element('div#camera video#player');
+              browser.assert.style('div#camera video#player', 'display', 'block');
+
+              browser.assert.element('div#camera nav#shooter');
+              browser.assert.style('div#camera nav#shooter', 'display', 'block');
+
+              browser.assert.element('div#camera nav#sender');
+              browser.assert.style('div#camera nav#sender', 'display', 'none');
+
+              browser.assert.element('div#camera canvas#viewer');
+              browser.assert.style('div#camera canvas#viewer', 'display', 'none');
+
               done();
             }).catch(err => {
               done.fail(err);
