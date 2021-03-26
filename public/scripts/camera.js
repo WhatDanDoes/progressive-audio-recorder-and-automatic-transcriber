@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const context = viewer.getContext('2d');
         const shooter = document.getElementById('shooter');
         const sender = document.getElementById('sender');
-        const capture = document.getElementById('capture');
+        const cancel = document.getElementById('cancel');
+        const send = document.getElementById('send');
 
         const player = document.getElementById('player');
         // Stop all incoming streams
@@ -57,6 +58,14 @@ document.addEventListener('DOMContentLoaded', function(event) {
           });
           player.srcObject = null;
         }
+
+        const capture = document.getElementById('capture');
+        // Draw the video frame to the canvas.
+        capture.addEventListener('click', () => {
+          stopAllStreams();
+          showPhotoViewer();
+          //context.drawImage(player, 0, 0, viewer.width, viewer.height);
+        });
 
         // Reverse button is only relevant if there is more than one video input
         const reverseButton = document.getElementById('reverse-camera');
@@ -86,6 +95,19 @@ document.addEventListener('DOMContentLoaded', function(event) {
           capture.style.display = 'none';
           viewer.style.display = 'none';
           sender.style.display = 'none';
+          reverseButton.style.display = 'none';
+        };
+
+        /**
+         * Show photo viewer
+         */
+        function showPhotoViewer() {
+          camera.style.display = 'block';
+          player.style.display = 'none';
+          shooter.style.display = 'none';
+          capture.style.display = 'none';
+          viewer.style.display = 'block';
+          sender.style.display = 'block';
           reverseButton.style.display = 'none';
         };
 
@@ -140,12 +162,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
         function launchCamera(constraints) {
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-
-//            const captureButton = document.getElementById('capture');
-//            captureButton.addEventListener('click', () => {
-//              // Draw the video frame to the canvas.
-//              context.drawImage(player, 0, 0, canvas.width, canvas.height);
-//            });
 
             // Attach the video stream to the video element and autoplay.
             player.srcObject = stream;

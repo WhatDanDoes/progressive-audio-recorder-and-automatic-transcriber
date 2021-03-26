@@ -477,7 +477,7 @@ describe('image mobile upload', () => {
                  *
                  * ... didn't see the `capture` attribute!
                  */
-                it('toggles the video constraint and restarts the camera', done => {
+                it('toggles the video constraint and restarts the stream', done => {
                   browser.click('#camera-button').then(res => {
                     browser.click('#reverse-camera').then(res => {
                       browser.assert.element('div#camera nav#shooter button#reverse-camera[aria-label="user"][capture="user"]');
@@ -532,6 +532,105 @@ describe('image mobile upload', () => {
             });
 
             describe('#capture button', () => {
+              let mediaTrackStopSpy, streamRemoveTrackSpy;
+              beforeEach(done => {
+                mediaTrackStopSpy = jasmine.createSpy('stop');
+                streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
+
+                mediaDevices = {
+                  ..._mediaDevices,
+                  getUserMedia: () => {
+                    return new Promise((resolve, reject) => {
+                      resolve({
+                        dummy: 'This device has at least two cameras!',
+                        removeTrack: streamRemoveTrackSpy,
+                        getTracks: () => [
+                          {
+                            stop: mediaTrackStopSpy
+                          }
+                        ]
+                      });
+                    });
+                  }
+                };
+
+                browser.reload(err => {
+                  if (err) return done.fail(err);
+
+                  browser.click('#camera-button').then(res => {
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              });
+
+              it('hides the camera and reveals the viewer interface', done => {
+                browser.assert.style('div#camera', 'display', 'block');
+
+                browser.assert.element('div#camera video#player');
+                browser.assert.style('div#camera video#player', 'display', 'block');
+
+                browser.assert.element('div#camera nav#shooter');
+                browser.assert.element('div#camera nav#shooter button#reverse-camera');
+                browser.assert.element('div#camera nav#shooter button#capture');
+                browser.assert.element('div#camera nav#shooter button#go-back');
+                browser.assert.style('div#camera nav#shooter', 'display', 'block');
+
+                browser.assert.element('div#camera nav#sender');
+                browser.assert.element('div#camera nav#sender button#send');
+                browser.assert.element('div#camera nav#sender button#cancel');
+                browser.assert.style('div#camera nav#sender', 'display', 'none');
+
+                browser.assert.element('div#camera canvas#viewer');
+                browser.assert.style('div#camera canvas#viewer', 'display', 'none');
+
+                browser.click('#capture').then(res => {
+                  browser.assert.style('div#camera', 'display', 'block');
+
+                  browser.assert.element('div#camera video#player');
+                  browser.assert.style('div#camera video#player', 'display', 'none');
+
+                  browser.assert.element('div#camera nav#shooter');
+                  browser.assert.style('div#camera nav#shooter', 'display', 'none');
+
+                  browser.assert.element('div#camera nav#sender');
+                  browser.assert.element('div#camera nav#sender button#send');
+                  browser.assert.element('div#camera nav#sender button#cancel');
+                  browser.assert.style('div#camera nav#sender', 'display', 'block');
+
+                  browser.assert.element('div#camera canvas#viewer');
+                  browser.assert.style('div#camera canvas#viewer', 'display', 'block');
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+
+              it('draws the camera image to the canvas', done => {
+                done.fail();
+              });
+
+              it('removes the existing tracks', done => {
+                expect(streamRemoveTrackSpy.calls.count()).toEqual(0);
+                browser.click('#capture').then(res => {
+                  expect(streamRemoveTrackSpy.calls.count()).toEqual(1);
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+
+              it('stops the existing media streams', done => {
+                expect(mediaTrackStopSpy.calls.count()).toEqual(0);
+                browser.click('#capture').then(res => {
+                  expect(mediaTrackStopSpy.calls.count()).toEqual(1);
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
             });
 
             describe('#go-back button', () => {
@@ -580,7 +679,7 @@ describe('image mobile upload', () => {
                 });
               });
 
-              it('stops the existing tracks', done => {
+              it('removes the existing tracks', done => {
                 expect(streamRemoveTrackSpy.calls.count()).toEqual(0);
                 browser.click('#go-back').then(res => {
                   expect(streamRemoveTrackSpy.calls.count()).toEqual(1);
