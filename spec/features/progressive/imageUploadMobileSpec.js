@@ -357,9 +357,10 @@ describe('image mobile upload', () => {
             describe('#reverse-camera button', () => {
               describe('exists', () => {
 
-                let videoTrackSpy;
+                let mediaTrackStopSpy, streamRemoveTrackSpy;
                 beforeEach(done => {
-                  videoTrackSpy = jasmine.createSpy('stop');
+                  mediaTrackStopSpy = jasmine.createSpy('stop');
+                  streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
 
                   mediaDevices = {
                     ..._mediaDevices,
@@ -397,12 +398,13 @@ describe('image mobile upload', () => {
                       return new Promise((resolve, reject) => {
                         resolve({
                           dummy: 'This device has at least two cameras!',
-                          getVideoTracks: () => [
+                          removeTrack: streamRemoveTrackSpy,
+                          getTracks: () => [
                             {
-                              stop: videoTrackSpy
+                              stop: mediaTrackStopSpy
                             },
                             {
-                              stop: videoTrackSpy
+                              stop: mediaTrackStopSpy
                             }
                           ]
                         });
@@ -427,11 +429,32 @@ describe('image mobile upload', () => {
                   });
                 });
 
-                it('stops any existing streams', done => {
-                  expect(videoTrackSpy.calls.count()).toEqual(0);
+                /**
+                 * 2021-3-26
+                 *
+                 * This makes it so the app doesn't freeze in Android Chrome.
+                 *
+                 * See https://github.com/twilio/twilio-video-app-react/issues/355#issuecomment-780368725
+                 */
+                it('removes existing tracks', done => {
+                  expect(streamRemoveTrackSpy.calls.count()).toEqual(0);
                   browser.click('#camera-button').then(res => {
                     browser.click('#reverse-camera').then(res => {
-                      expect(videoTrackSpy.calls.count()).toEqual(2);
+                      expect(streamRemoveTrackSpy.calls.count()).toEqual(2);
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+
+                it('stops any existing streams', done => {
+                  expect(mediaTrackStopSpy.calls.count()).toEqual(0);
+                  browser.click('#camera-button').then(res => {
+                    browser.click('#reverse-camera').then(res => {
+                      expect(mediaTrackStopSpy.calls.count()).toEqual(2);
                       done();
                     }).catch(err => {
                       done.fail(err);
@@ -450,7 +473,7 @@ describe('image mobile upload', () => {
                  *
                  * I just need to prove the right method is being called. I'll
                  * set an `aria-label` to determine the call and its parameters.
-                 * And thus, _behavioural_ testing takes the prize.
+                 * And thus, _behavioural_ testing wins the day.
                  *
                  * ... didn't see the `capture` attribute!
                  */
@@ -513,9 +536,10 @@ describe('image mobile upload', () => {
 
             describe('#go-back button', () => {
 
-              let videoTrackSpy;
+              let mediaTrackStopSpy, streamRemoveTrackSpy;
               beforeEach(done => {
-                videoTrackSpy = jasmine.createSpy('stop');
+                mediaTrackStopSpy = jasmine.createSpy('stop');
+                streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
 
                 mediaDevices = {
                   ..._mediaDevices,
@@ -523,9 +547,10 @@ describe('image mobile upload', () => {
                     return new Promise((resolve, reject) => {
                       resolve({
                         dummy: 'This device has at least two cameras!',
-                        getVideoTracks: () => [
+                        removeTrack: streamRemoveTrackSpy,
+                        getTracks: () => [
                           {
-                            stop: videoTrackSpy
+                            stop: mediaTrackStopSpy
                           }
                         ]
                       });
@@ -544,10 +569,21 @@ describe('image mobile upload', () => {
                 });
               });
 
-              it('removes the camera from the display', done => {
+              it('does not display the camera', done => {
                 browser.assert.element('div#camera');
+                browser.assert.style('div#camera', 'display', 'block');
                 browser.click('#go-back').then(res => {
-                  browser.assert.elements('div#camera', 0);
+                  browser.assert.style('div#camera', 'display', 'none');
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+
+              it('stops the existing tracks', done => {
+                expect(streamRemoveTrackSpy.calls.count()).toEqual(0);
+                browser.click('#go-back').then(res => {
+                  expect(streamRemoveTrackSpy.calls.count()).toEqual(1);
                   done();
                 }).catch(err => {
                   done.fail(err);
@@ -555,30 +591,9 @@ describe('image mobile upload', () => {
               });
 
               it('stops the existing streams', done => {
-                expect(videoTrackSpy.calls.count()).toEqual(0);
+                expect(mediaTrackStopSpy.calls.count()).toEqual(0);
                 browser.click('#go-back').then(res => {
-                  expect(videoTrackSpy.calls.count()).toEqual(1);
-                  done();
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-
-              /**
-               * 2021-3-25
-               *
-               * This test was born of a weirdness in Android Chrome.
-               * When the camera element is torn down, the background
-               * layer persists. It is like a ghost in the DOM. There
-               * is no evidence of this persistent layer in dev tools.
-               *
-               * No similar problem on desktop Chrome.
-               */
-              it('removes the opaque camera background', done => {
-                browser.assert.style('div#camera', 'background-color', 'rgba(0,0,0,0.5)');
-                expect(videoTrackSpy.calls.count()).toEqual(0);
-                browser.click('#go-back').then(res => {
-                  browser.assert.style('div#camera', 'background-color', 'null');
+                  expect(mediaTrackStopSpy.calls.count()).toEqual(1);
                   done();
                 }).catch(err => {
                   done.fail(err);

@@ -12,8 +12,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const mediaConstraints = {
           audio: false,
           video: {
-            //facingMode: 'environment'
-            deviceId: devices[0].deviceId
+            facingMode: 'environment'
           }
         };
 
@@ -64,6 +63,19 @@ document.addEventListener('DOMContentLoaded', function(event) {
         reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
         reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
 
+        if (devices.length > 1) {
+          reverseButton.addEventListener('click', function(evt) {
+            stopAllStreams();
+            mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
+
+            // More for testing than UX
+            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
+            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
+
+            launchCamera(mediaConstraints);
+          });
+        }
+
         /**
          * Hide camera
          */
@@ -76,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
           sender.style.display = 'none';
           reverseButton.style.display = 'none';
         };
-
 
         /**
          * 2021-3-26
@@ -129,17 +140,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
         function launchCamera(constraints) {
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-
-//            if (devices.length > 1) {
-//              function reverseHandler(evt) {
-//                stopAllStreams();
-//                mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
-//                evt.currentTarget.removeEventListener('click', reverseHandler);
-//                camera.remove();
-//                launchCameraButton.click();
-//              }
-//              reverseButton.addEventListener('click', reverseHandler, { once: true });
-//            }
 
 //            const captureButton = document.getElementById('capture');
 //            captureButton.addEventListener('click', () => {
