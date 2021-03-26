@@ -16,8 +16,42 @@ const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
 describe('image mobile upload', () => {
 
-  let agent;
+  /**
+   * Boilerplate media devices mock for zombie.
+   * Inspired by manual inspection of my desktop browser.
+   * Mobile devices typically have at least two `videoinputs`.
+   */
+  const _mediaDevices = {
+    enumerateDevices: () => {
+      return new Promise((resolve, reject) => {
+        resolve([{
+          deviceId: "",
+          groupId: "someaudioinputgroupid",
+          kind: "audioinput",
+          label: ""
+        },
+        {
+          deviceId: "",
+          groupId: "default",
+          kind: "audiooutput",
+          label: ""
+        },
+        {
+          deviceId: "",
+          groupId: "somecrazyvideoinputgroupid",
+          kind: "videoinput",
+          label: ""
+        }]);
+      });
+    },
+    getUserMedia: () => {
+      return new Promise((resolve, reject) => {
+        resolve('howdy!');
+      });
+    }
+  };
 
+  let agent;
   beforeEach(done => {
     fixtures.load(__dirname + '/../../fixtures/agents.js', models.mongoose, function(err) {
       if (err) {
@@ -61,35 +95,9 @@ describe('image mobile upload', () => {
        * mock that functionality for testing
        */
       Browser.extend(function(browser) {
-        const mediaDevices = {
-          enumerateDevices: () => {
-            return new Promise((resolve, reject) => {
-              resolve([{
-                deviceId: "",
-                groupId: "someaudioinputgroupid",
-                kind: "audioinput",
-                label: ""
-              },
-              {
-                deviceId: "",
-                groupId: "default",
-                kind: "audiooutput",
-                label: ""
-              },
-              {
-                deviceId: "",
-                groupId: "somecrazyvideoinputgroupid",
-                kind: "videoinput",
-                label: ""
-              }]);
-            });
-          },
-          getUserMedia: () => { console.log('getting user media!!!'); }
-        };
-
         browser.on('response', (req, res) => {
           if (browser.window) {
-            browser.window.navigator.mediaDevices = mediaDevices;
+            browser.window.navigator.mediaDevices = _mediaDevices;
           }
         });
       });
@@ -166,7 +174,25 @@ describe('image mobile upload', () => {
         Browser.extend(function(browser) {
           browser.on('response', (req, res) => {
             if (browser.window) {
-              browser.window.navigator.mediaDevices = mediaDevices;
+              browser.window.navigator.mediaDevices = {
+                ...mediaDevices,
+                enumerateDevices: () => {
+                  return new Promise((resolve, reject) => {
+                    resolve([{
+                      deviceId: "",
+                      groupId: "someaudioinputgroupid",
+                      kind: "audioinput",
+                      label: ""
+                    },
+                    {
+                      deviceId: "",
+                      groupId: "default",
+                      kind: "audiooutput",
+                      label: ""
+                    }]);
+                  });
+                },
+              };
             }
           });
         });
@@ -187,37 +213,10 @@ describe('image mobile upload', () => {
 
     describe('camera available', () => {
 
-      const mediaDevices = {
-        enumerateDevices: () => {
-          return new Promise((resolve, reject) => {
-            resolve([{
-              deviceId: "",
-              groupId: "someaudioinputgroupid",
-              kind: "audioinput",
-              label: ""
-            },
-            {
-              deviceId: "",
-              groupId: "default",
-              kind: "audiooutput",
-              label: ""
-            },
-            {
-              deviceId: "",
-              groupId: "somecrazyvideoinputgroupid",
-              kind: "videoinput",
-              label: ""
-            }]);
-          });
-        },
-        getUserMedia: () => {
-          return new Promise((resolve, reject) => {
-            resolve({
-              dummy: 'howdy!',
-            });
-          });
-        }
-      };
+      let mediaDevices;
+      beforeEach(() => {
+        mediaDevices = {..._mediaDevices};
+      });
 
       it('displays the progressive, Javascript-driven browser camera launcher', done => {
         /**
@@ -327,10 +326,6 @@ describe('image mobile upload', () => {
           });
 
           it('reveals the camera markup with picture shooter controls', done => {
-            browser.assert.element('div#camera');
-            // Shouldn't the value be 'none'?
-            browser.assert.style('div#camera', 'display', '');
-
             browser.click('#camera-button').then(res => {
               browser.assert.style('div#camera', 'display', 'block');
 
@@ -364,52 +359,55 @@ describe('image mobile upload', () => {
 
                 let videoTrackSpy;
                 beforeEach(done => {
-                  mediaDevices.enumerateDevices = () => {
-                    return new Promise((resolve, reject) => {
-                      resolve([
-                        {
-                          deviceId: "",
-                          groupId: "someaudioinputgroupid",
-                          kind: "audioinput",
-                          label: ""
-                        },
-                        {
-                          deviceId: "",
-                          groupId: "default",
-                          kind: "audiooutput",
-                          label: ""
-                        },
-                        {
-                          deviceId: "",
-                          groupId: "somecrazyvideoinputgroupid",
-                          kind: "videoinput",
-                          label: ""
-                        },
-                        {
-                          deviceId: "",
-                          groupId: "somefrontviewcrazyvideoinputgroupid",
-                          kind: "videoinput",
-                          label: ""
-                        }
-                      ]);
-                    });
-                  };
-
                   videoTrackSpy = jasmine.createSpy('stop');
-                  mediaDevices.getUserMedia = () => {
-                    return new Promise((resolve, reject) => {
-                      resolve({
-                        dummy: 'This device has at least two cameras!',
-                        getVideoTracks: () => [
+
+                  mediaDevices = {
+                    ..._mediaDevices,
+                    enumerateDevices: () => {
+                      return new Promise((resolve, reject) => {
+                        resolve([
                           {
-                            stop: videoTrackSpy
+                            deviceId: "",
+                            groupId: "someaudioinputgroupid",
+                            kind: "audioinput",
+                            label: ""
                           },
                           {
-                            stop: videoTrackSpy
+                            deviceId: "",
+                            groupId: "default",
+                            kind: "audiooutput",
+                            label: ""
+                          },
+                          {
+                            deviceId: "",
+                            groupId: "somecrazyvideoinputgroupid",
+                            kind: "videoinput",
+                            label: ""
+                          },
+                          {
+                            deviceId: "",
+                            groupId: "somefrontviewcrazyvideoinputgroupid",
+                            kind: "videoinput",
+                            label: ""
                           }
-                        ]
+                        ]);
                       });
-                    });
+                    },
+                    getUserMedia: () => {
+                      return new Promise((resolve, reject) => {
+                        resolve({
+                          dummy: 'This device has at least two cameras!',
+                          getVideoTracks: () => [
+                            {
+                              stop: videoTrackSpy
+                            },
+                            {
+                              stop: videoTrackSpy
+                            }
+                          ]
+                        });
+                      });
+                    }
                   };
 
                   browser.reload(err => {
@@ -457,8 +455,6 @@ describe('image mobile upload', () => {
                  * ... didn't see the `capture` attribute!
                  */
                 it('toggles the video constraint and restarts the camera', done => {
-                  browser.assert.element('div#camera nav#shooter button#reverse-camera');
-
                   browser.click('#camera-button').then(res => {
                     browser.click('#reverse-camera').then(res => {
                       browser.assert.element('div#camera nav#shooter button#reverse-camera[aria-label="user"][capture="user"]');
@@ -492,32 +488,7 @@ describe('image mobile upload', () => {
               });
 
               describe('does not exist', () => {
-                 beforeEach(done => {
-                  mediaDevices.enumerateDevices = () => {
-                    return new Promise((resolve, reject) => {
-                      resolve([
-                        {
-                          deviceId: "",
-                          groupId: "someaudioinputgroupid",
-                          kind: "audioinput",
-                          label: ""
-                        },
-                        {
-                          deviceId: "",
-                          groupId: "default",
-                          kind: "audiooutput",
-                          label: ""
-                        },
-                        {
-                          deviceId: "",
-                          groupId: "somecrazyvideoinputgroupid",
-                          kind: "videoinput",
-                          label: ""
-                        }
-                      ]);
-                    });
-                  };
-
+                beforeEach(done => {
                   browser.reload(err => {
                     if (err) return done.fail(err);
                     done();
@@ -541,6 +512,78 @@ describe('image mobile upload', () => {
             });
 
             describe('#go-back button', () => {
+
+              let videoTrackSpy;
+              beforeEach(done => {
+                videoTrackSpy = jasmine.createSpy('stop');
+
+                mediaDevices = {
+                  ..._mediaDevices,
+                  getUserMedia: () => {
+                    return new Promise((resolve, reject) => {
+                      resolve({
+                        dummy: 'This device has at least two cameras!',
+                        getVideoTracks: () => [
+                          {
+                            stop: videoTrackSpy
+                          }
+                        ]
+                      });
+                    });
+                  }
+                };
+
+                browser.reload(err => {
+                  if (err) return done.fail(err);
+
+                  browser.click('#camera-button').then(res => {
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              });
+
+              it('removes the camera from the display', done => {
+                browser.assert.element('div#camera');
+                browser.click('#go-back').then(res => {
+                  browser.assert.elements('div#camera', 0);
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+
+              it('stops the existing streams', done => {
+                expect(videoTrackSpy.calls.count()).toEqual(0);
+                browser.click('#go-back').then(res => {
+                  expect(videoTrackSpy.calls.count()).toEqual(1);
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+
+              /**
+               * 2021-3-25
+               *
+               * This test was born of a weirdness in Android Chrome.
+               * When the camera element is torn down, the background
+               * layer persists. It is like a ghost in the DOM. There
+               * is no evidence of this persistent layer in dev tools.
+               *
+               * No similar problem on desktop Chrome.
+               */
+              it('removes the opaque camera background', done => {
+                browser.assert.style('div#camera', 'background-color', 'rgba(0,0,0,0.5)');
+                expect(videoTrackSpy.calls.count()).toEqual(0);
+                browser.click('#go-back').then(res => {
+                  browser.assert.style('div#camera', 'background-color', 'null');
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
             });
           });
 
@@ -554,241 +597,5 @@ describe('image mobile upload', () => {
         });
       });
     });
-  });
-
-  describe('browser with camera access granted', () => {
-
-    let browser, lanny, mediaDevices;
-
-    beforeEach(done => {
-      /**
-       * Zombie JS, being what it is, doesn't have any user media. This is how I
-       * mock that functionality for testing
-       */
-      mediaDevices = { getUserMedia: () => {  } };
-      Browser.extend(function(browser) {
-        browser.on('response', (req, res) => {
-          if (browser.window) {
-            browser.window.navigator.mediaDevices = mediaDevices;
-          }
-        });
-      });
-
-      browser = new Browser({ waitDuration: '30s', loadCss: true });
-      //browser.debug();
-
-      models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
-        lanny = results;
-        browser.visit('/', err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
-
-          browser.clickLink('Login', err => {
-            if (err) done.fail(err);
-            browser.assert.success();
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-            done();
-          });
-        });
-      }).catch(error => {
-        done.fail(error);
-      });
-    });
-
-    describe('unauthenticated access', () => {
-      beforeEach(done => {
-        // Expire all sessions
-        models.db.collection('sessions').updateMany({}, { $currentDate: {expires: true} }).then(result => {
-          done();
-        }).catch(err => {
-          done.fail(err);
-        });
-      });
-
-//      it('redirects home with a friendly error message', done => {
-//        browser.click('docs', 'spec/files/troll.jpg').then(res => {
-//          browser.assert.redirected();
-//          browser.assert.url({ pathname: '/' });
-//          browser.assert.text('.alert.alert-danger', 'You need to login first');
-//          done();
-//        });
-//      });
-
-//      it('does not write a file to the file system', done => {
-//        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//          if (err) {
-//            return done.fail(err);
-//          }
-//          expect(files.length).toEqual(0);
-//
-//          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//              if (err) {
-//                return done.fail(err);
-//              }
-//              expect(files.length).toEqual(0);
-//              done();
-//            });
-//          });
-//        });
-//      });
-//
-//      it('does not create a database record', done => {
-//        models.Image.find({}).then(images => {
-//          expect(images.length).toEqual(0);
-//          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//            models.Image.find({}).then(images => {
-//              expect(images.length).toEqual(0);
-//              done();
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          });
-//        }).catch(err => {
-//          done.fail(err);
-//        });
-//      });
-    });
-
-    describe('authenticated access', () => {
-//      it('displays a friendly message upon successful receipt of file', done => {
-//        browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//          browser.assert.redirected();
-//          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-//          browser.assert.text('.alert.alert-success', 'Image received');
-//          done();
-//        }).catch(err => {
-//          done.fail(err);
-//        });
-//      });
-
-//      it('writes the file to the disk on agent\'s first access', done => {
-//        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//          if (err) {
-//            return done.fail(err);
-//          }
-//          expect(files.length).toEqual(0);
-//
-//          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//
-//            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//
-//              if (err) {
-//                return done.fail(err);
-//              }
-//              expect(files.length).toEqual(1);
-//
-//              done();
-//            });
-//          }).catch(err => {
-//            done.fail(err);
-//          });
-//        });
-//      });
-//
-//      // 2021-2-22
-//      //
-//      // This actually meant to test multiple file uploads in one action.
-//      // Currently attaching a file to the `input` triggers an immediate
-//      // `submit`, which makes attaching more than one file impossible.
-//      //
-//      // Noted here so that it can be revisited as progressive app features
-//      // continue to take shape
-//      //
-//      it('writes multiple attached files to disk', done => {
-//
-//        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//          if (err) {
-//            return done.fail(err);
-//          }
-//          expect(files.length).toEqual(0);
-//
-//          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//
-//            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//
-//              if (err) {
-//                return done.fail(err);
-//              }
-//              expect(files.length).toEqual(1);
-//
-//              browser.attach('docs', 'spec/files/troll.png').then(res => {
-//
-//                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//
-//                  if (err) {
-//                    return done.fail(err);
-//                  }
-//                  expect(files.length).toEqual(2);
-//
-//                  done();
-//                });
-//              }).catch(err => {
-//                done.fail(err);
-//              });
-//            });
-//          }).catch(err => {
-//            done.fail(err);
-//          });
-//        });
-//      });
-//
-//      it('creates a database record', done => {
-//        models.Image.find({}).then(images => {
-//          expect(images.length).toEqual(0);
-//
-//          browser.attach('docs', 'spec/files/troll.png').then(res => {
-//            models.Image.find({}).then(images => {
-//              expect(images.length).toEqual(1);
-//              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-//
-//              done();
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          }).catch(err => {
-//            done.fail(err);
-//          });
-//        }).catch(err => {
-//          done.fail(err);
-//        });
-//      });
-//
-//      it('writes a database record for each attached file', done => {
-//        models.Image.find({}).then(images => {
-//          expect(images.length).toEqual(0);
-//
-//          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-//            models.Image.find({}).then(images => {
-//              expect(images.length).toEqual(1);
-//              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-//
-//              browser.attach('docs', 'spec/files/troll.png').then(res => {
-//                models.Image.find({}).then(images => {
-//                  expect(images.length).toEqual(2);
-//                  expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-//                  expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-//
-//                  done();
-//                }).catch(err => {
-//                  done.fail(err);
-//                });
-//              }).catch(err => {
-//                done.fail(err);
-//              });
-//            }).catch(err => {
-//              done.fail(err);
-//            });
-//          }).catch(err => {
-//            done.fail(err);
-//          });
-//        }).catch(err => {
-//          done.fail(err);
-//        });
-//      });
-    });
-  });
-
-  describe('browser with camera access denied', () => {
   });
 });
