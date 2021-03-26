@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         };
 
         /**
-         * Swap out basic image upload form...
+         * Swap out basic image upload form for camera launcher
          */
         const section = document.querySelector('.deep-link');
         const defaultImageForm = section.innerHTML;
@@ -29,38 +29,73 @@ document.addEventListener('DOMContentLoaded', function(event) {
         `;
         const launchCameraButton = document.getElementById('camera-button');
 
-        // ... for camera and components
-        section.insertAdjacentHTML('afterend', `
-          <div id="camera">
-            <video id="player" autoplay></video>
-            <canvas id="viewer"></canvas>
-            <nav id="shooter">
-              <button id="reverse-camera">Reverse</button>
-              <button id="capture">Capture</button>
-              <button id="go-back">Back</button>
-            </nav>
-            <nav id="sender">
-              <button id="send">Send</button>
-              <button id="cancel">Cancel</button>
-            </nav>
-          </div>
-        `);
-
-        const camera = document.getElementById('camera');
-
         /**
          * Launch the camera
          *
          * @param Object - user media constraints
          */
         function launchCamera(constraints) {
-          navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
 
+          // The camera and its components
+          section.insertAdjacentHTML('afterend', `
+            <div id="camera">
+              <video id="player" autoplay></video>
+              <canvas id="viewer"></canvas>
+              <nav id="shooter">
+                <button id="reverse-camera">Reverse</button>
+                <button id="capture">Capture</button>
+                <button id="go-back">Back</button>
+              </nav>
+              <nav id="sender">
+                <button id="send">Send</button>
+                <button id="cancel">Cancel</button>
+              </nav>
+            </div>
+          `);
+          const camera = document.getElementById('camera');
+
+          navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             const player = document.getElementById('player');
+            // Stop all incoming video streams
+            function stopAllStreams() {
+              player.srcObject.getTracks().forEach(track => track.stop());
+            }
+
             const viewer = document.getElementById('viewer');
+            const context = viewer.getContext('2d');
             const shooter = document.getElementById('shooter');
             const sender = document.getElementById('sender');
-            const context = viewer.getContext('2d');
+            const capture = document.getElementById('capture');
+
+            /**
+             * 2021-3-26
+             *
+             * It kind of seems like the `video` element and its associated
+             * APIs are a little picky. I'm not entirely certain on how to best
+             * destroy an element and its streams.
+             *
+             * Most internet lore speaks of this:
+             * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
+             *
+             * The camera behaves much better on desktop Chrome that it does in
+             * Android.
+             */
+            // Close camera and return to app
+            const goBackButton = document.getElementById('go-back');
+            goBackButton.addEventListener('click', function cb(evt) {
+              console.log('Go back!');
+              // What follows is guesswork and sorcery...
+              stopAllStreams();
+              player.pause();
+              player.srcObject = null;
+              player.load();
+              // This is probably unecessary. I'm just trying to erase every
+              // trace of the the video element so it works better on Android.
+              player.remove();
+              camera.remove();
+
+              evt.currentTarget.removeEventListener(event.type, cb);
+            }, { once: true });
 
             // Reverse button is only relevant if there is more than one video input
             const reverseButton = document.getElementById('reverse-camera');
@@ -69,21 +104,24 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
             if (devices.length > 1) {
               function reverseHandler(evt) {
-                player.srcObject.getVideoTracks().forEach(track => track.stop());
+                stopAllStreams();
                 mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
-                reverseButton.removeEventListener('click', reverseHandler);
+                evt.currentTarget.removeEventListener('click', reverseHandler);
+                camera.remove();
                 launchCameraButton.click();
               }
-              reverseButton.addEventListener('click', reverseHandler);
+              reverseButton.addEventListener('click', reverseHandler, { once: true });
             }
 
             /**
-             *
+             * This should be unnecessary, as it is set in the styles.
+             * Can't get tests to pass without explicitly setting them.
              */
             function setInitialCameraState() {
               camera.style.display = 'block';
               player.style.display = 'block';
               shooter.style.display = 'block';
+              capture.style.display = 'block';
               viewer.style.display = 'none';
               sender.style.display = 'none';
 
