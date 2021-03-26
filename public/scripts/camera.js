@@ -12,12 +12,13 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const mediaConstraints = {
           audio: false,
           video: {
-            facingMode: 'environment'
+            //facingMode: 'environment'
+            deviceId: devices[0].deviceId
           }
         };
 
         /**
-         * Swap out basic image upload form for camera launcher
+         * Swap out basic image upload form for camera and launcher
          */
         const section = document.querySelector('.deep-link');
         const defaultImageForm = section.innerHTML;
@@ -26,8 +27,99 @@ document.addEventListener('DOMContentLoaded', function(event) {
             <img src="/images/bpe-logo.png"><br>
             Add photos
           </div>
+          <div id="camera">
+            <video id="player" autoplay></video>
+            <canvas id="viewer"></canvas>
+            <nav id="shooter">
+              <button id="reverse-camera">Reverse</button>
+              <button id="capture">Capture</button>
+              <button id="go-back">Back</button>
+            </nav>
+            <nav id="sender">
+              <button id="send">Send</button>
+              <button id="cancel">Cancel</button>
+            </nav>
+          </div>
         `;
         const launchCameraButton = document.getElementById('camera-button');
+        const camera = document.getElementById('camera');
+        const viewer = document.getElementById('viewer');
+        const context = viewer.getContext('2d');
+        const shooter = document.getElementById('shooter');
+        const sender = document.getElementById('sender');
+        const capture = document.getElementById('capture');
+
+        const player = document.getElementById('player');
+        // Stop all incoming streams
+        function stopAllStreams() {
+          player.srcObject.getTracks().forEach(track => {
+            player.srcObject.removeTrack(track);
+            track.stop();
+          });
+          player.srcObject = null;
+        }
+
+        // Reverse button is only relevant if there is more than one video input
+        const reverseButton = document.getElementById('reverse-camera');
+        reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
+        reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
+
+        /**
+         * Hide camera
+         */
+        function hideCamera() {
+          camera.style.display = 'none';
+          player.style.display = 'none';
+          shooter.style.display = 'none';
+          capture.style.display = 'none';
+          viewer.style.display = 'none';
+          sender.style.display = 'none';
+          reverseButton.style.display = 'none';
+        };
+
+
+        /**
+         * 2021-3-26
+         *
+         * It kind of seems like the `video` element and its associated
+         * APIs are a little picky. I'm not entirely certain on how to best
+         * destroy an element and its streams.
+         *
+         * Most internet lore speaks of this:
+         * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
+         *
+         * The camera behaves much better on desktop Chrome that it does in
+         * Android.
+         *
+         * Found the trick! https://github.com/twilio/twilio-video-app-react/issues/355#issuecomment-780368725
+         *
+         * It's a long-standing bug in Chrome.
+         */
+        // Close camera and return to app
+        const goBackButton = document.getElementById('go-back');
+        goBackButton.addEventListener('click', function cb(evt) {
+          stopAllStreams();
+          hideCamera();
+        });
+
+        /**
+         * The camera interface on launch
+         */
+        function setInitialCameraState() {
+          camera.style.display = 'block';
+          player.style.display = 'block';
+          shooter.style.display = 'block';
+          capture.style.display = 'block';
+          viewer.style.display = 'none';
+          sender.style.display = 'none';
+
+          if (devices.length > 1) {
+            reverseButton.style.display = 'block';
+          }
+          else {
+            reverseButton.style.display = 'none';
+          }
+        };
 
         /**
          * Launch the camera
@@ -36,102 +128,18 @@ document.addEventListener('DOMContentLoaded', function(event) {
          */
         function launchCamera(constraints) {
 
-          // The camera and its components
-          section.insertAdjacentHTML('afterend', `
-            <div id="camera">
-              <video id="player" autoplay></video>
-              <canvas id="viewer"></canvas>
-              <nav id="shooter">
-                <button id="reverse-camera">Reverse</button>
-                <button id="capture">Capture</button>
-                <button id="go-back">Back</button>
-              </nav>
-              <nav id="sender">
-                <button id="send">Send</button>
-                <button id="cancel">Cancel</button>
-              </nav>
-            </div>
-          `);
-          const camera = document.getElementById('camera');
-
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-            const player = document.getElementById('player');
-            // Stop all incoming video streams
-            function stopAllStreams() {
-              player.srcObject.getTracks().forEach(track => track.stop());
-            }
 
-            const viewer = document.getElementById('viewer');
-            const context = viewer.getContext('2d');
-            const shooter = document.getElementById('shooter');
-            const sender = document.getElementById('sender');
-            const capture = document.getElementById('capture');
-
-            /**
-             * 2021-3-26
-             *
-             * It kind of seems like the `video` element and its associated
-             * APIs are a little picky. I'm not entirely certain on how to best
-             * destroy an element and its streams.
-             *
-             * Most internet lore speaks of this:
-             * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
-             *
-             * The camera behaves much better on desktop Chrome that it does in
-             * Android.
-             */
-            // Close camera and return to app
-            const goBackButton = document.getElementById('go-back');
-            goBackButton.addEventListener('click', function cb(evt) {
-              console.log('Go back!');
-              // What follows is guesswork and sorcery...
-              stopAllStreams();
-              player.pause();
-              player.srcObject = null;
-              player.load();
-              // This is probably unecessary. I'm just trying to erase every
-              // trace of the the video element so it works better on Android.
-              player.remove();
-              camera.remove();
-
-              evt.currentTarget.removeEventListener(event.type, cb);
-            }, { once: true });
-
-            // Reverse button is only relevant if there is more than one video input
-            const reverseButton = document.getElementById('reverse-camera');
-            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
-            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
-
-            if (devices.length > 1) {
-              function reverseHandler(evt) {
-                stopAllStreams();
-                mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
-                evt.currentTarget.removeEventListener('click', reverseHandler);
-                camera.remove();
-                launchCameraButton.click();
-              }
-              reverseButton.addEventListener('click', reverseHandler, { once: true });
-            }
-
-            /**
-             * This should be unnecessary, as it is set in the styles.
-             * Can't get tests to pass without explicitly setting them.
-             */
-            function setInitialCameraState() {
-              camera.style.display = 'block';
-              player.style.display = 'block';
-              shooter.style.display = 'block';
-              capture.style.display = 'block';
-              viewer.style.display = 'none';
-              sender.style.display = 'none';
-
-              if (devices.length > 1) {
-                reverseButton.style.display = 'block';
-              }
-              else {
-                reverseButton.style.display = 'none';
-              }
-            };
+//            if (devices.length > 1) {
+//              function reverseHandler(evt) {
+//                stopAllStreams();
+//                mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
+//                evt.currentTarget.removeEventListener('click', reverseHandler);
+//                camera.remove();
+//                launchCameraButton.click();
+//              }
+//              reverseButton.addEventListener('click', reverseHandler, { once: true });
+//            }
 
 //            const captureButton = document.getElementById('capture');
 //            captureButton.addEventListener('click', () => {
