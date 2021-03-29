@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const mediaConstraints = {
           audio: false,
           video: {
-            facingMode: 'environment'
+            facingMode: 'environment',
+            width: { ideal: 4096 },
+            height: { ideal: 2160 }
           }
         };
 
@@ -28,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
           </div>
           <div id="camera">
             <video id="player" autoplay></video>
-            <canvas id="viewer"></canvas>
+            <canvas id="viewer" width=${window.innerWidth} height=${window.innerHeight}></canvas>
             <nav id="shooter">
               <button id="reverse-camera">Reverse</button>
               <button id="capture">Capture</button>
@@ -42,8 +44,11 @@ document.addEventListener('DOMContentLoaded', function(event) {
         `;
         const launchCameraButton = document.getElementById('camera-button');
         const camera = document.getElementById('camera');
+
         const viewer = document.getElementById('viewer');
         const context = viewer.getContext('2d');
+
+
         const shooter = document.getElementById('shooter');
         const sender = document.getElementById('sender');
 
@@ -54,6 +59,19 @@ document.addEventListener('DOMContentLoaded', function(event) {
         });
 
         const send = document.getElementById('send');
+        // Send the photo to the server
+        send.addEventListener('click', () => {
+//          viewer.toBlob(function(blob) {
+//            console.log(blob);
+            hideCamera();
+
+//          stopAllStreams();
+//          showPhotoViewer();
+//          context.drawImage(player, 0, 0, viewer.width, viewer.height);
+
+//          }, 'image/jpeg', 0.8)
+        });
+
 
         const player = document.getElementById('player');
         // Stop all incoming streams
@@ -68,9 +86,9 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const capture = document.getElementById('capture');
         // Draw the video frame to the canvas.
         capture.addEventListener('click', () => {
-          stopAllStreams();
           showPhotoViewer();
           context.drawImage(player, 0, 0, viewer.width, viewer.height);
+          stopAllStreams();
         });
 
         // Reverse button is only relevant if there is more than one video input
