@@ -702,6 +702,73 @@ describe('image mobile upload', () => {
                   done.fail(err);
                 });
               });
+
+              describe('#sender controls', () => {
+                beforeEach(done => {
+                  browser.click('#capture').then(res => {
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+
+                describe('#send button', () => {
+                });
+
+                describe('#cancel button', () => {
+                  it('returns to the camera interface', done => {
+                    browser.assert.style('div#camera', 'display', 'block');
+
+                    browser.assert.element('div#camera video#player');
+                    browser.assert.style('div#camera video#player', 'display', 'none');
+
+                    browser.assert.element('div#camera nav#shooter');
+                    browser.assert.style('div#camera nav#shooter', 'display', 'none');
+
+                    browser.assert.element('div#camera nav#sender');
+                    browser.assert.element('div#camera nav#sender button#send');
+                    browser.assert.element('div#camera nav#sender button#cancel');
+                    browser.assert.style('div#camera nav#sender', 'display', 'block');
+
+                    //
+                    // The canvas element is stubbed out. Using `browser.assert`
+                    // (as below) won't work in this case. Testing the `canvas`
+                    // object is the next best thing.
+                    //
+                    //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
+                    browser.assert.element('div#camera canvas#viewer');
+                    expect(canvas.style.display).toEqual('block');
+
+                    browser.click('#cancel').then(res => {
+                      browser.assert.style('div#camera', 'display', 'block');
+
+                      browser.assert.element('div#camera video#player');
+                      browser.assert.style('div#camera video#player', 'display', 'block');
+
+                      browser.assert.element('div#camera nav#shooter');
+                      browser.assert.element('div#camera nav#shooter button#reverse-camera');
+                      browser.assert.element('div#camera nav#shooter button#capture');
+                      browser.assert.element('div#camera nav#shooter button#go-back');
+                      browser.assert.style('div#camera nav#shooter', 'display', 'block');
+
+                      browser.assert.element('div#camera nav#sender');
+                      browser.assert.element('div#camera nav#sender button#send');
+                      browser.assert.element('div#camera nav#sender button#cancel');
+                      browser.assert.style('div#camera nav#sender', 'display', 'none');
+
+                      browser.assert.element('div#camera canvas#viewer');
+
+                      // See note above...
+                      //browser.assert.style('div#camera canvas#viewer', 'display', 'none');
+                      expect(canvas.style.display).toEqual('none');
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+                });
+              });
             });
 
             describe('#go-back button', () => {
@@ -769,14 +836,6 @@ describe('image mobile upload', () => {
                   done.fail(err);
                 });
               });
-            });
-          });
-
-          describe('#sender controls', () => {
-            describe('#send button', () => {
-            });
-
-            describe('#cancel button', () => {
             });
           });
         });
