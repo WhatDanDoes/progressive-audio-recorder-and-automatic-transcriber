@@ -278,7 +278,9 @@ describe('image mobile upload', () => {
             expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({
               audio: false,
               video: {
-                facingMode: 'environment'
+                facingMode: 'environment',
+                width: { ideal: 4096 },
+                height: { ideal: 2160 }
               }
             });
             done();
@@ -640,7 +642,7 @@ describe('image mobile upload', () => {
                 browser.assert.element('div#camera nav#sender button#cancel');
                 browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-                browser.assert.element('div#camera canvas#viewer');
+                browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                 //
                 // The canvas element is stubbed out. Using `browser.assert`
                 // (as below) won't work in this case. Testing the `canvas`
@@ -665,7 +667,8 @@ describe('image mobile upload', () => {
 
                   // See note above...
                   //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
-                  browser.assert.element('div#camera canvas#viewer');
+                  //browser.assert.element('div#camera canvas#viewer');
+                  browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                   expect(canvas.style.display).toEqual('block');
 
                   done();
@@ -674,9 +677,12 @@ describe('image mobile upload', () => {
                 });
               });
 
-              it('draws the camera image to the canvas', done => {
+              //it('draws the camera image to the canvas', done => {
+              it('draws the camera image to the canvas before stopping media tracks and streams', done => {
                 browser.click('#capture').then(res => {
                   expect(drawImageSpy).toHaveBeenCalled();
+                  expect(drawImageSpy).toHaveBeenCalledBefore(streamRemoveTrackSpy);
+                  expect(drawImageSpy).toHaveBeenCalledBefore(mediaTrackStopSpy);
                   done();
                 }).catch(err => {
                   done.fail(err);
