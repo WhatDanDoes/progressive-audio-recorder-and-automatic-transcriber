@@ -245,8 +245,19 @@ describe('image mobile upload', () => {
 
       describe('access', () => {
 
-        let browser;
+        let browser, drawImageSpy;
         beforeEach(done => {
+          // Need to make sure the image is drawn on the viewer canvas
+          drawImageSpy = jasmine.createSpy('drawImage');
+          const canvas = {
+            style: {},
+            getContext: (dim) => {
+              return canvasElement = {
+                drawImage: drawImageSpy
+              };
+            }
+          };
+
           spyOn(mediaDevices, 'getUserMedia').and.callThrough();
 
           /**
@@ -257,6 +268,29 @@ describe('image mobile upload', () => {
               if (browser.window) {
                 browser.window.navigator.mediaDevices = mediaDevices;
               }
+            });
+
+            /**
+             *
+             *
+             *
+             *
+             */
+            browser.on('loaded', (req, res) => {
+              spyOn(browser.document, 'getElementById')
+                .withArgs('photos-input').and.callThrough()
+                .withArgs('photos-form').and.callThrough()
+                .withArgs('camera-button').and.callThrough()
+                .withArgs('camera').and.callThrough()
+                .withArgs('viewer').and.returnValue(canvas)
+                .withArgs('shooter').and.callThrough()
+                .withArgs('sender').and.callThrough()
+                .withArgs('cancel').and.callThrough()
+                .withArgs('send').and.callThrough()
+                .withArgs('player').and.callThrough()
+                .withArgs('capture').and.callThrough()
+                .withArgs('reverse-camera').and.callThrough()
+                .withArgs('go-back').and.callThrough();
             });
           });
 
@@ -609,7 +643,12 @@ describe('image mobile upload', () => {
               });
 
               it('draws the camera image to the canvas', done => {
-                done.fail();
+                browser.click('#capture').then(res => {
+                  expect(drawImageSpy).toHaveBeenCalled();
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
 
               it('removes the existing tracks', done => {
