@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             Add photos
           </div>
           <div id="camera">
-            <video id="player" autoplay></video>
+            <video id="player" width=${window.innerWidth} height=${window.innerHeight} autoplay></video>
             <canvas id="viewer" width=${window.innerWidth} height=${window.innerHeight}></canvas>
             <nav id="shooter">
               <button id="reverse-camera">Reverse</button>

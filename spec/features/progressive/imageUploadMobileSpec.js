@@ -331,7 +331,7 @@ describe('image mobile upload', () => {
             browser.click('#camera-button').then(res => {
               browser.assert.style('div#camera', 'display', 'block');
 
-              browser.assert.element('div#camera video#player');
+              browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
               browser.assert.style('div#camera video#player', 'display', 'block');
 
               browser.assert.element('div#camera nav#shooter');
@@ -345,7 +345,7 @@ describe('image mobile upload', () => {
               browser.assert.element('div#camera nav#sender button#cancel');
               browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-              browser.assert.element('div#camera canvas#viewer');
+              browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
               browser.assert.style('div#camera canvas#viewer', 'display', 'none');
 
               done();
@@ -628,7 +628,7 @@ describe('image mobile upload', () => {
               it('hides the camera and reveals the viewer interface', done => {
                 browser.assert.style('div#camera', 'display', 'block');
 
-                browser.assert.element('div#camera video#player');
+                browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                 browser.assert.style('div#camera video#player', 'display', 'block');
 
                 browser.assert.element('div#camera nav#shooter');
@@ -654,7 +654,7 @@ describe('image mobile upload', () => {
                 browser.click('#capture').then(res => {
                   browser.assert.style('div#camera', 'display', 'block');
 
-                  browser.assert.element('div#camera video#player');
+                  browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                   browser.assert.style('div#camera video#player', 'display', 'none');
 
                   browser.assert.element('div#camera nav#shooter');
@@ -667,9 +667,8 @@ describe('image mobile upload', () => {
 
                   // See note above...
                   //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
-                  //browser.assert.element('div#camera canvas#viewer');
-                  browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                   expect(canvas.style.display).toEqual('block');
+                  browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
 
                   done();
                 }).catch(err => {
@@ -677,7 +676,6 @@ describe('image mobile upload', () => {
                 });
               });
 
-              //it('draws the camera image to the canvas', done => {
               it('draws the camera image to the canvas before stopping media tracks and streams', done => {
                 browser.click('#capture').then(res => {
                   expect(drawImageSpy).toHaveBeenCalled();
@@ -790,7 +788,7 @@ describe('image mobile upload', () => {
                   it('returns to the camera interface', done => {
                     browser.assert.style('div#camera', 'display', 'block');
 
-                    browser.assert.element('div#camera video#player');
+                    browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                     browser.assert.style('div#camera video#player', 'display', 'none');
 
                     browser.assert.element('div#camera nav#shooter');
@@ -807,13 +805,13 @@ describe('image mobile upload', () => {
                     // object is the next best thing.
                     //
                     //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
-                    browser.assert.element('div#camera canvas#viewer');
                     expect(canvas.style.display).toEqual('block');
+                    browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
 
                     browser.click('#cancel').then(res => {
                       browser.assert.style('div#camera', 'display', 'block');
 
-                      browser.assert.element('div#camera video#player');
+                      browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                       browser.assert.style('div#camera video#player', 'display', 'block');
 
                       browser.assert.element('div#camera nav#shooter');
@@ -827,7 +825,7 @@ describe('image mobile upload', () => {
                       browser.assert.element('div#camera nav#sender button#cancel');
                       browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-                      browser.assert.element('div#camera canvas#viewer');
+                      browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
 
                       // See note above...
                       //browser.assert.style('div#camera canvas#viewer', 'display', 'none');
