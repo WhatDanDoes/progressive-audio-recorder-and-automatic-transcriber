@@ -724,6 +724,16 @@ describe('image mobile upload', () => {
                     });
                   });
 
+                  it('hides the camera interface', done => {
+                    browser.assert.style('div#camera', 'display', 'block');
+                    browser.click('#send').then(res => {
+                      browser.assert.style('div#camera', 'display', 'none');
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+
                   it('writes the file to the disk on agent\'s first access', done => {
                     fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
                       if (err) {
