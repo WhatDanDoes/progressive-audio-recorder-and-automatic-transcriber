@@ -245,19 +245,8 @@ describe('image mobile upload', () => {
 
       describe('access', () => {
 
-        let browser, drawImageSpy;
+        let browser;
         beforeEach(done => {
-          // Need to make sure the image is drawn on the viewer canvas
-          drawImageSpy = jasmine.createSpy('drawImage');
-          const canvas = {
-            style: {},
-            getContext: (dim) => {
-              return canvasElement = {
-                drawImage: drawImageSpy
-              };
-            }
-          };
-
           spyOn(mediaDevices, 'getUserMedia').and.callThrough();
 
           /**
@@ -268,29 +257,6 @@ describe('image mobile upload', () => {
               if (browser.window) {
                 browser.window.navigator.mediaDevices = mediaDevices;
               }
-            });
-
-            /**
-             *
-             *
-             *
-             *
-             */
-            browser.on('loaded', (req, res) => {
-              spyOn(browser.document, 'getElementById')
-                .withArgs('photos-input').and.callThrough()
-                .withArgs('photos-form').and.callThrough()
-                .withArgs('camera-button').and.callThrough()
-                .withArgs('camera').and.callThrough()
-                .withArgs('viewer').and.returnValue(canvas)
-                .withArgs('shooter').and.callThrough()
-                .withArgs('sender').and.callThrough()
-                .withArgs('cancel').and.callThrough()
-                .withArgs('send').and.callThrough()
-                .withArgs('player').and.callThrough()
-                .withArgs('capture').and.callThrough()
-                .withArgs('reverse-camera').and.callThrough()
-                .withArgs('go-back').and.callThrough();
             });
           });
 
@@ -566,10 +532,21 @@ describe('image mobile upload', () => {
             });
 
             describe('#capture button', () => {
-              let mediaTrackStopSpy, streamRemoveTrackSpy;
+              let mediaTrackStopSpy, streamRemoveTrackSpy, drawImageSpy, canvas;
               beforeEach(done => {
                 mediaTrackStopSpy = jasmine.createSpy('stop');
                 streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
+
+                // Need to make sure the image is drawn on the viewer canvas
+                drawImageSpy = jasmine.createSpy('drawImage');
+                canvas = {
+                  style: {},
+                  getContext: (dim) => {
+                    return {
+                      drawImage: drawImageSpy
+                    };
+                  }
+                };
 
                 mediaDevices = {
                   ..._mediaDevices,
@@ -588,13 +565,60 @@ describe('image mobile upload', () => {
                   }
                 };
 
-                browser.reload(err => {
-                  if (err) return done.fail(err);
+                /**
+                 * Mock browser MediaDevices interface
+                 */
+                Browser.extend(function(browser) {
+                  browser.on('response', (req, res) => {
+                    if (browser.window) {
+                      browser.window.navigator.mediaDevices = mediaDevices;
+                    }
+                  });
 
-                  browser.click('#camera-button').then(res => {
-                    done();
-                  }).catch(err => {
-                    done.fail(err);
+                  /**
+                   * This is all for the purpose of ensuring `drawImage` is called on
+                   * the `canvas` element.
+                   *
+                   * I don't know why each `getElementId` call has to be explicitly
+                   * stubbed. Jasmine barfs if you don't...
+                   */
+                  browser.on('loaded', (req, res) => {
+                    spyOn(browser.document, 'getElementById')
+                      .withArgs('photos-input').and.callThrough()
+                      .withArgs('photos-form').and.callThrough()
+                      .withArgs('camera-button').and.callThrough()
+                      .withArgs('camera').and.callThrough()
+                      // This is the relevant spy
+                      .withArgs('viewer').and.returnValue(canvas)
+                      .withArgs('shooter').and.callThrough()
+                      .withArgs('sender').and.callThrough()
+                      .withArgs('cancel').and.callThrough()
+                      .withArgs('send').and.callThrough()
+                      .withArgs('player').and.callThrough()
+                      .withArgs('capture').and.callThrough()
+                      .withArgs('reverse-camera').and.callThrough()
+                      .withArgs('go-back').and.callThrough();
+                  });
+                });
+
+                stubAuth0Sessions(agent.email, DOMAIN, err => {
+                  if (err) done.fail(err);
+
+                  browser = new Browser();
+                  browser.visit('/', err => {
+                    if (err) return done.fail(err);
+
+                    browser.clickLink('Login', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.element('#camera-button');
+                      browser.assert.elements('#photos-form', 0);
+
+                      browser.click('#camera-button').then(res => {
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
                   });
                 });
               });
@@ -617,7 +641,13 @@ describe('image mobile upload', () => {
                 browser.assert.style('div#camera nav#sender', 'display', 'none');
 
                 browser.assert.element('div#camera canvas#viewer');
-                browser.assert.style('div#camera canvas#viewer', 'display', 'none');
+                //
+                // The canvas element is stubbed out. Using `browser.assert`
+                // (as below) won't work in this case. Testing the `canvas`
+                // object is the next best thing.
+                //
+                //browser.assert.style('div#camera canvas#viewer', 'display', 'none');
+                expect(canvas.style.display).toEqual('none');
 
                 browser.click('#capture').then(res => {
                   browser.assert.style('div#camera', 'display', 'block');
@@ -633,8 +663,10 @@ describe('image mobile upload', () => {
                   browser.assert.element('div#camera nav#sender button#cancel');
                   browser.assert.style('div#camera nav#sender', 'display', 'block');
 
+                  // See note above...
+                  //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
                   browser.assert.element('div#camera canvas#viewer');
-                  browser.assert.style('div#camera canvas#viewer', 'display', 'block');
+                  expect(canvas.style.display).toEqual('block');
 
                   done();
                 }).catch(err => {
