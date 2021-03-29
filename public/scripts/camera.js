@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         capture.addEventListener('click', () => {
           stopAllStreams();
           showPhotoViewer();
-          //context.drawImage(player, 0, 0, viewer.width, viewer.height);
+          context.drawImage(player, 0, 0, viewer.width, viewer.height);
         });
 
         // Reverse button is only relevant if there is more than one video input
