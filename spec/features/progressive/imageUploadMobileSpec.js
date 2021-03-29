@@ -713,6 +713,61 @@ describe('image mobile upload', () => {
                 });
 
                 describe('#send button', () => {
+                  it('displays a friendly message upon successful receipt of file', done => {
+                    browser.click('#send').then(res => {
+                      browser.assert.redirected();
+                      browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                      browser.assert.text('.alert.alert-success', 'Image received');
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+
+                  it('writes the file to the disk on agent\'s first access', done => {
+                    fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                      if (err) {
+                        return done.fail(err);
+                      }
+                      expect(files.length).toEqual(0);
+
+                      browser.click('#send').then(res => {
+
+                        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+
+                          if (err) {
+                            return done.fail(err);
+                          }
+                          expect(files.length).toEqual(1);
+
+                          done();
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
+                  });
+
+                  it('creates a database record', done => {
+                    models.Image.find({}).then(images => {
+                      expect(images.length).toEqual(0);
+
+                      browser.click('#send').then(res => {
+                        models.Image.find({}).then(images => {
+                          expect(images.length).toEqual(1);
+                          expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+
+                          done();
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
                 });
 
                 describe('#cancel button', () => {
