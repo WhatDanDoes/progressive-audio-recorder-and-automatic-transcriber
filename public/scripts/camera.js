@@ -46,7 +46,13 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const context = viewer.getContext('2d');
         const shooter = document.getElementById('shooter');
         const sender = document.getElementById('sender');
+
         const cancel = document.getElementById('cancel');
+        // Cancel the option to send the photo
+        cancel.addEventListener('click', () => {
+          launchCamera(mediaConstraints);
+        });
+
         const send = document.getElementById('send');
 
         const player = document.getElementById('player');
