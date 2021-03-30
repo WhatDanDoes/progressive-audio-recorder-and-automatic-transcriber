@@ -66,9 +66,11 @@ document.addEventListener('DOMContentLoaded', function(event) {
             fetch('/image', {
               method: 'POST',
               body: formData,
+              redirect: 'manual',
             })
             .then(res => {
-              console.log('IMAGE SENT');
+              // Automatically following redirect does not render the document
+              window.location.href = res.url;
             })
             .finally(() => {
               hideCamera();
