@@ -736,6 +736,9 @@ describe('image mobile upload', () => {
                * `FormData` interface. As such, certain functionality cannot be
                * tested with Zombie JS.
                *
+               * https://github.com/assaf/zombie/issues/685
+               * https://github.com/assaf/zombie/blob/e6cf0f81368349392f433c7b5122fb568b9b30b0/src/fetch.js#L104
+               *
                * The problematic tests are sketched in for future reference, as
                * I suspect something like Puppeteer may be more suitable for
                * these purposes.
