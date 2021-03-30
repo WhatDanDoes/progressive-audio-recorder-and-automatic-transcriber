@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         // Send the photo to the server
         send.addEventListener('click', () => {
           viewer.toBlob(function(blob) {
-            const formData = new FormData(blob);
+            const formData = new FormData();
             formData.append('docs', blob, 'blob.jpg');
 
             fetch('/image', {
