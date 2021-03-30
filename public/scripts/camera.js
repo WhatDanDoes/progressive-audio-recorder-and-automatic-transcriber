@@ -42,13 +42,11 @@ document.addEventListener('DOMContentLoaded', function(event) {
             </nav>
           </div>
         `;
+
         const launchCameraButton = document.getElementById('camera-button');
         const camera = document.getElementById('camera');
-
         const viewer = document.getElementById('viewer');
         const context = viewer.getContext('2d');
-
-
         const shooter = document.getElementById('shooter');
         const sender = document.getElementById('sender');
 
@@ -61,15 +59,22 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const send = document.getElementById('send');
         // Send the photo to the server
         send.addEventListener('click', () => {
-//          viewer.toBlob(function(blob) {
-//            console.log(blob);
-            hideCamera();
+          viewer.toBlob(function(blob) {
+            const formData = new FormData(blob);
+            formData.append('docs', blob, 'blob.jpg');
 
-//          stopAllStreams();
-//          showPhotoViewer();
-//          context.drawImage(player, 0, 0, viewer.width, viewer.height);
+            fetch('/image', {
+              method: 'POST',
+              body: formData,
+            })
+            .then(res => {
+              console.log('IMAGE SENT');
+            })
+            .finally(() => {
+              hideCamera();
+            });
 
-//          }, 'image/jpeg', 0.8)
+          }, 'image/jpeg', 1);
         });
 
 
