@@ -50,7 +50,7 @@ describe('image mobile upload', () => {
       return new Promise((resolve, reject) => {
         resolve('howdy!');
       });
-    }
+    },
   };
 
   let agent;
@@ -333,7 +333,7 @@ describe('image mobile upload', () => {
             browser.click('#camera-button').then(res => {
               browser.assert.style('div#camera', 'display', 'block');
 
-              browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+              browser.assert.element(`div#camera video#player`);
               browser.assert.style('div#camera video#player', 'display', 'block');
 
               browser.assert.element('div#camera nav#shooter');
@@ -347,7 +347,7 @@ describe('image mobile upload', () => {
               browser.assert.element('div#camera nav#sender button#cancel');
               browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-              browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+              browser.assert.element(`div#camera canvas#viewer`);
               browser.assert.style('div#camera canvas#viewer', 'display', 'none');
 
               done();
@@ -577,16 +577,16 @@ describe('image mobile upload', () => {
                   getUserMedia: () => {
                     return new Promise((resolve, reject) => {
                       resolve({
-                        dummy: 'This device has at least two cameras!',
+                        dummy: 'This device has one camera!',
                         removeTrack: streamRemoveTrackSpy,
                         getTracks: () => [
                           {
                             stop: mediaTrackStopSpy
                           }
-                        ]
+                        ],
                       });
                     });
-                  }
+                  },
                 };
 
                 /**
@@ -650,7 +650,7 @@ describe('image mobile upload', () => {
               it('hides the camera and reveals the viewer interface', done => {
                 browser.assert.style('div#camera', 'display', 'block');
 
-                browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                browser.assert.element(`div#camera video#player`);
                 browser.assert.style('div#camera video#player', 'display', 'block');
 
                 browser.assert.element('div#camera nav#shooter');
@@ -664,7 +664,7 @@ describe('image mobile upload', () => {
                 browser.assert.element('div#camera nav#sender button#cancel');
                 browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-                browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                browser.assert.element(`div#camera canvas#viewer`);
                 //
                 // The canvas element is stubbed out. Using `browser.assert`
                 // (as below) won't work in this case. Testing the `canvas`
@@ -676,7 +676,7 @@ describe('image mobile upload', () => {
                 browser.click('#capture').then(res => {
                   browser.assert.style('div#camera', 'display', 'block');
 
-                  browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                  browser.assert.element(`div#camera video#player`);
                   browser.assert.style('div#camera video#player', 'display', 'none');
 
                   browser.assert.element('div#camera nav#shooter');
@@ -689,8 +689,13 @@ describe('image mobile upload', () => {
 
                   // See note above...
                   //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
+                  //browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                   expect(canvas.style.display).toEqual('block');
-                  browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                  expect(canvas.style.display).toEqual('block');
+                  expect(canvas.style.width).toEqual(browser.window.innerWidth);
+                  expect(canvas.style.height).toEqual(browser.window.innerHeight);
+                  expect(canvas.width).toEqual(browser.query("video#player").videoWidth);
+                  expect(canvas.height).toEqual(browser.query("video#player").videoHeight);
 
                   done();
                 }).catch(err => {
@@ -782,17 +787,13 @@ describe('image mobile upload', () => {
                   //      return done.fail(err);
                   //    }
                   //    expect(files.length).toEqual(0);
-
                   //    browser.click('#send').then(res => {
-
                   //      setTimeout(() => {
                   //        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-
                   //          if (err) {
                   //            return done.fail(err);
                   //          }
                   //          expect(files.length).toEqual(1);
-
                   //          done();
                   //      });
                   //      }, 1000);
@@ -806,12 +807,10 @@ describe('image mobile upload', () => {
                   //it('creates a database record', done => {
                   //  models.Image.find({}).then(images => {
                   //    expect(images.length).toEqual(0);
-
                   //    browser.click('#send').then(res => {
                   //      models.Image.find({}).then(images => {
                   //        expect(images.length).toEqual(1);
                   //        expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-
                   //        done();
                   //      }).catch(err => {
                   //        done.fail(err);
@@ -834,14 +833,15 @@ describe('image mobile upload', () => {
                   it('returns to the camera interface', done => {
                     browser.assert.style('div#camera', 'display', 'block');
 
-                    browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                    browser.assert.element(`div#camera video#player`);
                     browser.assert.style('div#camera video#player', 'display', 'none');
 
                     browser.assert.element('div#camera nav#shooter');
                     browser.assert.style('div#camera nav#shooter', 'display', 'none');
 
                     browser.assert.element('div#camera nav#sender');
-                    browser.assert.element('div#camera nav#sender button#send'); browser.assert.element('div#camera nav#sender button#cancel'); browser.assert.style('div#camera nav#sender', 'display', 'block');
+                    browser.assert.element('div#camera nav#sender button#send');
+                    browser.assert.element('div#camera nav#sender button#cancel'); browser.assert.style('div#camera nav#sender', 'display', 'block');
 
                     //
                     // The canvas element is stubbed out. Using `browser.assert`
@@ -849,13 +849,17 @@ describe('image mobile upload', () => {
                     // object is the next best thing.
                     //
                     //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
+                    //browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                     expect(canvas.style.display).toEqual('block');
-                    browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                    expect(canvas.style.width).toEqual(browser.window.innerWidth);
+                    expect(canvas.style.height).toEqual(browser.window.innerHeight);
+                    expect(canvas.width).toEqual(browser.query("video#player").videoWidth);
+                    expect(canvas.height).toEqual(browser.query("video#player").videoHeight);
 
                     browser.click('#cancel').then(res => {
                       browser.assert.style('div#camera', 'display', 'block');
 
-                      browser.assert.element(`div#camera video#player[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                      browser.assert.element(`div#camera video#player`);
                       browser.assert.style('div#camera video#player', 'display', 'block');
 
                       browser.assert.element('div#camera nav#shooter');
@@ -869,7 +873,7 @@ describe('image mobile upload', () => {
                       browser.assert.element('div#camera nav#sender button#cancel');
                       browser.assert.style('div#camera nav#sender', 'display', 'none');
 
-                      browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
+                      browser.assert.element(`div#camera canvas#viewer`);
 
                       // See note above...
                       //browser.assert.style('div#camera canvas#viewer', 'display', 'none');

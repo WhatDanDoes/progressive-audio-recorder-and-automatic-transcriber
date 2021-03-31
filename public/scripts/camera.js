@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
             Add photos
           </div>
           <div id="camera">
-            <video id="player" width=${window.innerWidth} height=${window.innerHeight} autoplay></video>
-            <canvas id="viewer" width=${window.innerWidth} height=${window.innerHeight}></canvas>
+            <video id="player" autoplay></video>
+            <canvas id="viewer"></canvas>
             <nav id="shooter">
               <button id="reverse-camera">Reverse</button>
               <button id="capture">Capture</button>
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
               // Automatically following redirect does not re-render the document
               window.location.href = res.url;
             });
-          }, 'image/jpeg', 1);
+          }, 'image/jpeg', 0.8);
         });
 
 
@@ -133,6 +133,12 @@ document.addEventListener('DOMContentLoaded', function(event) {
          * Show photo viewer
          */
         function showPhotoViewer() {
+          // Make large DOM canvas and small style canvas
+          viewer.width = player.videoWidth;
+          viewer.height = player.videoHeight;
+          viewer.style.width = window.innerWidth;
+          viewer.style.height = window.innerHeight;
+
           camera.style.display = 'block';
           player.style.display = 'none';
           shooter.style.display = 'none';
