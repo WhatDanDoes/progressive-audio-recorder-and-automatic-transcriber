@@ -688,6 +688,9 @@ article.note header .note-menu:hover .dropdown-content {
 
 /**
  * Camera and component overlay
+ *
+ * The controls were loosely adapted from:
+ * https://blog.prototypr.io/make-a-camera-web-app-tutorial-part-1-ec284af8dddf
  */
 #camera {
   position: fixed;
@@ -701,60 +704,45 @@ article.note header .note-menu:hover .dropdown-content {
   z-index: 2;
 }
 
-#camera #player {
-  position: fixed;
-  display: none;
+#camera canvas#viewer {
   width: 100%;
   height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
   z-index: 4;
 }
 
-#camera nav#shooter {
-  position: fixed;
-  display: none;
+#camera video#player {
   width: 100%;
   height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 5;
-}
-
-#camera nav#capture {
-  position: fixed;
-  display: none;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 5;
-}
-
-
-#camera nav#sender {
-  position: fixed;
-  display: none;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 5;
-}
-
-#camera #viewer {
-  position: fixed;
-  display: none;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
   z-index: 4;
 }
 
+#camera nav {
+  position: fixed;
+  bottom: 3em;
+  z-index: 5;
+}
+
+#camera nav button {
+  width: 5em;
+  height: 5em;
+  background-color: rgb(255,255,255,0.3);
+  color: white;
+  font-size: .75em;
+  border-radius: 50%;
+  border: none;
+  position: fixed;
+  bottom: 3em;
+  box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+#camera nav button#capture,
+#camera nav button#send {
+  left: calc(50% - 2.5em);
+}
+
+#camera nav button#cancel,
+#camera nav button#go-back {
+  left: calc(100% - 5em);
+}
 
