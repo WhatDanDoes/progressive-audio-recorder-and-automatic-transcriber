@@ -136,8 +136,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
           // Make large DOM canvas and small style canvas
           viewer.width = player.videoWidth;
           viewer.height = player.videoHeight;
-          viewer.style.width = window.innerWidth;
-          viewer.style.height = window.innerHeight;
 
           camera.style.display = 'block';
           player.style.display = 'none';

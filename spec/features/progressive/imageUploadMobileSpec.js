@@ -692,8 +692,6 @@ describe('image mobile upload', () => {
                   //browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                   expect(canvas.style.display).toEqual('block');
                   expect(canvas.style.display).toEqual('block');
-                  expect(canvas.style.width).toEqual(browser.window.innerWidth);
-                  expect(canvas.style.height).toEqual(browser.window.innerHeight);
                   expect(canvas.width).toEqual(browser.query("video#player").videoWidth);
                   expect(canvas.height).toEqual(browser.query("video#player").videoHeight);
 
@@ -851,8 +849,6 @@ describe('image mobile upload', () => {
                     //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
                     //browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
                     expect(canvas.style.display).toEqual('block');
-                    expect(canvas.style.width).toEqual(browser.window.innerWidth);
-                    expect(canvas.style.height).toEqual(browser.window.innerHeight);
                     expect(canvas.width).toEqual(browser.query("video#player").videoWidth);
                     expect(canvas.height).toEqual(browser.query("video#player").videoHeight);
 
