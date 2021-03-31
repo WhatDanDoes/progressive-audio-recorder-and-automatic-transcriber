@@ -628,7 +628,7 @@ describe('image mobile upload', () => {
                 stubAuth0Sessions(agent.email, DOMAIN, err => {
                   if (err) done.fail(err);
 
-                  browser = new Browser();
+                  browser = new Browser({ waitDuration: 30000 });
                   browser.visit('/', err => {
                     if (err) return done.fail(err);
 
@@ -768,11 +768,8 @@ describe('image mobile upload', () => {
                   it('hides the camera interface', done => {
                     browser.assert.style('div#camera', 'display', 'block');
                     browser.click('#send').then(res => {
-                      // client-side Javascript needs a bit of time. Zombie doesn't wait
-                      setTimeout(() => {
-                        browser.assert.style('div#camera', 'display', 'none');
-                        done();
-                      }, 200);
+                      browser.assert.style('div#camera', 'display', 'none');
+                      done();
                     }).catch(err => {
                       done.fail(err);
                     });

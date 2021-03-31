@@ -62,20 +62,20 @@ document.addEventListener('DOMContentLoaded', function(event) {
           viewer.toBlob(function(blob) {
             const formData = new FormData();
             formData.append('docs', blob, 'blob.jpg');
+            hideCamera();
 
             fetch('/image', {
               method: 'POST',
               body: formData,
               redirect: 'manual',
+              headers: {
+                referer: window.location
+              }
             })
             .then(res => {
-              // Automatically following redirect does not render the document
+              // Automatically following redirect does not re-render the document
               window.location.href = res.url;
-            })
-            .finally(() => {
-              hideCamera();
             });
-
           }, 'image/jpeg', 1);
         });
 
