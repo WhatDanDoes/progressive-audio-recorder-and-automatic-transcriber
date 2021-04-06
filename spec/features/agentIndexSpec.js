@@ -112,8 +112,19 @@ describe('agentIndexSpec', () => {
         browser.assert.text('h2', `Hello, ${agent.email}`);
       });
 
-      it('displays an Android deep link with JWT', () => {
-        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+      //
+      // Removing augmented native app...
+      //
+//      it('displays an Android deep link with JWT', () => {
+//        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
+//      });
+
+      it('displays an add-photo form', () => {
+        browser.assert.element('.deep-link');
+        browser.assert.element('form[action="/image"][method="post"]');
+        browser.assert.element('input[id="photos-input"][type="file"][accept="image/*"]');
+        browser.assert.text('label[for="photos-input"]', 'Add photos');
+        browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
       });
 
       it('shows a list of albums the agent can read', () => {

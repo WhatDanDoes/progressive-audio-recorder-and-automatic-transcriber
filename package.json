@@ -1,5 +1,5 @@
 {
-  "name": "basic-photo-server",
+  "name": "auth0-photo-server",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "connect-mongo": "^3.2.0",
     "cookie-parser": "^1.4.5",
     "debug": "~2.6.9",
-    "dotenv": "^8.2.0",
+    "dotenv-flow": "^3.2.0",
     "ejs": "~2.6.1",
     "express": "~4.16.1",
     "express-session": "^1.17.1",
@@ -23,7 +23,7 @@
     "marked": "^1.2.3",
     "method-override": "^3.0.0",
     "mkdirp": "^0.5.1",
-    "mongoose": "^5.10.9",
+    "mongoose": "^5.12.2",
     "mongoose-findorcreate": "^3.0.0",
     "mongoose-unique-array": "^0.3.4",
     "morgan": "~1.9.1",
@@ -39,6 +39,7 @@
     "jasmine": "^3.6.2",
     "mock-fs": "^4.13.0",
     "nock": "^13.0.4",
+    "node-blob": "0.0.2",
     "node-jose": "^2.0.0",
     "node-mocks-http": "^1.9.0",
     "node-rsa": "^1.1.1",

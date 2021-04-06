@@ -275,14 +275,30 @@ router.patch('/:domain/:agentId/:imageId/like', (req, res) => {
 /**
  * POST /image
  */
-router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
+router.post('/', upload.array('docs', 8), function(req, res, next) {
+    // If coming from the native app
+    if (req.headers['accept'] === 'application/json') {
+      return jwtAuth(req, res, next);
+    }
+    // Non-native app authorization
+    next();
+  }, (req, res) => {
+
   if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    if (req.headers['accept'] === 'application/json') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    req.flash('error', 'You need to login first');
+    return res.redirect('/');
   }
 
   // No image provided
   if (!req.files || !req.files.length) {
-    return res.status(400).json({ message: 'No image provided' });
+    if (req.headers['accept'] === 'application/json') {
+      return res.status(400).json({ message: 'No image provided' });
+    }
+    req.flash('error', 'No image provided');
+    return res.redirect(req.headers.referer);
   }
 
   let savePaths = [];
@@ -322,10 +338,18 @@ router.post('/', upload.array('docs', 8), jwtAuth, (req, res) => {
 
   recursiveSave((err) => {
     if (err) {
-      return res.status(500).json({ message: err.message });
+      if (req.headers['accept'] === 'application/json') {
+        return res.status(500).json({ message: err.message });
+      }
+      req.flash('error', err.message);
+      return res.redirect(req.headers.referer);
     }
-    res.status(201).json({ message: 'Image received' });
-  })
+    if (req.headers['accept'] === 'application/json') {
+      return res.status(201).json({ message: 'Image received' });
+    }
+    req.flash('success', 'Image received');
+    return res.redirect(req.headers.referer);
+  });
 });
 
 /**

@@ -14,8 +14,9 @@ const roles = require('../../config/roles');
  * agents are using the same access token for testing purposes.
  */
 const _access = require('../fixtures/sample-auth0-access-token');
-_access.iss = `http://${process.env.AUTH0_DOMAIN}/`;
+_access.iss = `https://${process.env.AUTH0_DOMAIN}/`;
 const _identity = require('../fixtures/sample-auth0-identity-token');
+_identity.iss = `https://${process.env.AUTH0_DOMAIN}/`;
 const scope = require('../../config/permissions');
 const apiScope = require('../../config/apiPermissions');
 const _profile = require('../fixtures/sample-auth0-profile-response');
