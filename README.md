@@ -9,7 +9,7 @@ This is a living document. It will change over time. In pursuing the goals of th
 
 ## Basic Functionality
 
-This is a Progressive Web Application. It uses cameras when available and defaults to simple file upload when not. Photos taken with this app are reduced in size for transmission. Upon submission, the economized photo can be found in the agent's personal photo album, whereupon it may be _deleted_ or _published_ to the public photo roll. Authenticated agents can _like_, comment, or flag photos. Currently, only one agent may post to the public photo wall. There is currently no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
+This is a Progressive Web Application. It uses cameras when available and defaults to simple file upload when not. Photos taken with this app are reduced in size for transmission. Upon submission, the economized photo can be found in the agent's personal photo album, whereupon it may be _deleted_ or _published_ to the public photo roll. Authenticated agents can _like_, comment, or flag photos. Currently, only one agent may post to the public photo wall. There is no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
 
 ## Auth0 Enhanced Functionality
 
