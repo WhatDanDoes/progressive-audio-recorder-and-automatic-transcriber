@@ -9,9 +9,9 @@ This is a living document. It will change over time. In pursuing the goals of th
 
 ## Basic Functionality
 
-This is a web application _augmented_ by a native Android photo-taking app. Photos taken with the `basic-photo-economizer` are reduced in size for transmission (e.g., from 5MB to about 400kB, typically). Upon submission, the economized photo can be found in the agent's personal photo album, whereupon it may be _deleted_ or _published_ to the public photo roll. Though a cool proof-of-concept, this augmented web application meets few expectations of a contemporary photo-sharing platform (e.g., there's nothing crediting the photographer on the main roll, and nothing to allow a photo to be flagged or removed). This short-comings will be addressed as the app incorporates Identity services.
+This is a Progressive Web Application. It uses cameras when available and defaults to simple file upload when not. Photos taken with this app are reduced in size for transmission. Upon submission, the economized photo can be found in the agent's personal photo album, whereupon it may be _deleted_ or _published_ to the public photo roll. Authenticated agents can _like_, comment, or flag photos. Currently, only one agent may post to the public photo wall. There is currently no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
 
-## Auth0 Enhanced Functionality (in progress)
+## Auth0 Enhanced Functionality
 
 The Identity platform handles authentication and basic organization structuring. The `auth0-photo-server` is ideally suited to consume the services it currently offers and will likely reveal shortcomings in the process. At the time of writing, agents with varying permission levels can create _teams_ and arrange those under _organizational_ umbrellas. This by itself mirrors the expectation that an agent might invite others to contribute to a photo album, or be granted permission to publish photos to the public roll.
 
