@@ -1,13 +1,10 @@
-    <% if (isMobile) { %>
-      <section class="deep-link">
-        <a href="bpe://bpe?token=<%= token %>&domain=<%= encodeURIComponent(process.env.DOMAIN) %>">
-          <img src="/images/bpe-logo.png">
-          <p>Add photos</p>
-        </a>
-      </section>
-    <% } else { %>
-      <section class="center">
-        <h2>This web app is augmented with a native Android app</h2>
-        <h3>Login from your tablet or phone to send photos</h3>
-      </section>
-    <% } %>
+  <script src="/scripts/camera.js"></script>
+  <section class="deep-link">
+    <form action="/image" method="post" id="photos-form" enctype="multipart/form-data">
+      <input id="photos-input" type="file" accept="image/*" name="docs" multiple>
+      <label for="photos-input">
+        <img src="/images/bpe-logo.png"><br>
+        Add photos
+      </label>
+    </form>
+  </section>
