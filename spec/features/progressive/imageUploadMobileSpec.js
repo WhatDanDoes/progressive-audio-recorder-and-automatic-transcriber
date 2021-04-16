@@ -743,9 +743,8 @@ describe('image mobile upload', () => {
                * https://github.com/assaf/zombie/issues/685
                * https://github.com/assaf/zombie/blob/e6cf0f81368349392f433c7b5122fb568b9b30b0/src/fetch.js#L104
                *
-               * The problematic tests are sketched in for future reference, as
-               * I suspect something like Puppeteer may be more suitable for
-               * these purposes.
+               * The untestable situations are left as comments. See how the
+               * puppeteer tests fill in these gaps.
                */
               describe('#sender controls', () => {
                 describe('as tested with zombie.js', () => {
@@ -825,6 +824,11 @@ describe('image mobile upload', () => {
 
                     // See above.
                     //it('lands in the right spot with an updated image list', done => {
+                    //  done.fail();
+                    //});
+
+                    // See above.
+                    //it('reveals a progress spinner', done => {
                     //  done.fail();
                     //});
                   });
@@ -947,12 +951,11 @@ describe('image mobile upload', () => {
                           done();
                         });
 
-
                         expect(await page.$('#camera-button')).toBeTruthy();
                         expect(await page.$('#photos-form')).toBeFalsy();
 
+                        // Open the camera app
                         await page.click('#camera-button');
-
                       });
                     } catch (e) {
                       console.log(e);
@@ -975,127 +978,84 @@ describe('image mobile upload', () => {
                       });
 
                       await page.click('#send');
-
                       await page.waitForSelector('.alert.alert-success');
-
                       expect(page.url()).toEqual(`${APP_URL}/image/${agent.getAgentDirectory()}`);
-
                       expect(redirected).toBe(true);
                     });
 
-//                    it('hides the camera interface', done => {
-//                      browser.assert.style('div#camera', 'display', 'block');
-//                      browser.click('#send').then(res => {
-//                        browser.assert.style('div#camera', 'display', 'none');
-//                        done();
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    });
+                    it('hides the camera interface', async done => {
+                      let cameraIsVisible = await page.$eval('div#camera', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(cameraIsVisible).toBe(true);
+
+                      await page.waitForSelector('div#camera', { visible: true });
+                      page.click('#send').then(async () => {
+                        await page.waitForSelector('.alert.alert-success');
+                        await page.waitForSelector('div#camera');
+
+                        cameraIsVisible = await page.$eval('div#camera', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                        expect(cameraIsVisible).toBe(false);
+
+                        done();
+                      });
+                    });
 
                     // See above.
-                    //it('writes the file to the disk on agent\'s first access', done => {
-                    //  fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-                    //    if (err) {
-                    //      return done.fail(err);
-                    //    }
-                    //    expect(files.length).toEqual(0);
-                    //    browser.click('#send').then(res => {
-                    //      setTimeout(() => {
-                    //        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-                    //          if (err) {
-                    //            return done.fail(err);
-                    //          }
-                    //          expect(files.length).toEqual(1);
-                    //          done();
-                    //      });
-                    //      }, 1000);
-                    //    }).catch(err => {
-                    //      done.fail(err);
-                    //    });
-                    //  });
-                    //});
+                    it('writes the file to the disk on agent\'s first access', done => {
+                      fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                        if (err) {
+                          return done.fail(err);
+                        }
+                        expect(files.length).toEqual(0);
+
+                        page.click('#send').then(async () => {
+                          await page.waitForSelector('.alert.alert-success');
+                          await page.waitForSelector('div#camera');
+
+                          fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                            if (err) {
+                              return done.fail(err);
+                            }
+                            expect(files.length).toEqual(1);
+                            done();
+                          });
+                        });
+                      });
+                    });
 
                     // See above.
-                    //it('creates a database record', done => {
-                    //  models.Image.find({}).then(images => {
-                    //    expect(images.length).toEqual(0);
-                    //    browser.click('#send').then(res => {
-                    //      models.Image.find({}).then(images => {
-                    //        expect(images.length).toEqual(1);
-                    //        expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-                    //        done();
-                    //      }).catch(err => {
-                    //        done.fail(err);
-                    //      });
-                    //    }).catch(err => {
-                    //      done.fail(err);
-                    //    });
-                    //  }).catch(err => {
-                    //    done.fail(err);
-                    //  });
-                    //});
+                    it('creates a database record', done => {
+                      models.Image.find({}).then(images => {
+                        expect(images.length).toEqual(0);
+
+                        page.click('#send').then(async () => {
+                          await page.waitForSelector('.alert.alert-success');
+                          await page.waitForSelector('div#camera');
+
+                          models.Image.find({}).then(images => {
+                            expect(images.length).toEqual(1);
+                            expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                            done();
+                          }).catch(err => {
+                            done.fail(err);
+                          });
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
 
                     // See above.
-                    //it('lands in the right spot with an updated image list', done => {
-                    //  done.fail();
-                    //});
+                    it('lands in the right spot with an updated image list', done => {
+                      done.fail();
+                    });
+
+                    // See above.
+                    it('reveals a progress spinner', done => {
+                      done.fail();
+                    });
                   });
-
-//                  describe('#cancel button', () => {
-//                    it('returns to the camera interface', done => {
-//                      browser.assert.style('div#camera', 'display', 'block');
-//
-//                      browser.assert.element(`div#camera video#player`);
-//                      browser.assert.style('div#camera video#player', 'display', 'none');
-//
-//                      browser.assert.element('div#camera nav#shooter');
-//                      browser.assert.style('div#camera nav#shooter', 'display', 'none');
-//
-//                      browser.assert.element('div#camera nav#sender');
-//                      browser.assert.element('div#camera nav#sender button#send');
-//                      browser.assert.element('div#camera nav#sender button#cancel'); browser.assert.style('div#camera nav#sender', 'display', 'block');
-//
-//                      //
-//                      // The canvas element is stubbed out. Using `browser.assert`
-//                      // (as below) won't work in this case. Testing the `canvas`
-//                      // object is the next best thing.
-//                      //
-//                      //browser.assert.style('div#camera canvas#viewer', 'display', 'block');
-//                      //browser.assert.element(`div#camera canvas#viewer[width="${browser.window.innerWidth}"][height="${browser.window.innerHeight}"]`);
-//                      expect(canvas.style.display).toEqual('block');
-//                      expect(canvas.width).toEqual(browser.query("video#player").videoWidth);
-//                      expect(canvas.height).toEqual(browser.query("video#player").videoHeight);
-//
-//                      browser.click('#cancel').then(res => {
-//                        browser.assert.style('div#camera', 'display', 'block');
-//
-//                        browser.assert.element(`div#camera video#player`);
-//                        browser.assert.style('div#camera video#player', 'display', 'block');
-//
-//                        browser.assert.element('div#camera nav#shooter');
-//                        browser.assert.element('div#camera nav#shooter button#reverse-camera');
-//                        browser.assert.element('div#camera nav#shooter button#capture');
-//                        browser.assert.element('div#camera nav#shooter button#go-back');
-//                        browser.assert.style('div#camera nav#shooter', 'display', 'block');
-//
-//                        browser.assert.element('div#camera nav#sender');
-//                        browser.assert.element('div#camera nav#sender button#send');
-//                        browser.assert.element('div#camera nav#sender button#cancel');
-//                        browser.assert.style('div#camera nav#sender', 'display', 'none');
-//
-//                        browser.assert.element(`div#camera canvas#viewer`);
-//
-//                        // See note above...
-//                        //browser.assert.style('div#camera canvas#viewer', 'display', 'none');
-//                        expect(canvas.style.display).toEqual('none');
-//
-//                        done();
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    });
-//                  });
                 });
               });
             });
