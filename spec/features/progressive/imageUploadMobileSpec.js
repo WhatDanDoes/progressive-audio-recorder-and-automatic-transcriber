@@ -617,6 +617,7 @@ describe('image mobile upload', () => {
                       .withArgs('viewer').and.returnValue(canvas)
                       .withArgs('shooter').and.callThrough()
                       .withArgs('sender').and.callThrough()
+                      .withArgs('spinner').and.callThrough()
                       .withArgs('cancel').and.callThrough()
                       .withArgs('send').and.callThrough()
                       .withArgs('player').and.callThrough()
@@ -769,10 +770,25 @@ describe('image mobile upload', () => {
                     //  });
                     //});
 
-                    it('hides the camera interface', done => {
+                    /**
+                     * 2021-4-16
+                     *
+                     * See the puppeteer block for the corresponding test.
+                     * This makes sure spinner appears and the sender controls
+                     * disappear.
+                     *
+                     * Puppeteer makes sure the camera and its artefacts are
+                     * hidden.
+                     */
+                    it('displays a spinner and hides the sender controls', done => {
                       browser.assert.style('div#camera', 'display', 'block');
+                      browser.assert.style('#send', 'display', '');
+                      browser.assert.style('#cancel', 'display', '');
+
                       browser.click('#send').then(res => {
-                        browser.assert.style('div#camera', 'display', 'none');
+                        browser.assert.style('#spinner', 'display', 'block');
+                        browser.assert.style('#send', 'display', 'none');
+                        browser.assert.style('#cancel', 'display', 'none');
                         done();
                       }).catch(err => {
                         done.fail(err);
@@ -1047,13 +1063,53 @@ describe('image mobile upload', () => {
                     });
 
                     // See above.
-                    it('lands in the right spot with an updated image list', done => {
-                      done.fail();
+                    it('lands in the right spot with an updated image list', async done => {
+                      let posts = await page.$$('.post');
+                      expect(posts.length).toEqual(0);
+                      page.click('#send').then(async () => {
+                        await page.waitForSelector('.alert.alert-success');
+                        await page.waitForSelector('div#camera');
+
+                        expect(page.url()).toEqual(`${APP_URL}/image/${agent.getAgentDirectory()}`);
+
+                        posts = await page.$$('.post');
+                        expect(posts.length).toEqual(1);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
                     });
 
-                    // See above.
-                    it('reveals a progress spinner', done => {
-                      done.fail();
+                    /**
+                     * 2021-4-16
+                     *
+                     * Testing spinners has always proven weirdly challenging.
+                     *
+                     * As with other frameworks, the tests execute so quickly
+                     * that the spinner never renders. This tests to make sure
+                     * the spinner and camera disappear after an upload.
+                     *
+                     * There's a test in the zombie block for the intermediary
+                     * spinner/sender button behaviour.
+                     */
+                    it('reveals and hides a progress spinner', async () => {
+                      let cameraIsVisible = await page.$eval('div#camera', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(cameraIsVisible).toBe(true);
+
+                      let spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(spinnerIsVisible).toBe(false);
+
+                      await page.click('#send');
+
+                      await page.waitForSelector('.alert.alert-success');
+                      await page.waitForSelector('div#camera');
+
+                      spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(spinnerIsVisible).toBe(false);
+
+                      cameraIsVisible = await page.$eval('div#camera', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(cameraIsVisible).toBe(false);
                     });
                   });
                 });
