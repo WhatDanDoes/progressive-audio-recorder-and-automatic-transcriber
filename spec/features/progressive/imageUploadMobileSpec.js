@@ -909,7 +909,9 @@ describe('image mobile upload', () => {
 
                   const APP_URL = `http://localhost:${PORT}`;
                   const puppeteer = require('puppeteer');
-                  const useNock = require('nock-puppeteer');
+                  // The `default` reference is temporary until `nock-puppeteer`
+                  // 1.0.6 is released
+                  const useNock = require('nock-puppeteer').default;
                   const path = require('path');
 
                   let puppetBrowser, page;
@@ -943,7 +945,7 @@ describe('image mobile upload', () => {
                       useNock(page, [`https://${process.env.AUTH0_DOMAIN}`]);
 
                       stubAuth0Sessions(agent.email,`localhost:${PORT}` , async err => {
-                        if (err) done.fail(err);
+                        if (err) return done.fail(err);
 
                         await page.goto(APP_URL);
 
