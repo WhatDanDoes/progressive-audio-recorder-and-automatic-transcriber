@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             Add photos
           </div>
           <div id="camera">
+            <div id="spinner">Sending...</div>
             <video id="player" autoplay></video>
             <canvas id="viewer"></canvas>
             <nav id="shooter">
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const context = viewer.getContext('2d');
         const shooter = document.getElementById('shooter');
         const sender = document.getElementById('sender');
+        const spinner = document.getElementById('spinner');
 
         const cancel = document.getElementById('cancel');
         // Cancel the option to send the photo
@@ -62,7 +64,10 @@ document.addEventListener('DOMContentLoaded', function(event) {
           viewer.toBlob(function(blob) {
             const formData = new FormData();
             formData.append('docs', blob, 'blob.jpg');
-            hideCamera();
+
+            spinner.style.display = 'block';
+            send.style.display = 'none';
+            cancel.style.display = 'none';
 
             fetch('/image', {
               method: 'POST',
@@ -73,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
               }
             })
             .then(res => {
+              hideCamera();
               // Automatically following redirect does not re-render the document
               window.location.href = res.url;
             });
@@ -127,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
           viewer.style.display = 'none';
           sender.style.display = 'none';
           reverseButton.style.display = 'none';
+          spinner.style.display = 'none';
         };
 
         /**
@@ -180,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
           capture.style.display = 'block';
           viewer.style.display = 'none';
           sender.style.display = 'none';
+          spinner.style.display = 'none';
 
           if (devices.length > 1) {
             reverseButton.style.display = 'block';
