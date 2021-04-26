@@ -30,7 +30,7 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Writing note on an image', () => {
+describe('Writing note on a track', () => {
 
   let browser, agent, lanny;
 
@@ -65,9 +65,9 @@ describe('Writing note on an image', () => {
   });
 
   describe('unauthenticated', () => {
-    it('does not allow liking an image', done => {
+    it('does not allow liking a track', done => {
       request(app)
-        .post(`/image/${agent.getAgentDirectory()}/image2.jpg/note`)
+        .post(`/track/${agent.getAgentDirectory()}/track2.ogg/note`)
         .send({ text: 'Groovy, baby! Yeah...' })
         .end((err, res) => {
           if (err) return done.fail(err);
@@ -85,27 +85,27 @@ describe('Writing note on an image', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
-            'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
-          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
@@ -134,7 +134,7 @@ describe('Writing note on an image', () => {
       it('provides a text field in which to write a note', done => {
         browser.assert.element('article.post');
         browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
-        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note"]`);
         browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
         browser.assert.text(`article.post section.feedback-controls span.accordion form button[type="submit"]`, 'Post');
 
@@ -174,10 +174,10 @@ describe('Writing note on an image', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          models.Image.find({ published: { $ne: null } }).populate('notes').then(images => {
-            expect(images.length).toEqual(1);
-            expect(images[0].notes.length).toEqual(1);
-            expect(images[0].notes[0].text).toEqual(newlines);
+          models.Track.find({ published: { $ne: null } }).populate('notes').then(tracks => {
+            expect(tracks.length).toEqual(1);
+            expect(tracks[0].notes.length).toEqual(1);
+            expect(tracks[0].notes[0].text).toEqual(newlines);
 
             done();
           }).catch(err => {
@@ -193,7 +193,7 @@ describe('Writing note on an image', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+          browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
             browser.assert.text('.note-content p:first-child', 'Why');
             browser.assert.text('.note-content p:nth-child(2)', 'The');
             browser.assert.text('.note-content p:nth-child(3)', 'Face');
@@ -210,7 +210,7 @@ describe('Writing note on an image', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+          browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
             browser.assert.text('.note-content h1', 'Why');
             browser.assert.text('.note-content em', 'The');
             browser.assert.text('.note-content h2', 'Face');
@@ -240,14 +240,14 @@ describe('Writing note on an image', () => {
         });
       });
 
-      it('displays note content on image show', done => {
+      it('displays note content on track show', done => {
         browser.assert.elements('article.post section.notes', 0);
 
         browser.fill('textarea', 'Greetings');
         browser.pressButton('Post', err => {
           if (err) return done.fail(err);
 
-          browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+          browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
             if (err) return done.fail(err);
   
             browser.assert.text('article.post section.notes header aside .note-content', 'Greetings');
@@ -259,7 +259,7 @@ describe('Writing note on an image', () => {
 
     describe('from the show page', () => {
       beforeEach(done => {
-        browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+        browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
           if (err) done.fail(err);
           browser.assert.success();
           done();
@@ -267,10 +267,10 @@ describe('Writing note on an image', () => {
       });
 
       it('provides a text field in which to write a note', done => {
-        browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+        browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
         browser.assert.element('article.post');
         browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
-        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note"]`);
         browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
         browser.assert.text(`article.post section.feedback-controls span.accordion form button[type="submit"]`, 'Post');
 
@@ -296,7 +296,7 @@ describe('Writing note on an image', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
           done();
         });
       });

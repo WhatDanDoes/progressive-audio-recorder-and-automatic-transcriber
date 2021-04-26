@@ -67,7 +67,7 @@ describe('Deleting a note on a track', () => {
   describe('unauthenticated', () => {
     it('does not allow deleting a note on a track', done => {
       request(app)
-        .delete(`/track/${agent.getAgentDirectory()}/track2.jpg/note/some-fake-note-id`)
+        .delete(`/track/${agent.getAgentDirectory()}/track2.ogg/note/some-fake-note-id`)
         .end((err, res) => {
           if (err) return done.fail(err);
           expect(res.status).toEqual(401);
@@ -84,25 +84,25 @@ describe('Deleting a note on a track', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'track1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'track2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'track3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
-            'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           'public/tracks/uploads': {}
         });
 
         const tracks = [
-          { path: `uploads/${agent.getAgentDirectory()}/track1.jpg`, recordist: agent._id, published: new Date() },
-          { path: `uploads/${agent.getAgentDirectory()}/track2.jpg`, recordist: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/track3.jpg`, recordist: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, recordist: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, recordist: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, recordist: lanny._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
         ];
         models.Track.create(tracks).then(results => {
 
@@ -130,14 +130,14 @@ describe('Deleting a note on a track', () => {
 
         let track;
         beforeEach(done => {
-          models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+          models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(result => {
             result.published = new Date();
             result.notes.push({ author: lanny._id, text: "Word to your mom" });
 
             result.save().then(result => {
               track = result;
 
-              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                 if (err) done.fail(err);
                 browser.assert.success();
 
@@ -152,7 +152,7 @@ describe('Deleting a note on a track', () => {
         });
 
         it('does not provide a menu to modify/delete the note', done => {
-          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
           browser.assert.elements('article.note .note-menu', 0);
 
           done();
@@ -160,7 +160,7 @@ describe('Deleting a note on a track', () => {
 
         it('returns 403', done => {
           request(app)
-            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}`)
+            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}`)
             .set('Cookie', browser.cookies)
             .end((err, res) => {
               if (err) return done.fail(err);
@@ -174,7 +174,7 @@ describe('Deleting a note on a track', () => {
           expect(track.notes.length).toEqual(1);
 
           request(app)
-            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}`)
+            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}`)
             .set('Cookie', browser.cookies)
             .expect(403)
             .end((err, res) => {
@@ -199,7 +199,7 @@ describe('Deleting a note on a track', () => {
           describe('agent wrote note', () => {
             let track;
             beforeEach(done => {
-              browser.visit(`/track/${agent.getAgentDirectory()}/track1.jpg`, err => {
+              browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
                 if (err) done.fail(err);
                 browser.assert.success();
 
@@ -208,7 +208,7 @@ describe('Deleting a note on a track', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.jpg` }).populate('notes').then(result => {
+                  models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg` }).populate('notes').then(result => {
                     track = result;
                     expect(track.notes.length).toEqual(1);
 
@@ -221,9 +221,9 @@ describe('Deleting a note on a track', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -234,7 +234,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
+                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
                 done();
               });
             });
@@ -271,14 +271,14 @@ describe('Deleting a note on a track', () => {
           describe('another agent wrote note', () => {
             let track;
             beforeEach(done => {
-              models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.jpg` }).then(result => {
+              models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg` }).then(result => {
                 result.published = new Date();
                 result.notes.push({ author: lanny._id, text: "Word to your mom" });
 
                 result.save().then(result => {
                   track = result;
 
-                  browser.visit(`/track/${agent.getAgentDirectory()}/track1.jpg`, err => {
+                  browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
                     if (err) done.fail(err);
                     browser.assert.success();
 
@@ -293,9 +293,9 @@ describe('Deleting a note on a track', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -306,7 +306,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
+                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
                 done();
               });
             });
@@ -346,14 +346,14 @@ describe('Deleting a note on a track', () => {
 
             let track;
             beforeEach(done => {
-              models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+              models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(result => {
                 result.published = new Date();
                 result.notes.push({ author: agent._id, text: "Word to your mom" });
 
                 result.save().then(result => {
                   track = result;
 
-                  browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                  browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                     if (err) done.fail(err);
                     browser.assert.success();
 
@@ -368,9 +368,9 @@ describe('Deleting a note on a track', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+              browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -381,7 +381,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
                 done();
               });
             });
@@ -430,7 +430,7 @@ describe('Deleting a note on a track', () => {
                 process.env.SUDO = 'lanny@example.com';
                 expect(process.env.SUDO).not.toEqual(agent.email);
 
-                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(result => {
                   result.published = new Date();
                   result.notes.push({ author: agent._id, text: "Word to your mom" });
                   result.notes.push({ author: lanny._id, text: "Right back at ya!" });
@@ -448,17 +448,17 @@ describe('Deleting a note on a track', () => {
               });
 
               it('provides a menu to modify/delete the agent\'s own note but not that belonging to another', done => {
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                   if (err) return done.fail();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
 
                   browser.assert.elements('article.note', 2);
 
                   browser.assert.elements('article.note .note-menu', 1);
                   expect(track.notes[0].author).toEqual(agent._id);
-                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
 
-                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[1]._id}?_method=DELETE"]`, 0);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[1]._id}?_method=DELETE"]`, 0);
                   done();
                 });
               });
@@ -470,7 +470,7 @@ describe('Deleting a note on a track', () => {
               beforeEach(done => {
                 process.env.SUDO = agent.email;
 
-                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(result => {
                   result.published = new Date();
                   result.notes.push({ author: agent._id, text: "Word to your mom" });
                   result.notes.push({ author: lanny._id, text: "Right back at ya!" });
@@ -478,10 +478,10 @@ describe('Deleting a note on a track', () => {
                   result.save().then(result => {
                     track = result;
 
-                    browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                    browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
-                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
                       done();
                     });
 
@@ -495,9 +495,9 @@ describe('Deleting a note on a track', () => {
 
 
               it('provides a menu to modify/delete every note', done => {
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                   if (err) return done.fail();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
 
                   browser.assert.elements('article.note', 2);
                   browser.assert.elements('article.note .note-menu', 2);
@@ -505,29 +505,29 @@ describe('Deleting a note on a track', () => {
                   expect(track.notes[0].author).toEqual(agent._id);
                   expect(track.notes[1].author).toEqual(lanny._id);
 
-                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
-                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[1]._id}?_method=DELETE"]`, 1);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[1]._id}?_method=DELETE"]`, 1);
 
                   done();
                 });
               });
 
               it('deletes notes from the database', done => {
-                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                   expect(tracks.notes.length).toEqual(2);
 
                   browser.pressButton('.delete-note', err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
-                    models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                    models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                       expect(tracks.notes.length).toEqual(1);
 
                       browser.pressButton('.delete-note', err => {
                         if (err) return done.fail(err);
                         browser.assert.success();
 
-                        models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                        models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                           expect(tracks.notes.length).toEqual(0);
 
                           done();
