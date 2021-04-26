@@ -8,7 +8,7 @@
       <% include ./_pager %>
       <% for (let track of tracks) { %>
         <article class="post">
-          <section class="image">
+          <section class="track">
             <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
               <img src="<%= `/${track.path}` %>" />
             </a>
