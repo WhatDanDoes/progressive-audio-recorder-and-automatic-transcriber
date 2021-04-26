@@ -77,11 +77,11 @@ describe('authentication', function() {
         beforeEach(function(done) {
           mockAndUnmock({
             [`uploads/${agent.getAgentDirectory()}`]: {
-              'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
             },
-            'public/images/uploads': {}
+            'public/tracks/uploads': {}
           });
 
           const tracks = [
@@ -114,11 +114,11 @@ describe('authentication', function() {
         });
 
         it("redirects to the agent's album page", function() {
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
         });
 
         it('displays track submission history', function() {
-          expect(browser.queryAll('.image').length).toEqual(3);
+          expect(browser.queryAll('.track').length).toEqual(3);
         });
 
         it('displays link to the agent\'s tracks', function() {
