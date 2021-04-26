@@ -228,7 +228,7 @@ describe('authSpec', () => {
         .expect(302)
         .end(function(err, res) {
           if (err) return done.fail(err);
-          expect(res.headers.location).toEqual('/image/example.com/someguy');
+          expect(res.headers.location).toEqual('/track/example.com/someguy');
           done();
         });
     });
