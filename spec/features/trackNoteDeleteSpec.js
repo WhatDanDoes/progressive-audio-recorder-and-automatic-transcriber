@@ -30,7 +30,7 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Deleting a note on an image', () => {
+describe('Deleting a note on a track', () => {
 
   let browser, agent, lanny;
 
@@ -65,9 +65,9 @@ describe('Deleting a note on an image', () => {
   });
 
   describe('unauthenticated', () => {
-    it('does not allow deleting a note on an image', done => {
+    it('does not allow deleting a note on a track', done => {
       request(app)
-        .delete(`/image/${agent.getAgentDirectory()}/image2.jpg/note/some-fake-note-id`)
+        .delete(`/track/${agent.getAgentDirectory()}/track2.jpg/note/some-fake-note-id`)
         .end((err, res) => {
           if (err) return done.fail(err);
           expect(res.status).toEqual(401);
@@ -84,27 +84,27 @@ describe('Deleting a note on an image', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track3.jpg': fs.readFileSync('spec/files/troll.jpg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
             'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
             'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
             'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
-          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.jpg`, recordist: agent._id, published: new Date() },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.jpg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.jpg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, recordist: lanny._id },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
@@ -128,16 +128,16 @@ describe('Deleting a note on an image', () => {
 
       describe('from the show page', () => {
 
-        let image;
+        let track;
         beforeEach(done => {
-          models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+          models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
             result.published = new Date();
             result.notes.push({ author: lanny._id, text: "Word to your mom" });
 
             result.save().then(result => {
-              image = result;
+              track = result;
 
-              browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                 if (err) done.fail(err);
                 browser.assert.success();
 
@@ -152,7 +152,7 @@ describe('Deleting a note on an image', () => {
         });
 
         it('does not provide a menu to modify/delete the note', done => {
-          browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
           browser.assert.elements('article.note .note-menu', 0);
 
           done();
@@ -160,7 +160,7 @@ describe('Deleting a note on an image', () => {
 
         it('returns 403', done => {
           request(app)
-            .delete(`/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[0]._id}`)
+            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}`)
             .set('Cookie', browser.cookies)
             .end((err, res) => {
               if (err) return done.fail(err);
@@ -171,18 +171,18 @@ describe('Deleting a note on an image', () => {
         });
 
         it('does not remove the note from the database', done => {
-          expect(image.notes.length).toEqual(1);
+          expect(track.notes.length).toEqual(1);
 
           request(app)
-            .delete(`/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[0]._id}`)
+            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}`)
             .set('Cookie', browser.cookies)
             .expect(403)
             .end((err, res) => {
               if (err) return done.fail(err);
 
-              models.Image.findOne({ _id: image._id }).populate('notes').then(result => {
-                image = result;
-                expect(image.notes.length).toEqual(1);
+              models.Track.findOne({ _id: track._id }).populate('notes').then(result => {
+                track = result;
+                expect(track.notes.length).toEqual(1);
 
                 done();
               }).catch(err => {
@@ -197,9 +197,9 @@ describe('Deleting a note on an image', () => {
       describe('from the show page', () => {
         describe('agent owns resource', () => {
           describe('agent wrote note', () => {
-            let image;
+            let track;
             beforeEach(done => {
-              browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+              browser.visit(`/track/${agent.getAgentDirectory()}/track1.jpg`, err => {
                 if (err) done.fail(err);
                 browser.assert.success();
 
@@ -208,9 +208,9 @@ describe('Deleting a note on an image', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  models.Image.findOne({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg` }).populate('notes').then(result => {
-                    image = result;
-                    expect(image.notes.length).toEqual(1);
+                  models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.jpg` }).populate('notes').then(result => {
+                    track = result;
+                    expect(track.notes.length).toEqual(1);
 
                     done();
                   }).catch(err => {
@@ -221,9 +221,9 @@ describe('Deleting a note on an image', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note/${image.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -234,20 +234,20 @@ describe('Deleting a note on an image', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
                 done();
               });
             });
 
             it('removes the note from the database', done => {
-              expect(image.notes.length).toEqual(1);
+              expect(track.notes.length).toEqual(1);
               browser.pressButton('.delete-note', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                models.Image.findOne({ _id: image._id }).populate('notes').then(result => {
-                  image = result;
-                  expect(image.notes.length).toEqual(0);
+                models.Track.findOne({ _id: track._id }).populate('notes').then(result => {
+                  track = result;
+                  expect(track.notes.length).toEqual(0);
 
                   done();
                 }).catch(err => {
@@ -269,16 +269,16 @@ describe('Deleting a note on an image', () => {
           });
 
           describe('another agent wrote note', () => {
-            let image;
+            let track;
             beforeEach(done => {
-              models.Image.findOne({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg` }).then(result => {
+              models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.jpg` }).then(result => {
                 result.published = new Date();
                 result.notes.push({ author: lanny._id, text: "Word to your mom" });
 
                 result.save().then(result => {
-                  image = result;
+                  track = result;
 
-                  browser.visit(`/image/${agent.getAgentDirectory()}/image1.jpg`, err => {
+                  browser.visit(`/track/${agent.getAgentDirectory()}/track1.jpg`, err => {
                     if (err) done.fail(err);
                     browser.assert.success();
 
@@ -293,9 +293,9 @@ describe('Deleting a note on an image', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/image/${agent.getAgentDirectory()}/image1.jpg/note/${image.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -306,20 +306,20 @@ describe('Deleting a note on an image', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.jpg` });
                 done();
               });
             });
 
             it('removes the note from the database', done => {
-              expect(image.notes.length).toEqual(1);
+              expect(track.notes.length).toEqual(1);
               browser.pressButton('.delete-note', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                models.Image.findOne({ _id: image._id }).populate('notes').then(result => {
-                  image = result;
-                  expect(image.notes.length).toEqual(0);
+                models.Track.findOne({ _id: track._id }).populate('notes').then(result => {
+                  track = result;
+                  expect(track.notes.length).toEqual(0);
 
                   done();
                 }).catch(err => {
@@ -344,16 +344,16 @@ describe('Deleting a note on an image', () => {
         describe('agent does not own resource', () => {
           describe('agent wrote note', () => {
 
-            let image;
+            let track;
             beforeEach(done => {
-              models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+              models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
                 result.published = new Date();
                 result.notes.push({ author: agent._id, text: "Word to your mom" });
 
                 result.save().then(result => {
-                  image = result;
+                  track = result;
 
-                  browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                  browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                     if (err) done.fail(err);
                     browser.assert.success();
 
@@ -368,9 +368,9 @@ describe('Deleting a note on an image', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+              browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -381,20 +381,20 @@ describe('Deleting a note on an image', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
                 done();
               });
             });
 
             it('removes the note from the database', done => {
-              expect(image.notes.length).toEqual(1);
+              expect(track.notes.length).toEqual(1);
               browser.pressButton('.delete-note', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                models.Image.findOne({ _id: image._id }).populate('notes').then(result => {
-                  image = result;
-                  expect(image.notes.length).toEqual(0);
+                models.Track.findOne({ _id: track._id }).populate('notes').then(result => {
+                  track = result;
+                  expect(track.notes.length).toEqual(0);
 
                   done();
                 }).catch(err => {
@@ -425,18 +425,18 @@ describe('Deleting a note on an image', () => {
           describe('set', () => {
             describe('non sudo agent', () => {
 
-              let image;
+              let track;
               beforeEach(done => {
                 process.env.SUDO = 'lanny@example.com';
                 expect(process.env.SUDO).not.toEqual(agent.email);
 
-                models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
                   result.published = new Date();
                   result.notes.push({ author: agent._id, text: "Word to your mom" });
                   result.notes.push({ author: lanny._id, text: "Right back at ya!" });
 
                   result.save().then(result => {
-                    image = result;
+                    track = result;
 
                     done();
                   }).catch(err => {
@@ -448,17 +448,17 @@ describe('Deleting a note on an image', () => {
               });
 
               it('provides a menu to modify/delete the agent\'s own note but not that belonging to another', done => {
-                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                   if (err) return done.fail();
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
 
                   browser.assert.elements('article.note', 2);
 
                   browser.assert.elements('article.note .note-menu', 1);
-                  expect(image.notes[0].author).toEqual(agent._id);
-                  browser.assert.elements(`article.note .note-menu form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[0]._id}?_method=DELETE"]`, 1);
+                  expect(track.notes[0].author).toEqual(agent._id);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
 
-                  browser.assert.elements(`article.note .note-menu form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[1]._id}?_method=DELETE"]`, 0);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[1]._id}?_method=DELETE"]`, 0);
                   done();
                 });
               });
@@ -466,22 +466,22 @@ describe('Deleting a note on an image', () => {
 
             describe('sudo agent', () => {
 
-              let image;
+              let track;
               beforeEach(done => {
                 process.env.SUDO = agent.email;
 
-                models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(result => {
                   result.published = new Date();
                   result.notes.push({ author: agent._id, text: "Word to your mom" });
                   result.notes.push({ author: lanny._id, text: "Right back at ya!" });
 
                   result.save().then(result => {
-                    image = result;
+                    track = result;
 
-                    browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                    browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
-                      browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
                       done();
                     });
 
@@ -495,40 +495,40 @@ describe('Deleting a note on an image', () => {
 
 
               it('provides a menu to modify/delete every note', done => {
-                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
                   if (err) return done.fail();
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.jpg` });
 
                   browser.assert.elements('article.note', 2);
                   browser.assert.elements('article.note .note-menu', 2);
 
-                  expect(image.notes[0].author).toEqual(agent._id);
-                  expect(image.notes[1].author).toEqual(lanny._id);
+                  expect(track.notes[0].author).toEqual(agent._id);
+                  expect(track.notes[1].author).toEqual(lanny._id);
 
-                  browser.assert.elements(`article.note .note-menu form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[0]._id}?_method=DELETE"]`, 1);
-                  browser.assert.elements(`article.note .note-menu form[action="/image/${lanny.getAgentDirectory()}/lanny1.jpg/note/${image.notes[1]._id}?_method=DELETE"]`, 1);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
+                  browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.jpg/note/${track.notes[1]._id}?_method=DELETE"]`, 1);
 
                   done();
                 });
               });
 
               it('deletes notes from the database', done => {
-                models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                  expect(images.notes.length).toEqual(2);
+                models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                  expect(tracks.notes.length).toEqual(2);
 
                   browser.pressButton('.delete-note', err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
-                    models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                      expect(images.notes.length).toEqual(1);
+                    models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                      expect(tracks.notes.length).toEqual(1);
 
                       browser.pressButton('.delete-note', err => {
                         if (err) return done.fail(err);
                         browser.assert.success();
 
-                        models.Image.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                          expect(images.notes.length).toEqual(0);
+                        models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(tracks => {
+                          expect(tracks.notes.length).toEqual(0);
 
                           done();
                         }).catch(err => {
