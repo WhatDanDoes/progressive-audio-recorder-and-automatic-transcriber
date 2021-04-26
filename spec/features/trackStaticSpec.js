@@ -22,7 +22,7 @@ const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 const mock = require('mock-fs');
 const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 
-describe('imageStaticSpec', () => {
+describe('trackStaticSpec', () => {
   let browser, agent, lanny, troy;
 
   beforeEach(done => {
@@ -69,25 +69,25 @@ describe('imageStaticSpec', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
-            'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           [`uploads/${troy.getAgentDirectory()}`]: {
-            'troy1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'troy2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'troy1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'troy2.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: new Date() },
-          { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+          { path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`, recordist: troy._id, published: new Date() },
+          { path: `uploads/${troy.getAgentDirectory()}/troy2.ogg`, recordist: troy._id },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
@@ -101,9 +101,9 @@ describe('imageStaticSpec', () => {
     });
 
     describe('authorized', () => {
-      it('allows an agent to view his own static image file', done => {
+      it('allows an agent to view his own static track file', done => {
         request(app)
-          .get(`/uploads/${agent.getAgentDirectory()}/image1.jpg`)
+          .get(`/uploads/${agent.getAgentDirectory()}/track1.ogg`)
           .set('Cookie', browser.cookies)
           .expect(200)
           .end((err, res) => {
@@ -112,11 +112,11 @@ describe('imageStaticSpec', () => {
           });
       });
 
-      it('allows an agent to view a static image file he is allowed read', done => {
+      it('allows an agent to view a static track file he is allowed read', done => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
         request(app)
-          .get(`/uploads/${lanny.getAgentDirectory()}/lanny1.jpg`)
+          .get(`/uploads/${lanny.getAgentDirectory()}/lanny1.ogg`)
           .set('Cookie', browser.cookies)
           .expect(200)
           .end((err, res) => {
@@ -125,8 +125,8 @@ describe('imageStaticSpec', () => {
           });
       });
 
-      it('allows an agent to view a static image file that has been published', done => {
-        models.Image.find({ published: { '$ne': null } }).then(published => {
+      it('allows an agent to view a static track file that has been published', done => {
+        models.Track.find({ published: { '$ne': null } }).then(published => {
           expect(published.length).toEqual(1);
           request(app)
             .get(`/${published[0].path}`)
@@ -143,12 +143,12 @@ describe('imageStaticSpec', () => {
     });
 
     describe('unauthorized', () => {
-      it('does not allow an agent to view a static image for which he has not been granted access', done => {
+      it('does not allow an agent to view a static track for which he has not been granted access', done => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).not.toEqual(troy._id);
 
         request(app)
-          .get(`/uploads/${troy.getAgentDirectory()}/troy2.jpg`)
+          .get(`/uploads/${troy.getAgentDirectory()}/troy2.ogg`)
           .set('Cookie', browser.cookies)
           .expect(403)
           .end((err, res) => {
@@ -157,8 +157,8 @@ describe('imageStaticSpec', () => {
           });
       });
 
-      it('does not allow an agent to view a static image file that has been not been published', done => {
-        models.Image.find({ published: null, photographer: troy._id}).then(unpublished => {
+      it('does not allow an agent to view a static track file that has been not been published', done => {
+        models.Track.find({ published: null, recordist: troy._id}).then(unpublished => {
           expect(unpublished.length).toEqual(1);
           request(app)
             .get(`/${unpublished[0].path}`)
@@ -179,25 +179,25 @@ describe('imageStaticSpec', () => {
     beforeEach(done => {
       mockAndUnmock({
         [`uploads/${agent.getAgentDirectory()}`]: {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
         },
         [`uploads/${lanny.getAgentDirectory()}`]: {
-          'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
         },
         [`uploads/${troy.getAgentDirectory()}`]: {
-          'troy1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'troy2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+          'troy1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+          'troy2.ogg': fs.readFileSync('spec/files/troll.ogg'),
         },
-        'public/images/uploads': {}
+        'public/tracks/uploads': {}
       });
 
-      const images = [
-        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-        { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id, published: new Date() },
-        { path: `uploads/${troy.getAgentDirectory()}/troy2.jpg`, photographer: troy._id },
+      const tracks = [
+        { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+        { path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`, recordist: troy._id, published: new Date() },
+        { path: `uploads/${troy.getAgentDirectory()}/troy2.ogg`, recordist: troy._id },
       ];
-      models.Image.create(images).then(results => {
+      models.Track.create(tracks).then(results => {
         done();
       }).catch(err => {
         done.fail(err);
@@ -206,7 +206,7 @@ describe('imageStaticSpec', () => {
 
     it('returns a 404', done => {
       request(app)
-        .get(`/uploads/${agent.getAgentDirectory()}/image1.jpg`)
+        .get(`/uploads/${agent.getAgentDirectory()}/track1.ogg`)
         .set('Cookie', browser.cookies)
         .expect(404)
         .end((err, res) => {
@@ -215,8 +215,8 @@ describe('imageStaticSpec', () => {
         });
     });
 
-    it('finds a static image file that has been published', done => {
-      models.Image.find({ published: { '$ne': null } }).then(published => {
+    it('finds a static track file that has been published', done => {
+      models.Track.find({ published: { '$ne': null } }).then(published => {
         expect(published.length).toEqual(1);
         request(app)
           .get(`/${published[0].path}`)
