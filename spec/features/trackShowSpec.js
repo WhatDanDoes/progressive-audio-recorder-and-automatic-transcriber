@@ -20,7 +20,7 @@ const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 const mock = require('mock-fs');
 const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 
-describe('imageShowSpec', () => {
+describe('trackShowSpec', () => {
   let browser, agent, lanny;
 
   beforeEach(done => {
@@ -60,21 +60,21 @@ describe('imageShowSpec', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: new Date() },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id, published: new Date() },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
@@ -99,36 +99,36 @@ describe('imageShowSpec', () => {
     });
 
     describe('authorized', () => {
-      it('allows an agent to click and view his own image', done => {
-        browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.element(`.image a[href="/image/${agent.getAgentDirectory()}/image1.jpg"] img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`);
-        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+      it('allows an agent to click and view his own track', done => {
+        browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
+        browser.assert.element(`.track a[href="/track/${agent.getAgentDirectory()}/track1.ogg"] img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`);
+        browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.assert.element(`img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`);
+          browser.assert.element(`img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`);
           browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
           browser.assert.element('article.post header aside div');
           browser.assert.element('article.post header aside time');
           browser.assert.element('article.post header span.post-menu');
           browser.assert.element('article.post section.feedback-controls');
           browser.assert.element('article.post section.feedback-controls i.like-button');
-          browser.assert.element('.delete-image-form');
-          browser.assert.element('.publish-image-form');
+          browser.assert.element('.delete-track-form');
+          browser.assert.element('.publish-track-form');
 
           done();
         });
       });
 
-      it('allows an agent to view an image to which he has permission to read', done => {
+      it('allows an agent to view a track to which he has permission to read', done => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+        browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
-          browser.assert.elements('.delete-image-form', 0);
+          browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+          browser.assert.elements('.delete-track-form', 0);
           done();
         });
       });
@@ -147,7 +147,7 @@ describe('imageShowSpec', () => {
       });
 
       it('does not allow an agent to view an album for which he has not been granted access', done => {
-        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+        browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
           if (err) return done.fail(err);
           browser.assert.redirected();
           browser.assert.url({ pathname: '/'});
@@ -156,21 +156,21 @@ describe('imageShowSpec', () => {
         });
       });
 
-      it('allows an agent to view a published image', done => {
+      it('allows an agent to view a published track', done => {
         // Unpublished
-        browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+        browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
           browser.assert.url({ pathname: '/'});
           browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
 
           // Published in setup above
-          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny2.jpg`, err => {
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`, err => {
             if (err) return done.fail(err);
 
             browser.assert.elements('.alert.alert-danger', 0);
-            browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny2.jpg"]`);
-            browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny2.jpg` });
+            browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny2.ogg"]`);
+            browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny2.ogg` });
             done();
           });
         });
@@ -180,7 +180,7 @@ describe('imageShowSpec', () => {
 
   describe('unauthenticated', () => {
     it('redirects home (which is where the login form is located)', done => {
-      browser.visit(`/image/${agent.getAgentDirectory()}/image2.jpg`, err => {
+      browser.visit(`/track/${agent.getAgentDirectory()}/track2.ogg`, err => {
         if (err) return done.fail(err);
         browser.assert.redirected();
         browser.assert.url({ pathname: '/'});
