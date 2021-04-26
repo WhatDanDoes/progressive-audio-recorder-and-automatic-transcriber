@@ -276,11 +276,11 @@ router.patch('/:domain/:agentId/:trackId/like', (req, res) => {
  * POST /track
  */
 router.post('/', upload.array('docs', 8), function(req, res, next) {
-    // If coming from the native app
+    // If provided a JWT
     if (req.headers['accept'] === 'application/json') {
       return jwtAuth(req, res, next);
     }
-    // Non-native app authorization
+    // Non-JWT app authorization
     next();
   }, (req, res) => {
 
@@ -349,6 +349,46 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
     }
     req.flash('success', 'Track received');
     return res.redirect(req.headers.referer);
+  });
+});
+
+/**
+ * POST /track/stream
+ */
+router.post('/stream', function(req, res, next) {
+    // If provided a JWT
+    if (req.headers['accept'] === 'application/json') {
+      return jwtAuth(req, res, next);
+    }
+    // Non-JWT app authorization
+    next();
+  }, (req, res) => {
+
+  if (!req.isAuthenticated()) {
+    if (req.headers['accept'] === 'application/json') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    req.flash('error', 'You need to login first');
+    return res.redirect('/');
+  }
+
+  const parts = req.user.email.split('@');
+  const agentDirectory = `${parts[1]}/${parts[0]}` ;
+  const fileName =`${timestamp('YYYY-MM-DD-HHmmssms')}.ogg`;
+
+  if (!fs.existsSync(`uploads/${agentDirectory}`)){
+    mkdirp.sync(`uploads/${agentDirectory}`);
+  }
+
+  const writeStream = fs.createWriteStream(`uploads/${agentDirectory}/${fileName}`);
+  req.pipe(writeStream);
+
+  req.on('end', () => {
+    models.Track.create({ path: `uploads/${agentDirectory}/${fileName}`, recordist: req.user._id }).then(track => {
+      return res.status(201).json({ message: 'Track received' });
+    }).catch(err => {
+      done(err);
+    });
   });
 });
 

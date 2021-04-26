@@ -121,211 +121,314 @@ describe('track upload API', () => {
     });
 
     describe('authenticated access', () => {
-      it('responds with 201 on successful receipt of file', done => {
-        request(app)
-          .post('/track')
-          .set('Accept', 'application/json')
-          .field('token', token)
-          .attach('docs', 'spec/files/troll.ogg')
-          .expect('Content-Type', /json/)
-          .expect(201)
-          .end(function(err, res) {
-            if (err) {
-              return done.fail(err);
-            }
-            expect(res.body.message).toEqual('Track received');
-            done();
-          });
-      });
-
-      it('writes the file to the disk on agent\'s first access', done => {
-        fs.readdir(`uploads/`, (err, files) => {
-          if (err) {
-            return done.fail(err);
-          }
-          expect(files.length).toEqual(0);
-
+      describe('audio file upload', () => {
+        it('responds with 201 on successful receipt of file', done => {
           request(app)
             .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
             .attach('docs', 'spec/files/troll.ogg')
-            .expect(201)
-            .end(function(err, res) {
-              if (err) {
-                return done.fail(err);
-              }
-              expect(res.body.message).toEqual('Track received');
-
-              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-
-                if (err) {
-                  return done.fail(err);
-                }
-                expect(files.length).toEqual(1);
-
-                done();
-              });
-          });
-        });
-      });
-
-      it('writes multiple attached files to disk', done => {
-        fs.readdir(`uploads`, (err, files) => {
-          if (err) {
-            return done.fail(err);
-          }
-          expect(files.length).toEqual(0);
-          request(app)
-            .post('/track')
-            .set('Accept', 'application/json')
-            .field('token', token)
-            .attach('docs', 'spec/files/troll.ogg')
-            .attach('docs', 'spec/files/troll.wav')
             .expect('Content-Type', /json/)
             .expect(201)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
-              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+              expect(res.body.message).toEqual('Track received');
+              done();
+            });
+        });
+
+        it('writes the file to the disk on agent\'s first access', done => {
+          fs.readdir(`uploads/`, (err, files) => {
+            if (err) {
+              return done.fail(err);
+            }
+            expect(files.length).toEqual(0);
+
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg')
+              .expect(201)
+              .end(function(err, res) {
                 if (err) {
                   return done.fail(err);
                 }
-                expect(files.length).toEqual(2);
+                expect(res.body.message).toEqual('Track received');
 
-                done();
-              });
+                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(files.length).toEqual(1);
+
+                  done();
+                });
             });
           });
-      });
+        });
 
-      it('writes the file to the disk on agent\'s subsequent accesses', done => {
-        fs.readdir(`uploads/`, (err, files) => {
-          if (err) {
-            return done.fail(err);
-          }
-          expect(files.length).toEqual(0);
-
-          request(app)
-            .post('/track')
-            .set('Accept', 'application/json')
-            .field('token', token)
-            .attach('docs', 'spec/files/troll.ogg')
-            .expect(201)
-            .end(function(err, res) {
-              if (err) {
-                return done.fail(err);
-              }
-              expect(res.body.message).toEqual('Track received');
-
-              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-
+        it('writes multiple attached files to disk', done => {
+          fs.readdir(`uploads`, (err, files) => {
+            if (err) {
+              return done.fail(err);
+            }
+            expect(files.length).toEqual(0);
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg')
+              .attach('docs', 'spec/files/troll.wav')
+              .expect('Content-Type', /json/)
+              .expect(201)
+              .end(function(err, res) {
                 if (err) {
                   return done.fail(err);
                 }
-                expect(files.length).toEqual(1);
+                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(files.length).toEqual(2);
 
-                request(app)
-                  .post('/track')
-                  .set('Accept', 'application/json')
-                  .field('token', token)
-                  .attach('docs', 'spec/files/troll.ogg')
-                  .expect(201)
-                  .end(function(err, res) {
-                    if (err) {
-                      return done.fail(err);
-                    }
-                    expect(res.body.message).toEqual('Track received');
+                  done();
+                });
+              });
+            });
+        });
 
-                    fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+        it('writes the file to the disk on agent\'s subsequent accesses', done => {
+          fs.readdir(`uploads/`, (err, files) => {
+            if (err) {
+              return done.fail(err);
+            }
+            expect(files.length).toEqual(0);
 
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg')
+              .expect(201)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+                expect(res.body.message).toEqual('Track received');
+
+                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(files.length).toEqual(1);
+
+                  request(app)
+                    .post('/track')
+                    .set('Accept', 'application/json')
+                    .field('token', token)
+                    .attach('docs', 'spec/files/troll.ogg')
+                    .expect(201)
+                    .end(function(err, res) {
                       if (err) {
                         return done.fail(err);
                       }
-                      expect(files.length).toEqual(2);
+                      expect(res.body.message).toEqual('Track received');
 
-                      done();
+                      fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+
+                        if (err) {
+                          return done.fail(err);
+                        }
+                        expect(files.length).toEqual(2);
+
+                        done();
+                      });
                     });
-                  });
+                });
               });
-            });
+          });
         });
-      });
 
-      it('creates a database record', done => {
-        models.Track.find({}).then(tracks => {
-          expect(tracks.length).toEqual(0);
+        it('creates a database record', done => {
+          models.Track.find({}).then(tracks => {
+            expect(tracks.length).toEqual(0);
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg')
+              .expect(201)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+
+                models.Track.find({}).then(tracks => {
+                  expect(tracks.length).toEqual(1);
+                  expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('writes a database record for each attached file', done => {
+          models.Track.find({}).then(tracks => {
+            expect(tracks.length).toEqual(0);
+
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg')
+              .attach('docs', 'spec/files/troll.wav')
+              .expect('Content-Type', /json/)
+              .expect(201)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+                models.Track.find({}).then(tracks => {
+                  expect(tracks.length).toEqual(2);
+                  expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                  expect(tracks[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('returns a 400 error if no track is defined', done => {
           request(app)
             .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.ogg')
-            .expect(201)
-            .end(function(err, res) {
-              if (err) {
-                return done.fail(err);
-              }
-
-              models.Track.find({}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-
-                done();
-              }).catch(err => {
-                done.fail(err);
-              });
-            });
-        }).catch(err => {
-          done.fail(err);
-        });
-      });
-
-      it('writes a database record for each attached file', done => {
-        models.Track.find({}).then(tracks => {
-          expect(tracks.length).toEqual(0);
-
-          request(app)
-            .post('/track')
-            .set('Accept', 'application/json')
-            .field('token', token)
-            .attach('docs', 'spec/files/troll.ogg')
-            .attach('docs', 'spec/files/troll.wav')
             .expect('Content-Type', /json/)
-            .expect(201)
+            .expect(400)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
-              models.Track.find({}).then(tracks => {
-                expect(tracks.length).toEqual(2);
-                expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-                expect(tracks[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-
-                done();
-              }).catch(err => {
-                done.fail(err);
-              });
+              expect(res.body.message).toEqual('No track provided');
+              done();
             });
-        }).catch(err => {
-          done.fail(err);
         });
       });
 
-      it('returns a 400 error if no track is defined', done => {
-        request(app)
-          .post('/track')
-          .set('Accept', 'application/json')
-          .field('token', token)
-          .expect('Content-Type', /json/)
-          .expect(400)
-          .end(function(err, res) {
+      describe('audio stream', () => {
+
+        let audioStream;
+        beforeEach(done => {
+          audioStream = fs.createReadStream(`${__dirname}/../../files/troll.ogg`);
+          done();
+        });
+
+        it('responds with 201 on successful closing of stream', done => {
+          let req = request(app)
+            .post('/track/stream')
+            .set('Accept', 'application/json')
+            .set('x-access-token', token)
+            .set('content-type', 'application/octet-stream');
+
+          audioStream.on('end', () => {
+            req
+              .expect('Content-Type', /json/)
+              .expect(201)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+                expect(res.body.message).toEqual('Track received');
+                done();
+              });
+          });
+
+          audioStream.pipe(req, {end: false});
+        });
+
+        it('writes the file to the disk on agent\'s first access', done => {
+          fs.readdir(`uploads/`, (err, files) => {
             if (err) {
               return done.fail(err);
             }
-            expect(res.body.message).toEqual('No track provided');
-            done();
+            expect(files.length).toEqual(0);
+
+            let req = request(app)
+              .post('/track/stream')
+              .set('Accept', 'application/json')
+              .set('x-access-token', token)
+              .set('content-type', 'application/octet-stream');
+
+            audioStream.on('end', () => {
+              req
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(res.body.message).toEqual('Track received');
+
+                  fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                    if (err) return done.fail(err);
+
+                    expect(files.length).toEqual(1);
+
+                    done();
+                  });
+              });
+            });
+
+            audioStream.pipe(req, {end: false});
           });
+        });
+
+        it('creates a database record', done => {
+          models.Track.find({}).then(tracks => {
+            expect(tracks.length).toEqual(0);
+
+            let req = request(app)
+              .post('/track/stream')
+              .set('Accept', 'application/json')
+              .set('x-access-token', token)
+              .set('content-type', 'application/octet-stream');
+
+            audioStream.on('end', () => {
+              req
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) return done.fail(err);
+
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
+
+            audioStream.pipe(req, {end: false});
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
       });
     });
   });
