@@ -107,12 +107,12 @@ describe('landing page', () => {
         if (err) return done.fail(err);
         browser.assert.success();
 
-        browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
+        browser.assert.elements('article.post section.track img', 2);
+        browser.assert.elements(`article.post section.track img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.track img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
         // No links to show pic view
-        browser.assert.elements('article.post section.photo a', 0);
+        browser.assert.elements('article.post section.track a', 0);
 
         browser.assert.elements('article.post header', 0);
         browser.assert.elements('article.post section.feedback-controls', 0);
@@ -332,13 +332,13 @@ describe('landing page', () => {
         if (err) return done.fail(err);
         browser.assert.success();
 
-        browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
+        browser.assert.elements('article.post section.track img', 2);
+        browser.assert.elements(`article.post section.track img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.track img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
         // Links to show pic view
-        browser.assert.element(`article.post section.photo a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
-        browser.assert.element(`article.post section.photo a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+        browser.assert.element(`article.post section.track a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+        browser.assert.element(`article.post section.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
         // agent and lanny have the same picture src
         // 2020-10-8 This needs to be fleshed out as the layout is decided

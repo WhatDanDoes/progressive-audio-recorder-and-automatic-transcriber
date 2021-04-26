@@ -540,7 +540,7 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 }
 
 /* 2021-2-18 https://dev.to/ibn_abubakre/styling-file-inputs-like-a-boss-mhm */
-#photos-input {
+#tracks-input {
   opacity: 0;
   width: 0.1px;
   height: 0.1px;
@@ -583,7 +583,7 @@ article.post header img.avatar {
   width: 10%;
   border-radius: 50%;
 }
-article.post section.photo img {
+article.post section.track img {
   border-radius: 4px;
 }
 

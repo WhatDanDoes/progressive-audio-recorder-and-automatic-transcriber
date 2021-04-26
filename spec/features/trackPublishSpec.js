@@ -240,7 +240,7 @@ describe('Publishing a track', () => {
               });
             });
 
-            it('shows an unpublish button on the agent\'s photo roll', done => {
+            it('shows an unpublish button on the agent\'s audio roll', done => {
               browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}"]`, err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
@@ -1003,7 +1003,7 @@ describe('Publishing a track', () => {
                   });
                 });
 
-                it('shows an unpublish button on the agent\'s photo roll', () => {
+                it('shows an unpublish button on the agent\'s audio roll', () => {
                   browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
                   browser.assert.text(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track`, 'Unpublish');
                 });

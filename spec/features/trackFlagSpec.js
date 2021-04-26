@@ -892,7 +892,7 @@ describe('Flagging a track', () => {
                   browser.visit('/', (err) => {
                     if (err) return done.fail(err);
 
-                    browser.assert.elements(`.photo a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`, 0);
+                    browser.assert.elements(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`, 0);
 
                     browser.visit('/track/flagged', err => {
                       if (err) return done.fail(err);
@@ -906,7 +906,7 @@ describe('Flagging a track', () => {
                           if (err) return done.fail(err);
                           browser.assert.success();
 
-                          browser.assert.element(`.photo a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`);
+                          browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`);
                           done();
                         });
                       });

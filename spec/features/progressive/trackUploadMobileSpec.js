@@ -135,9 +135,9 @@ describe('track mobile upload', () => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
-            browser.assert.element('#photos-form');
-            browser.assert.element('#photos-form[action="/track"]');
-            browser.assert.element('#photos-form[action="/track"] #photos-input[type="file"]');
+            browser.assert.element('#tracks-form');
+            browser.assert.element('#tracks-form[action="/track"]');
+            browser.assert.element('#tracks-form[action="/track"] #tracks-input[type="file"]');
             browser.assert.elements('#camera-button', 0);
             done();
           });
@@ -206,7 +206,7 @@ describe('track mobile upload', () => {
 
           browser.clickLink('Login', err => {
             if (err) return done.fail(err);
-            browser.assert.element('#photos-form');
+            browser.assert.element('#tracks-form');
             browser.assert.elements('#camera-button', 0);
             done();
           });
@@ -240,7 +240,7 @@ describe('track mobile upload', () => {
           browser.clickLink('Login', err => {
             if (err) return done.fail(err);
             browser.assert.element('#camera-button');
-            browser.assert.elements('#photos-form', 0);
+            browser.assert.elements('#tracks-form', 0);
             done();
           });
         });
@@ -270,7 +270,7 @@ describe('track mobile upload', () => {
             browser.clickLink('Login', err => {
               if (err) return done.fail(err);
               browser.assert.element('#camera-button');
-              browser.assert.elements('#photos-form', 0);
+              browser.assert.elements('#tracks-form', 0);
               done();
             });
           });
@@ -307,7 +307,7 @@ describe('track mobile upload', () => {
           it('reverts to the basic track upload form', done => {
             browser.click('#camera-button').then(res => {
 
-              browser.assert.element('#photos-form');
+              browser.assert.element('#tracks-form');
               browser.assert.elements('#camera-button', 0);
               browser.assert.elements('video#player', 0);
 
@@ -609,8 +609,8 @@ describe('track mobile upload', () => {
                    */
                   browser.on('loaded', (req, res) => {
                     spyOn(browser.document, 'getElementById')
-                      .withArgs('photos-input').and.callThrough()
-                      .withArgs('photos-form').and.callThrough()
+                      .withArgs('tracks-input').and.callThrough()
+                      .withArgs('tracks-form').and.callThrough()
                       .withArgs('camera-button').and.callThrough()
                       .withArgs('camera').and.callThrough()
                       // This is the relevant spy
@@ -637,7 +637,7 @@ describe('track mobile upload', () => {
                     browser.clickLink('Login', err => {
                       if (err) return done.fail(err);
                       browser.assert.element('#camera-button');
-                      browser.assert.elements('#photos-form', 0);
+                      browser.assert.elements('#tracks-form', 0);
 
                       browser.click('#camera-button').then(res => {
                         done();
@@ -970,7 +970,7 @@ describe('track mobile upload', () => {
                         });
 
                         expect(await page.$('#camera-button')).toBeTruthy();
-                        expect(await page.$('#photos-form')).toBeFalsy();
+                        expect(await page.$('#tracks-form')).toBeFalsy();
 
                         // Open the camera app
                         await page.click('#camera-button');

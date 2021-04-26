@@ -17,11 +17,11 @@ services:
     image: mongo
     restart: unless-stopped
     volumes:
-      - auth0_photo_server_data:/data/db
+      - progressive_audio_recorder_data:/data/db
 networks:
   default:
     external:
       name: nginx-proxy
 volumes:
-  auth0_photo_server_data:
+  progressive_audio_recorder_data:
 

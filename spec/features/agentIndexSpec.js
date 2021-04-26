@@ -112,12 +112,12 @@ describe('agentIndexSpec', () => {
         browser.assert.text('h2', `Hello, ${agent.email}`);
       });
 
-      it('displays an add-photo form', () => {
+      it('displays an add-track form', () => {
         browser.assert.element('.deep-link');
         browser.assert.element('form[action="/track"][method="post"]');
-        browser.assert.element('input[id="photos-input"][type="file"][accept="audio/*"]');
-        browser.assert.text('label[for="photos-input"]', 'Add track');
-        browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
+        browser.assert.element('input[id="tracks-input"][type="file"][accept="audio/*"]');
+        browser.assert.text('label[for="tracks-input"]', 'Add track');
+        browser.assert.element('label[for="tracks-input"] img[src="/images/bpe-logo.png"]');
       });
 
       it('shows a list of albums the agent can read', () => {

@@ -93,7 +93,7 @@ describe('trackIndexSpec', () => {
 
     describe('authorized', () => {
 
-      it('displays an add-photo form', done => {
+      it('displays an add-track form', done => {
         browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
         browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
@@ -102,50 +102,12 @@ describe('trackIndexSpec', () => {
           browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
           browser.assert.element('.deep-link');
           browser.assert.element('form[action="/track"][method="post"]');
-          browser.assert.element('input[id="photos-input"][type="file"][accept="audio/*"]');
-          browser.assert.text('label[for="photos-input"]', 'Add track');
-          browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
+          browser.assert.element('input[id="tracks-input"][type="file"][accept="audio/*"]');
+          browser.assert.text('label[for="tracks-input"]', 'Add track');
+          browser.assert.element('label[for="tracks-input"] img[src="/images/bpe-logo.png"]');
           done();
         });
       });
-
-      //
-      // Removing augmented native app...
-      //
-//      it('displays an Android deep link with JWT if browser is mobile', done => {
-//        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-//        // See `GET /track/:domain/:agentId`
-//        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
-//
-//        browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
-//        browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
-//          if (err) return done.fail(err);
-//
-//          browser.assert.success();
-//          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
-//          browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
-//          browser.assert.element('.deep-link');
-//          done();
-//        });
-//      });
-//
-//      it('does not display an Android deep link if browser is not mobile', done => {
-//        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-//        // See `GET /track/:domain/:agentId`
-//        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
-//
-//        browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
-//          if (err) return done.fail(err);
-//          browser.assert.success();
-//
-//          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
-//          browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
-//          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
-//          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
-//
-//          done();
-//        });
-//      });
 
       it('allows an agent to view his own album', () => {
         browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
