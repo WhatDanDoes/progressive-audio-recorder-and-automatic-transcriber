@@ -77,11 +77,11 @@ describe('agentIndexSpec', () => {
       beforeEach(done => {
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
         // BPE deep-link only shows up for mobile
@@ -121,9 +121,9 @@ describe('agentIndexSpec', () => {
 
       it('displays an add-photo form', () => {
         browser.assert.element('.deep-link');
-        browser.assert.element('form[action="/image"][method="post"]');
-        browser.assert.element('input[id="photos-input"][type="file"][accept="image/*"]');
-        browser.assert.text('label[for="photos-input"]', 'Add photos');
+        browser.assert.element('form[action="/track"][method="post"]');
+        browser.assert.element('input[id="photos-input"][type="file"][accept="audio/*"]');
+        browser.assert.text('label[for="photos-input"]', 'Add track');
         browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
       });
 
@@ -131,8 +131,8 @@ describe('agentIndexSpec', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
         browser.assert.elements('.agent a', 2);
-        browser.assert.link('.agent a', lanny.getAgentDirectory(), `/image/${lanny.getAgentDirectory()}`);
-        browser.assert.link('.agent a', agent.getAgentDirectory(), `/image/${agent.getAgentDirectory()}`);
+        browser.assert.link('.agent a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
+        browser.assert.link('.agent a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
       });
 
       it('lets the agent click and view a link he can read', done => {
