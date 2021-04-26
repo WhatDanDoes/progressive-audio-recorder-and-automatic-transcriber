@@ -58,22 +58,22 @@ describe('landing page', () => {
 
     beforeEach(done => {
       mockAndUnmock({
-        'public/images/uploads': {
-          'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-          'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+        'public/tracks/uploads': {
+          'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+          'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+          'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+          'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
         }
       });
 
-      const images = [
-        { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
-        { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: null },
-        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: new Date() },
-        { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: null },
+      const tracks = [
+        { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
+        { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id, published: null },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id, published: new Date() },
+        { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id, published: null },
       ];
 
-      models.Image.create(images).then(results => {
+      models.Track.create(tracks).then(results => {
         done();
       }).catch(err => {
         done.fail(err);
@@ -89,12 +89,12 @@ describe('landing page', () => {
       });
     });
 
-    it('displays a message if there are no images to view', done => {
-      models.Image.remove({ published: { '$ne': null } }).then(results => {
+    it('displays a message if there are no tracks to view', done => {
+      models.Track.remove({ published: { '$ne': null } }).then(results => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('h2', 'No tracks');
           done();
         });
       }).catch(err => {
@@ -102,14 +102,14 @@ describe('landing page', () => {
       });
     });
 
-    it('displays the published images without their stats or links', done => {
+    it('displays the published tracks without their stats or links', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
 
         browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
         // No links to show pic view
         browser.assert.elements('article.post section.photo a', 0);
@@ -127,19 +127,19 @@ describe('landing page', () => {
 
     describe('pagination', () => {
       beforeEach(done => {
-        models.mongoose.connection.db.dropCollection('images').then((err, result) => {
+        models.mongoose.connection.db.dropCollection('tracks').then((err, result) => {
 
-          // Create a bunch of images
+          // Create a bunch of tracks
           let files = {},
-              images = [];
+              tracks = [];
           for (let i = 0; i < 70; i++) {
-            files[`lanny${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-            images.push({ path: `uploads/${lanny.getAgentDirectory()}/lanny${i}.jpg`, photographer: agent._id, published: new Date() });
+            files[`lanny${i}.ogg`] = fs.readFileSync('spec/files/troll.ogg');
+            tracks.push({ path: `uploads/${lanny.getAgentDirectory()}/lanny${i}.ogg`, recordist: agent._id, published: new Date() });
           }
 
           mockAndUnmock({ [`uploads/${lanny.getAgentDirectory()}`]: files });
 
-          models.Image.create(images).then(results => {
+          models.Track.create(tracks).then(results => {
             done();
           }).catch(err => {
             done.fail(err);
@@ -149,7 +149,7 @@ describe('landing page', () => {
         });
       });
 
-      it('paginates images in the public uploads directory', done => {
+      it('paginates tracks in the public uploads directory', done => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -193,7 +193,7 @@ describe('landing page', () => {
       it('doesn\'t barf if paginating beyond the bounds', done => {
         browser.visit('/page/10', (err) => {
           if (err) return done.fail(err);
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('h2', 'No tracks');
 
           browser.visit('/page/0', (err) => {
             if (err) return done.fail(err);
@@ -252,26 +252,26 @@ describe('landing page', () => {
                 if (err) done.fail(err);
 
                 mockAndUnmock({
-                  'public/images/uploads': {
-                    'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-                    'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-                    'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-                    'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
+                  'public/tracks/uploads': {
+                    'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                    'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                    'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                    'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
                   }
                 });
 
-                const images = [
-                  { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
-                  { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id, published: null },
-                  { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id, published: new Date() },
-                  { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id, published: null },
+                const tracks = [
+                  { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
+                  { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id, published: null },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id, published: new Date() },
+                  { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id, published: null },
                 ];
 
-                models.Image.create(images).then(results => {
+                models.Track.create(tracks).then(results => {
                   browser.clickLink('Login', err => {
                     if (err) done.fail(err);
                     browser.assert.success();
-                    browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                    browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
 
                     models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
                       agent = results;
@@ -314,12 +314,12 @@ describe('landing page', () => {
       });
     });
 
-    it('displays a message if there are no images to view', done => {
+    it('displays a message if there are no tracks to view', done => {
       models.mongoose.connection.db.dropDatabase().then((err, result) => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.text('h2', 'No images');
+          browser.assert.text('h2', 'No tracks');
           done();
         });
       }).catch(err => {
@@ -327,18 +327,18 @@ describe('landing page', () => {
       });
     });
 
-    it('displays the published images with their stats and links', done => {
+    it('displays the published tracks with their stats and links', done => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
 
         browser.assert.elements('article.post section.photo img', 2);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/image1.jpg"]`, 1);
-        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.jpg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.photo img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
         // Links to show pic view
-        browser.assert.element(`article.post section.photo a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`);
-        browser.assert.element(`article.post section.photo a[href="/image/${lanny.getAgentDirectory()}/lanny1.jpg"]`);
+        browser.assert.element(`article.post section.photo a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+        browser.assert.element(`article.post section.photo a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
         // agent and lanny have the same picture src
         // 2020-10-8 This needs to be fleshed out as the layout is decided
@@ -359,19 +359,19 @@ describe('landing page', () => {
 
     describe('pagination', () => {
       beforeEach(done => {
-        models.mongoose.connection.db.dropCollection('images').then((err, result) => {
+        models.mongoose.connection.db.dropCollection('tracks').then((err, result) => {
 
-          // Create a bunch of images
+          // Create a bunch of tracks
           let files = {},
-              images = [];
+              tracks = [];
           for (let i = 0; i < 70; i++) {
-            files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-            images.push({ path: `public/images/uploads/image${i}.jpg`, photographer: agent._id, published: new Date() });
+            files[`track${i}.ogg`] = fs.readFileSync('spec/files/troll.ogg');
+            tracks.push({ path: `public/tracks/uploads/track${i}.ogg`, recordist: agent._id, published: new Date() });
           }
 
           mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
-          models.Image.create(images).then(results => {
+          models.Track.create(tracks).then(results => {
             done();
           }).catch(err => {
             done.fail(err);
@@ -381,7 +381,7 @@ describe('landing page', () => {
         });
       });
 
-      it('paginates images in the public uploads directory', done => {
+      it('paginates tracks in the public uploads directory', done => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -425,7 +425,7 @@ describe('landing page', () => {
       it('doesn\'t barf if paginating beyond the bounds', done => {
         browser.visit('/page/10', (err) => {
           if (err) return done.fail(err);
-          browser.assert.text('main h2:last-child', 'No images');
+          browser.assert.text('main h2:last-child', 'No tracks');
 
           browser.visit('/page/0', (err) => {
             if (err) return done.fail(err);
