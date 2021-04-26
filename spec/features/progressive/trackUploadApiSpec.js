@@ -48,74 +48,200 @@ describe('track upload API', () => {
 
     describe('unauthenticated access', () => {
 
-      it('returns 401 error', done => {
-        request(app)
-          .post('/track')
-          .set('Accept', 'application/json')
-          .attach('docs', 'spec/files/troll.ogg')
-          .expect('Content-Type', /json/)
-          .expect(401)
-          .end(function(err, res) {
+      describe('audio file upload', () => {
+
+        it('returns 401 error', done => {
+          request(app)
+            .post('/track')
+            .set('Accept', 'application/json')
+            .attach('docs', 'spec/files/troll.ogg')
+            .expect('Content-Type', /json/)
+            .expect(401)
+            .end(function(err, res) {
+              if (err) {
+                return done.fail(err);
+              }
+              expect(res.body.message).toEqual('Unauthorized: No token provided');
+              done();
+            });
+        });
+
+        it('does not write a file to the file system', done => {
+          fs.readdir('uploads', (err, files) => {
             if (err) {
               return done.fail(err);
             }
-            expect(res.body.message).toEqual('Unauthorized: No token provided');
-            done();
-          });
-      });
-
-      it('does not write a file to the file system', done => {
-        fs.readdir('uploads', (err, files) => {
-          if (err) {
-            return done.fail(err);
-          }
-          expect(files.length).toEqual(0);
-          request(app)
-            .post('/track')
-            .set('Accept', 'application/json')
-            .attach('docs', 'spec/files/troll.ogg')
-            .expect('Content-Type', /json/)
-            .expect(401)
-            .end(function(err, res) {
-              if (err) {
-                return done.fail(err);
-              }
-
-              fs.readdir('uploads', (err, files) => {
+            expect(files.length).toEqual(0);
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .attach('docs', 'spec/files/troll.ogg')
+              .expect('Content-Type', /json/)
+              .expect(401)
+              .end(function(err, res) {
                 if (err) {
                   return done.fail(err);
                 }
-                expect(files.length).toEqual(0);
-                done();
+
+                fs.readdir('uploads', (err, files) => {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(files.length).toEqual(0);
+                  done();
+                });
               });
-            });
+          });
+        });
+
+        it('does not create a database record', done => {
+          models.Track.find({}).then(tracks => {
+            expect(tracks.length).toEqual(0);
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .attach('docs', 'spec/files/troll.ogg')
+              .expect('Content-Type', /json/)
+              .expect(401)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+
+                models.Track.find({}).then(tracks => {
+                  expect(tracks.length).toEqual(0);
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
+          });
         });
       });
 
-      it('does not create a database record', done => {
-        models.Track.find({}).then(tracks => {
-          expect(tracks.length).toEqual(0);
-          request(app)
-            .post('/track')
+      describe('audio stream', () => {
+
+        let audioStream;
+        beforeEach(done => {
+          audioStream = fs.createReadStream(`${__dirname}/../../files/troll.ogg`);
+          done();
+        });
+
+        it('returns 401 error with no token provided', done => {
+          let req = request(app)
+            .post('/track/stream')
             .set('Accept', 'application/json')
-            .attach('docs', 'spec/files/troll.ogg')
-            .expect('Content-Type', /json/)
-            .expect(401)
-            .end(function(err, res) {
-              if (err) {
-                return done.fail(err);
-              }
+            .set('content-type', 'application/octet-stream');
 
-              models.Track.find({}).then(tracks => {
-                expect(tracks.length).toEqual(0);
-
+          audioStream.on('end', () => {
+            req
+              .expect('Content-Type', /json/)
+              .expect(401)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+                expect(res.body.message).toEqual('Unauthorized: No token provided');
                 done();
-              }).catch(err => {
-                done.fail(err);
               });
+          });
+
+          audioStream.pipe(req, {end: false});
+        });
+
+        it('returns 401 error with invalid token provided', done => {
+          let req = request(app)
+            .post('/track/stream')
+            .set('Accept', 'application/json')
+            .set('x-access-token', 'junk-token')
+            .set('content-type', 'application/octet-stream');
+
+          audioStream.on('end', () => {
+            req
+              .expect('Content-Type', /json/)
+              .expect(401)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+                expect(res.body.message).toEqual('Unauthorized: Invalid token');
+                done();
+              });
+          });
+
+          audioStream.pipe(req, {end: false});
+        });
+
+
+        it('does not write a file to the file system', done => {
+          fs.readdir('uploads', (err, files) => {
+            if (err) {
+              return done.fail(err);
+            }
+            expect(files.length).toEqual(0);
+
+            let req = request(app)
+              .post('/track/stream')
+              .set('Accept', 'application/json')
+              .set('content-type', 'application/octet-stream');
+
+            audioStream.on('end', () => {
+              req
+                .expect('Content-Type', /json/)
+                .expect(401)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+
+                  fs.readdir('uploads', (err, files) => {
+                    if (err) {
+                      return done.fail(err);
+                    }
+                    expect(files.length).toEqual(0);
+                    done();
+                  });
+                });
             });
-        }).catch(err => {
-          done.fail(err);
+
+            audioStream.pipe(req, {end: false});
+          });
+        });
+
+        it('does not create a database record', done => {
+          models.Track.find({}).then(tracks => {
+            expect(tracks.length).toEqual(0);
+            let req = request(app)
+              .post('/track/stream')
+              .set('Accept', 'application/json')
+              .set('content-type', 'application/octet-stream');
+
+            audioStream.on('end', () => {
+              req
+                .expect('Content-Type', /json/)
+                .expect(401)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(0);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
+
+            audioStream.pipe(req, {end: false});
+          }).catch(err => {
+            done.fail(err);
+          });
         });
       });
     });
