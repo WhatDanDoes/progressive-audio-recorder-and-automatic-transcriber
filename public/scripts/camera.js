@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const defaultImageForm = section.innerHTML;
         section.innerHTML = `
           <div id="camera-button">
-            <img src="/images/bpe-logo.png"><br>
+            <img src="/images/mic-logo.png"><br>
             Add photos
           </div>
           <div id="camera">

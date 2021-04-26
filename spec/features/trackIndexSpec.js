@@ -104,7 +104,7 @@ describe('trackIndexSpec', () => {
           browser.assert.element('form[action="/track"][method="post"]');
           browser.assert.element('input[id="tracks-input"][type="file"][accept="audio/*"]');
           browser.assert.text('label[for="tracks-input"]', 'Add track');
-          browser.assert.element('label[for="tracks-input"] img[src="/images/bpe-logo.png"]');
+          browser.assert.element('label[for="tracks-input"] img[src="/images/mic-logo.png"]');
           done();
         });
       });
