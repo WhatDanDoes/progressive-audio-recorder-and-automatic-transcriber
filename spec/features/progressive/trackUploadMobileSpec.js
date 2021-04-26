@@ -17,7 +17,7 @@ const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 const Blob = require('node-blob');
 
 
-describe('image mobile upload', () => {
+describe('track mobile upload', () => {
 
   /**
    * Boilerplate media devices mock for zombie.
@@ -136,8 +136,8 @@ describe('image mobile upload', () => {
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.element('#photos-form');
-            browser.assert.element('#photos-form[action="/image"]');
-            browser.assert.element('#photos-form[action="/image"] #photos-input[type="file"]');
+            browser.assert.element('#photos-form[action="/track"]');
+            browser.assert.element('#photos-form[action="/track"] #photos-input[type="file"]');
             browser.assert.elements('#camera-button', 0);
             done();
           });
@@ -304,7 +304,7 @@ describe('image mobile upload', () => {
             };
           });
 
-          it('reverts to the basic image upload form', done => {
+          it('reverts to the basic track upload form', done => {
             browser.click('#camera-button').then(res => {
 
               browser.assert.element('#photos-form');
@@ -542,7 +542,7 @@ describe('image mobile upload', () => {
                 mediaTrackStopSpy = jasmine.createSpy('stop');
                 streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
 
-                // Need to make sure the image is drawn on the viewer canvas
+                // Need to make sure the track is drawn on the viewer canvas
                 drawImageSpy = jasmine.createSpy('drawImage');
                 canvas = {
                   style: {},
@@ -552,7 +552,7 @@ describe('image mobile upload', () => {
                     };
                   },
                   toBlob: (done) => {
-                    fs.readFile(`spec/files/troll.jpg`, (err, fileData) => {
+                    fs.readFile(`spec/files/troll.ogg`, (err, fileData) => {
                       if (err) return done.fail(err);
 
                       /**
@@ -566,7 +566,7 @@ describe('image mobile upload', () => {
                        * This may become relevant again...
                        */
                       const arrayBuffer = new Uint8Array(fileData).buffer;
-                      const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
+                      const blob = new Blob([arrayBuffer], { type: 'track/jpeg' });
 
                       done(blob);
                     });
@@ -703,7 +703,7 @@ describe('image mobile upload', () => {
                 });
               });
 
-              it('draws the camera image to the canvas before stopping media tracks and streams', done => {
+              it('draws the camera track to the canvas before stopping media tracks and streams', done => {
                 browser.click('#capture').then(res => {
                   expect(drawImageSpy).toHaveBeenCalled();
                   expect(drawImageSpy).toHaveBeenCalledBefore(streamRemoveTrackSpy);
@@ -762,8 +762,8 @@ describe('image mobile upload', () => {
                     //it('displays a friendly message upon successful receipt of file', done => {
                     //  browser.click('#send').then(res => {
                     //    browser.assert.redirected();
-                    //    browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-                    //    browser.assert.text('.alert.alert-success', 'Image received');
+                    //    browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
+                    //    browser.assert.text('.alert.alert-success', 'Track received');
                     //    done();
                     //  }).catch(err => {
                     //    done.fail(err);
@@ -820,12 +820,12 @@ describe('image mobile upload', () => {
 
                     // See above.
                     //it('creates a database record', done => {
-                    //  models.Image.find({}).then(images => {
-                    //    expect(images.length).toEqual(0);
+                    //  models.Track.find({}).then(tracks => {
+                    //    expect(tracks.length).toEqual(0);
                     //    browser.click('#send').then(res => {
-                    //      models.Image.find({}).then(images => {
-                    //        expect(images.length).toEqual(1);
-                    //        expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                    //      models.Track.find({}).then(tracks => {
+                    //        expect(tracks.length).toEqual(1);
+                    //        expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
                     //        done();
                     //      }).catch(err => {
                     //        done.fail(err);
@@ -839,7 +839,7 @@ describe('image mobile upload', () => {
                     //});
 
                     // See above.
-                    //it('lands in the right spot with an updated image list', done => {
+                    //it('lands in the right spot with an updated track list', done => {
                     //  done.fail();
                     //});
 
@@ -997,7 +997,7 @@ describe('image mobile upload', () => {
 
                       await page.click('#send');
                       await page.waitForSelector('.alert.alert-success');
-                      expect(page.url()).toEqual(`${APP_URL}/image/${agent.getAgentDirectory()}`);
+                      expect(page.url()).toEqual(`${APP_URL}/track/${agent.getAgentDirectory()}`);
                       expect(redirected).toBe(true);
                     });
 
@@ -1042,16 +1042,16 @@ describe('image mobile upload', () => {
 
                     // See above.
                     it('creates a database record', done => {
-                      models.Image.find({}).then(images => {
-                        expect(images.length).toEqual(0);
+                      models.Track.find({}).then(tracks => {
+                        expect(tracks.length).toEqual(0);
 
                         page.click('#send').then(async () => {
                           await page.waitForSelector('.alert.alert-success');
                           await page.waitForSelector('div#camera');
 
-                          models.Image.find({}).then(images => {
-                            expect(images.length).toEqual(1);
-                            expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                          models.Track.find({}).then(tracks => {
+                            expect(tracks.length).toEqual(1);
+                            expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
                             done();
                           }).catch(err => {
                             done.fail(err);
@@ -1065,14 +1065,14 @@ describe('image mobile upload', () => {
                     });
 
                     // See above.
-                    it('lands in the right spot with an updated image list', async done => {
+                    it('lands in the right spot with an updated track list', async done => {
                       let posts = await page.$$('.post');
                       expect(posts.length).toEqual(0);
                       page.click('#send').then(async () => {
                         await page.waitForSelector('.alert.alert-success');
                         await page.waitForSelector('div#camera');
 
-                        expect(page.url()).toEqual(`${APP_URL}/image/${agent.getAgentDirectory()}`);
+                        expect(page.url()).toEqual(`${APP_URL}/track/${agent.getAgentDirectory()}`);
 
                         posts = await page.$$('.post');
                         expect(posts.length).toEqual(1);

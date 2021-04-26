@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             send.style.display = 'none';
             cancel.style.display = 'none';
 
-            fetch('/image', {
+            fetch('/track', {
               method: 'POST',
               body: formData,
               redirect: 'manual',
