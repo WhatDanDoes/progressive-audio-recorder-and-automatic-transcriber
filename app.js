@@ -129,7 +129,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  * Protected static assets
  */
 app.use(`/uploads`, [function(req, res, next) {
-  models.Image.findOne({ path: `uploads${req.path}`, published: { '$ne': null } }).then(image => {
+  models.Track.findOne({ path: `uploads${req.path}`, published: { '$ne': null } }).then(image => {
     if (image) {
       return next();
     }

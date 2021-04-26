@@ -59,7 +59,7 @@ describe('agentIndexSpec', () => {
 
     beforeEach(done => {
       stubAuth0Sessions(agent.email, DOMAIN, err => {
-        if (err) done.fail(err);
+        if (err) return done.fail(err);
         done();
       });
     });

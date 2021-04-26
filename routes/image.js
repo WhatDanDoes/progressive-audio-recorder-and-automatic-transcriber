@@ -53,11 +53,11 @@ function getAgentAlbum(page, req, res) {
     if (agent.email !== req.user.email || (process.env.SUDO && req.user.email !== process.env.SUDO)) {
       query.flagged = false;
     }
-    models.Image.find(query).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ createdAt: 'desc' }).then(images => {
+    models.Track.find(query).limit(MAX_IMGS).skip(MAX_IMGS * (page - 1)).sort({ createdAt: 'desc' }).then(tracks => {
 
       let nextPage = 0,
           prevPage = page - 1;
-      if (images.length === MAX_IMGS) {
+      if (tracks.length === MAX_IMGS) {
         nextPage = page + 1;
       }
 
@@ -65,8 +65,8 @@ function getAgentAlbum(page, req, res) {
       const payload = { email: req.user.email };
       const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
-      res.render('image/index', {
-        images: images,
+      res.render('track/index', {
+        images: tracks,
         messages: req.flash(),
         agent: req.user,
         nextPage: nextPage,

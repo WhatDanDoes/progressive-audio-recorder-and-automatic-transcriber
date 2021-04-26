@@ -4,15 +4,15 @@
         </form>
         <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
             <% if (image.flagged) { %>
-              <form action="<%= `/${image.path.replace('uploads', 'image')}/flag?_method=PATCH` %>" method="post" class="deflag-image-form">
+              <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-image-form">
                 <button class="publish-image" type="submit">
                   Deflag
                 </button>
               </form>
             <% } else { %>
-              <form action="<%= `/${image.path.replace('uploads', 'image')}` %>" method="post" class="publish-image-form">
+              <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-image-form">
                 <button class="publish-image" type="submit">
-                  <%= image.published ? 'Unpublish' : 'Publish' %>
+                  <%= track.published ? 'Unpublish' : 'Publish' %>
                 </button>
               </form>
             <% } %>

@@ -9,19 +9,19 @@ const MAX_IMGS = parseInt(process.env.MAX_IMGS);
  * - GET /page/:num
  */
 
-function getMainPhotoRoll(page, req, res) {
-  models.Image.find({ published: { '$ne': null }, flagged: false })
-    .populate('photographer')
+function getMainAudioLibrary(page, req, res) {
+  models.Track.find({ published: { '$ne': null }, flagged: false })
+    .populate('recordist')
     .populate('likes')
-    .skip(MAX_IMGS * (page - 1)).limit(MAX_IMGS).sort({ published: 'desc' }).then(images => {
+    .skip(MAX_IMGS * (page - 1)).limit(MAX_IMGS).sort({ published: 'desc' }).then(tracks => {
 
     let nextPage = page + 1,
         prevPage = page - 1;
-    if (images.length < MAX_IMGS) {
+    if (tracks.length < MAX_IMGS) {
       nextPage = 0;
     }
 
-    res.render('index', { images: images, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: prevPage });
+    res.render('index', { tracks: tracks, messages: req.flash(), agent: req.user, nextPage: nextPage, prevPage: prevPage });
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect('/');
@@ -31,7 +31,7 @@ function getMainPhotoRoll(page, req, res) {
 /* GET home page. */
 
 router.get('/', (req, res) => {
-  return getMainPhotoRoll(1, req, res);
+  return getMainAudioLibrary(1, req, res);
 });
 
 router.get('/page/:num', (req, res) => {
@@ -41,7 +41,7 @@ router.get('/page/:num', (req, res) => {
     return res.redirect('/');
   }
 
-  return getMainPhotoRoll(page, req, res);
+  return getMainAudioLibrary(page, req, res);
 });
 
 module.exports = router;
