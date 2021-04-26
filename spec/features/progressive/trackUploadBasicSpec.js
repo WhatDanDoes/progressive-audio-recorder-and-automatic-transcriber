@@ -16,7 +16,7 @@ const DOMAIN = 'example.com';
 Browser.localhost(DOMAIN, PORT);
 const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
-describe('image upload basic', () => {
+describe('track upload basic', () => {
 
   let agent, token;
 
@@ -72,7 +72,7 @@ describe('image upload basic', () => {
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.success();
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
             done();
           });
         });
@@ -93,7 +93,7 @@ describe('image upload basic', () => {
 
       it('redirects home with a friendly error message', done => {
         // Attaching a file fires the `submit` event. No need to click anything
-        browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+        browser.attach('docs', 'spec/files/troll.ogg').then(res => {
           browser.assert.redirected();
           browser.assert.url({ pathname: '/' });
           browser.assert.text('.alert.alert-danger', 'You need to login first');
@@ -108,7 +108,7 @@ describe('image upload basic', () => {
           }
           expect(files.length).toEqual(0);
 
-          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+          browser.attach('docs', 'spec/files/troll.ogg').then(res => {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) {
                 return done.fail(err);
@@ -121,11 +121,11 @@ describe('image upload basic', () => {
       });
 
       it('does not create a database record', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
-          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-            models.Image.find({}).then(images => {
-              expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
+          browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+            models.Track.find({}).then(tracks => {
+              expect(tracks.length).toEqual(0);
               done();
             }).catch(err => {
               done.fail(err);
@@ -139,10 +139,10 @@ describe('image upload basic', () => {
 
     describe('authenticated access', () => {
       it('displays a friendly message upon successful receipt of file', done => {
-        browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+        browser.attach('docs', 'spec/files/troll.ogg').then(res => {
           browser.assert.redirected();
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-          browser.assert.text('.alert.alert-success', 'Image received');
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
+          browser.assert.text('.alert.alert-success', 'Track received');
           done();
         }).catch(err => {
           done.fail(err);
@@ -156,7 +156,7 @@ describe('image upload basic', () => {
           }
           expect(files.length).toEqual(0);
 
-          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+          browser.attach('docs', 'spec/files/troll.ogg').then(res => {
 
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 
@@ -190,7 +190,7 @@ describe('image upload basic', () => {
           }
           expect(files.length).toEqual(0);
 
-          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
+          browser.attach('docs', 'spec/files/troll.ogg').then(res => {
 
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 
@@ -221,13 +221,13 @@ describe('image upload basic', () => {
       });
 
       it('creates a database record', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
 
           browser.attach('docs', 'spec/files/troll.png').then(res => {
-            models.Image.find({}).then(images => {
-              expect(images.length).toEqual(1);
-              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+            models.Track.find({}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 
               done();
             }).catch(err => {
@@ -242,19 +242,19 @@ describe('image upload basic', () => {
       });
 
       it('writes a database record for each attached file', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
 
-          browser.attach('docs', 'spec/files/troll.jpg').then(res => {
-            models.Image.find({}).then(images => {
-              expect(images.length).toEqual(1);
-              expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+          browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+            models.Track.find({}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 
               browser.attach('docs', 'spec/files/troll.png').then(res => {
-                models.Image.find({}).then(images => {
-                  expect(images.length).toEqual(2);
-                  expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-                  expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                models.Track.find({}).then(tracks => {
+                  expect(tracks.length).toEqual(2);
+                  expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                  expect(tracks[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 
                   done();
                 }).catch(err => {
