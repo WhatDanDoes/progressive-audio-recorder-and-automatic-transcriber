@@ -4,7 +4,7 @@ module.exports = function(mongoose) {
   const Schema = mongoose.Schema;
   const arrayUniquePlugin = require('mongoose-unique-array');
 
-  const ImageSchema = new Schema({
+  const TrackSchema = new Schema({
     path: {
       type: String,
       trim: true,
@@ -15,17 +15,17 @@ module.exports = function(mongoose) {
         isAsync: true,
         validator: function(v, cb) {
           if (!this.isNew) return cb();
-          this.model('Image').count({ path: v }).then(count => {
+          this.model('Track').count({ path: v }).then(count => {
             cb(!count);
           });
         },
-        message: 'Image file name collision'
+        message: 'Track file name collision'
       }
     },
-    photographer: {
+    recordist: {
       type: Schema.Types.ObjectId,
       ref: 'Agent',
-      required: [true, 'Who took the picture?'],
+      required: [true, 'Who recorded the track?'],
     },
     likes: [{
       type: Schema.Types.ObjectId,
@@ -61,7 +61,7 @@ module.exports = function(mongoose) {
   });
 
 
-  ImageSchema.methods.toggleFlagged = function(done) {
+  TrackSchema.methods.toggleFlagged = function(done) {
     this.flagged = !this.flagged;
     this.save((err, image) => {
       if (err) {
@@ -71,7 +71,7 @@ module.exports = function(mongoose) {
     });
   };
 
-  ImageSchema.methods.togglePublished = function(done) {
+  TrackSchema.methods.togglePublished = function(done) {
     this.published = this.published ? null : new Date();
     this.save((err, image) => {
       if (err) {
@@ -81,7 +81,7 @@ module.exports = function(mongoose) {
     });
   };
 
-  ImageSchema.methods.toggleLiked = function(agentId, done) {
+  TrackSchema.methods.toggleLiked = function(agentId, done) {
     if (typeof agentId === 'object') {
       agentId = agentId._id
     }
@@ -102,7 +102,7 @@ module.exports = function(mongoose) {
     });
   };
 
-  ImageSchema.methods.flag = function(agentId, done) {
+  TrackSchema.methods.flag = function(agentId, done) {
     if (typeof agentId === 'object') {
       agentId = agentId._id
     }
@@ -125,6 +125,6 @@ module.exports = function(mongoose) {
     });
   };
 
-  return ImageSchema;
+  return TrackSchema;
 };
 
