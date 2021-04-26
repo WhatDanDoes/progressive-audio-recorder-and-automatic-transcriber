@@ -30,7 +30,7 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Publishing an image', () => {
+describe('Publishing a track', () => {
 
   let browser, agent, lanny;
 
@@ -67,9 +67,9 @@ describe('Publishing an image', () => {
   describe('from show view', () => {
 
     describe('unauthenticated', () => {
-      it('does not allow publishing an image', done => {
+      it('does not allow publishing a track', done => {
         request(app)
-          .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+          .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
           .end((err, res) => {
             if (err) return done.fail(err);
             expect(res.status).toEqual(302);
@@ -86,27 +86,27 @@ describe('Publishing an image', () => {
 
           mockAndUnmock({
             [`uploads/${agent.getAgentDirectory()}`]: {
-              'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
             },
             [`uploads/${lanny.getAgentDirectory()}`]: {
-              'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
             },
-            'public/images/uploads': {}
+            'public/tracks/uploads': {}
           });
 
-          const images = [
-            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+          const tracks = [
+            { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
           ];
-          models.Image.create(images).then(results => {
+          models.Track.create(tracks).then(results => {
 
             browser.clickLink('Login', err => {
               if (err) done.fail(err);
@@ -123,12 +123,12 @@ describe('Publishing an image', () => {
         mock.restore();
       });
 
-      it('renders a form to allow an agent to publish an image', done => {
-        browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+      it('renders a form to allow an agent to publish a track', done => {
+        browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element('.publish-image-form');
-          browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`);
+          browser.assert.element('.publish-track-form');
+          browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"]`);
           done();
         });
       });
@@ -136,7 +136,7 @@ describe('Publishing an image', () => {
       describe('publishing', () => {
         describe('owner resource', () => {
           beforeEach(done => {
-            browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, err => {
+            browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
               if (err) return done.fail(err);
               browser.assert.success();
               done();
@@ -148,17 +148,17 @@ describe('Publishing an image', () => {
               if (err) return done.fail(err);
 
               browser.assert.success();
-              browser.assert.text('.alert.alert-success', 'Image published');
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+              browser.assert.text('.alert.alert-success', 'Track published');
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
               done();
             });
           });
 
-          it('does not delete the image from the agent\'s directory', done => {
+          it('does not delete the track from the agent\'s directory', done => {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
-              expect(files.includes('image1.jpg')).toBe(true);
+              expect(files.includes('track1.ogg')).toBe(true);
 
               browser.pressButton('Publish', function(err) {
                 if (err) return done.fail(err);
@@ -167,7 +167,7 @@ describe('Publishing an image', () => {
                 fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
                   if (err) return done.fail(err);
                   expect(files.length).toEqual(3);
-                  expect(files.includes('image1.jpg')).toBe(true);
+                  expect(files.includes('track1.ogg')).toBe(true);
 
                   done();
                 });
@@ -175,20 +175,20 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('does not add the image to the public/images/uploads directory', function(done) {
+          it('does not add the track to the public/tracks/uploads directory', function(done) {
             fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
-              expect(files.includes('image1.jpg')).toBe(true);
+              expect(files.includes('track1.ogg')).toBe(true);
 
               browser.pressButton('Publish', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                fs.readdir(`public/images/uploads`, (err, files) => {
+                fs.readdir(`public/tracks/uploads`, (err, files) => {
                   if (err) return done.fail(err);
                   expect(files.length).toEqual(0);
-                  expect(files.includes('image1.jpg')).toBe(false);
+                  expect(files.includes('track1.ogg')).toBe(false);
 
                   done();
                 });
@@ -196,24 +196,24 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('does not point the database path to the public/images/uploads directory', done => {
-            models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
-              expect(images.length).toEqual(0);
+          it('does not point the database path to the public/tracks/uploads directory', done => {
+            models.Track.find({ path: `public/tracks/uploads/track1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(0);
 
-              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].published).toEqual(null);
+              models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].published).toEqual(null);
 
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
-                    expect(images.length).toEqual(1);
-                    expect(images[0].published instanceof Date).toBe(true);
+                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published instanceof Date).toBe(true);
 
-                    models.Image.find({ path: `public/images/uploads/image1.jpg`}).then(images => {
-                      expect(images.length).toEqual(0);
+                    models.Track.find({ path: `public/tracks/uploads/track1.ogg`}).then(tracks => {
+                      expect(tracks.length).toEqual(0);
 
                       done();
                     }).catch(err => {
@@ -241,34 +241,34 @@ describe('Publishing an image', () => {
             });
 
             it('shows an unpublish button on the agent\'s photo roll', done => {
-              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}"]`, err => {
+              browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}"]`, err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                browser.assert.text(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"] button.publish-image`, 'Unpublish');
+                browser.assert.text(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"] button.publish-track`, 'Unpublish');
                 done();
               });
             });
 
-            it('shows an unpublish button on the image\'s show view', () => {
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
-              browser.assert.text('.publish-image-form button.publish-image', 'Unpublish');
+            it('shows an unpublish button on the track\'s show view', () => {
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+              browser.assert.text('.publish-track-form button.publish-track', 'Unpublish');
             });
 
-            it('sets the image\'s published property to null in the database', done => {
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}/image1.jpg` });
+            it('sets the track\'s published property to null in the database', done => {
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
 
-              models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].published).not.toEqual(null);
+              models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].published).not.toEqual(null);
 
                 browser.pressButton('Unpublish', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image1.jpg`}).then(images => {
-                    expect(images.length).toEqual(1);
-                    expect(images[0].published).toEqual(null);
+                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
                     done();
                   }).catch(err => {
@@ -281,7 +281,7 @@ describe('Publishing an image', () => {
             });
 
             it('redirects to the referring page', done => {
-              browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}"]`, err => {
+              browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}"]`, err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -289,7 +289,7 @@ describe('Publishing an image', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
                   done();
                 });
               });
@@ -299,7 +299,7 @@ describe('Publishing an image', () => {
 
         describe('readable resource', () => {
           beforeEach(done => {
-            browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
+            browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, (err) => {
               if (err) return done.fail(err);
               browser.assert.success();
               done();
@@ -307,32 +307,32 @@ describe('Publishing an image', () => {
           });
 
           it('does not show a publish button', () => {
-            browser.assert.elements('.publish-image-form', 0);
+            browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('does not remove the image from the agent\'s directory', done => {
+          it('does not remove the track from the agent\'s directory', done => {
             fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
-              expect(files.includes('lanny1.jpg')).toBe(true);
+              expect(files.includes('lanny1.ogg')).toBe(true);
 
               request(app)
-                .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                 .set('Cookie', browser.cookies)
                 .end((err, res) => {
                   if (err) return done.fail(err);
                   expect(res.status).toEqual(302);
-                  expect(res.header.location).toEqual(`/image/${lanny.getAgentDirectory()}`);
+                  expect(res.header.location).toEqual(`/track/${lanny.getAgentDirectory()}`);
 
                   fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
                     if (err) return done.fail(err);
                     expect(files.length).toEqual(3);
-                    expect(files.includes('lanny1.jpg')).toBe(true);
+                    expect(files.includes('lanny1.ogg')).toBe(true);
 
-                    fs.readdir(`public/images/uploads`, (err, files) => {
+                    fs.readdir(`public/tracks/uploads`, (err, files) => {
                       if (err) return done.fail(err);
                       expect(files.length).toEqual(0);
-                      expect(files.includes('image1.jpg')).toBe(false);
+                      expect(files.includes('track1.ogg')).toBe(false);
 
                       done();
                     });
@@ -342,26 +342,26 @@ describe('Publishing an image', () => {
           });
 
           it('does not modify the database record\'s path property', done => {
-            models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-              expect(images.length).toEqual(0);
+            models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(0);
 
-              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].published).toEqual(null);
+              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].published).toEqual(null);
 
                 request(app)
-                  .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                  .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                   .set('Cookie', browser.cookies)
                   .expect(302)
                   .end((err, res) => {
                     if (err) return done.fail(err);
 
-                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published).toEqual(null);
+                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].published).toEqual(null);
 
-                      models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-                        expect(images.length).toEqual(0);
+                      models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+                        expect(tracks.length).toEqual(0);
 
                         done();
                       }).catch(err => {
@@ -390,14 +390,14 @@ describe('Publishing an image', () => {
               expect(agent.canRead[0]).not.toEqual(troy._id);
 
               mkdirp(`uploads/${troy.getAgentDirectory()}`, (err) => {
-                fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.jpg`, fs.readFileSync('spec/files/troll.jpg'));
+                fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.ogg`, fs.readFileSync('spec/files/troll.ogg'));
 
-                const images = [
-                  { path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`, photographer: troy._id },
+                const tracks = [
+                  { path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`, recordist: troy._id },
                 ];
-                models.Image.create(images).then(results => {
+                models.Track.create(tracks).then(results => {
 
-                  browser.visit(`/image/${troy.getAgentDirectory()}/troy1.jpg`, function(err) {
+                  browser.visit(`/track/${troy.getAgentDirectory()}/troy1.ogg`, function(err) {
                     if (err) return done.fail(err);
                     done();
                   });
@@ -416,14 +416,14 @@ describe('Publishing an image', () => {
             browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
           });
 
-          it('does not touch the image on the file system', function(done) {
+          it('does not touch the track on the file system', function(done) {
             fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(1);
-              expect(files.includes('troy1.jpg')).toBe(true);
+              expect(files.includes('troy1.ogg')).toBe(true);
 
               request(app)
-                .post(`/image/${troy.getAgentDirectory()}/troy1.jpg`)
+                .post(`/track/${troy.getAgentDirectory()}/troy1.ogg`)
                 .set('Cookie', browser.cookies)
                 .end(function(err, res) {
                   if (err) return done.fail(err);
@@ -433,12 +433,12 @@ describe('Publishing an image', () => {
                   fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
                     if (err) return done.fail(err);
                     expect(files.length).toEqual(1);
-                    expect(files.includes('troy1.jpg')).toBe(true);
+                    expect(files.includes('troy1.ogg')).toBe(true);
 
-                    fs.readdir(`public/images/uploads`, (err, files) => {
+                    fs.readdir(`public/tracks/uploads`, (err, files) => {
                       if (err) return done.fail(err);
                       expect(files.length).toEqual(0);
-                      expect(files.includes('troy1.jpg')).toBe(false);
+                      expect(files.includes('troy1.ogg')).toBe(false);
 
                       done();
                     });
@@ -448,26 +448,26 @@ describe('Publishing an image', () => {
           });
 
           it('does not modify the database record\'s path property', done => {
-            models.Image.find({ path: `public/images/uploads/troy1.jpg`}).then(images => {
-              expect(images.length).toEqual(0);
+            models.Track.find({ path: `public/tracks/uploads/troy1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(0);
 
-              models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].published).toEqual(null);
+              models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].published).toEqual(null);
 
                 request(app)
-                  .post(`/image/${troy.getAgentDirectory()}/troy1.jpg`)
+                  .post(`/track/${troy.getAgentDirectory()}/troy1.ogg`)
                   .set('Cookie', browser.cookies)
                   .expect(302)
                   .end(function(err, res) {
                     if (err) return done.fail(err);
 
-                    models.Image.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.jpg`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published).toEqual(null);
+                    models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].published).toEqual(null);
 
-                      models.Image.find({ path: `public/images/uploads/troy1.jpg`}).then(images => {
-                        expect(images.length).toEqual(0);
+                      models.Track.find({ path: `public/tracks/uploads/troy1.ogg`}).then(tracks => {
+                        expect(tracks.length).toEqual(0);
 
                         done();
                       }).catch(err => {
@@ -501,49 +501,49 @@ describe('Publishing an image', () => {
               });
 
               it('doesn\'t render the Publish button', done => {
-                browser.clickLink(`a[href="/image/${agent.getAgentDirectory()}/image1.jpg"]`, (err) => {
+                browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, (err) => {
                   if (err) return done.fail(err);
 
                   browser.assert.success();
-                  browser.assert.elements('.publish-image-form', 0);
+                  browser.assert.elements('.publish-track-form', 0);
                   done();
                 });
               });
 
               it('redirects to the original directory', done => {
                 request(app)
-                  .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+                  .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
                   .set('Cookie', browser.cookies)
                   .expect(302)
                   .end((err, res) => {
                     if (err) return done.fail(err);
 
-                    expect(res.header.location).toEqual(`/image/${agent.getAgentDirectory()}/image2.jpg`);
+                    expect(res.header.location).toEqual(`/track/${agent.getAgentDirectory()}/track2.ogg`);
                     done();
                   });
               });
 
               it('does not modify the database record\'s path property', done => {
-                models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
-                  expect(images.length).toEqual(0);
+                models.Track.find({ path: `public/tracks/uploads/track2.ogg`}).then(tracks => {
+                  expect(tracks.length).toEqual(0);
 
-                  models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
-                    expect(images.length).toEqual(1);
-                    expect(images[0].published).toEqual(null);
+                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track2.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
                     request(app)
-                      .post(`/image/${agent.getAgentDirectory()}/image2.jpg`)
+                      .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
                       .set('Cookie', browser.cookies)
                       .expect(302)
                       .end(function(err, res) {
                         if (err) return done.fail(err);
 
-                        models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/image2.jpg`}).then(images => {
-                          expect(images.length).toEqual(1);
-                          expect(images[0].published).toEqual(null);
+                        models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track2.ogg`}).then(tracks => {
+                          expect(tracks.length).toEqual(1);
+                          expect(tracks[0].published).toEqual(null);
 
-                          models.Image.find({ path: `public/images/uploads/image2.jpg`}).then(images => {
-                            expect(images.length).toEqual(0);
+                          models.Track.find({ path: `public/tracks/uploads/track2.ogg`}).then(tracks => {
+                            expect(tracks.length).toEqual(0);
 
                             done();
                           }).catch(err => {
@@ -566,47 +566,47 @@ describe('Publishing an image', () => {
 
               beforeEach(done => {
                 process.env.SUDO = agent.email;
-                browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, (err) => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, (err) => {
                   if (err) return done.fail(err);
                   browser.assert.success();
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
                   done();
                 });
               });
 
               it('renders the Publish button', () => {
-                browser.assert.element('.publish-image-form');
+                browser.assert.element('.publish-track-form');
               });
 
               it('redirects to the referer page', done => {
-                browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
                 browser.pressButton('Publish', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}/lanny1.jpg` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
                   done();
                 });
               });
 
-              it('does not point the database path to the public/images/uploads directory', done => {
-                models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-                  expect(images.length).toEqual(0);
+              it('does not point the database path to the public/tracks/uploads directory', done => {
+                models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+                  expect(tracks.length).toEqual(0);
 
-                  models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                    expect(images.length).toEqual(1);
-                    expect(images[0].published).toEqual(null);
+                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
                     browser.pressButton('Publish', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                        expect(images.length).toEqual(1);
-                        expect(images[0].published instanceof Date).toBe(true);
+                      models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                        expect(tracks.length).toEqual(1);
+                        expect(tracks[0].published instanceof Date).toBe(true);
 
-                        models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-                          expect(images.length).toEqual(0);
+                        models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+                          expect(tracks.length).toEqual(0);
 
                           done();
                         }).catch(err => {
@@ -639,32 +639,32 @@ describe('Publishing an image', () => {
 
           mockAndUnmock({
             [`uploads/${agent.getAgentDirectory()}`]: {
-              'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
             },
             [`uploads/${lanny.getAgentDirectory()}`]: {
-              'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-              'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+              'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+              'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
             },
-            'public/images/uploads': {}
+            'public/tracks/uploads': {}
           });
 
-          const images = [
-            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+          const tracks = [
+            { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+            { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
           ];
-          models.Image.create(images).then(results => {
+          models.Track.create(tracks).then(results => {
 
             browser.clickLink('Login', err => {
               if (err) done.fail(err);
               browser.assert.success();
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
               done();
             });
           }).catch(err => {
@@ -677,17 +677,17 @@ describe('Publishing an image', () => {
         mock.restore();
       });
 
-      it('renders forms to allow an agent to publish an image', () => {
-        browser.assert.elements('.publish-image-form', 3);
-        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image1.jpg"][method="post"]`);
-        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image2.jpg"][method="post"]`);
-        browser.assert.element(`form[action="/image/${agent.getAgentDirectory()}/image3.jpg"][method="post"]`);
+      it('renders forms to allow an agent to publish a track', () => {
+        browser.assert.elements('.publish-track-form', 3);
+        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"]`);
+        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track2.ogg"][method="post"]`);
+        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track3.ogg"][method="post"]`);
       });
 
       describe('publishing', () => {
         describe('owner resource', () => {
           beforeEach(() => {
-            browser.assert.elements('.publish-image-form', 3);
+            browser.assert.elements('.publish-track-form', 3);
           });
 
           it('redirects to referer if the publish is successful', done => {
@@ -704,17 +704,17 @@ describe('Publishing an image', () => {
               if (err) return done.fail(err);
 
               browser.assert.success();
-              browser.assert.text('.alert.alert-success', 'Image published');
-              browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+              browser.assert.text('.alert.alert-success', 'Track published');
+              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
               done();
             });
           });
 
-          it('does not delete the image from the agent\'s directory', done => {
-            models.Image.find({ photographer: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-              expect(mostRecentImage.length).toEqual(1);
+          it('does not delete the track from the agent\'s directory', done => {
+            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
+              expect(mostRecentTrack.length).toEqual(1);
 
-              let filename = mostRecentImage[0].path.split('/');
+              let filename = mostRecentTrack[0].path.split('/');
               filename = filename[filename.length - 1];
 
               fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
@@ -741,11 +741,11 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('does not add the image to the public/images/uploads directory', function(done) {
-            models.Image.find({ photographer: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-              expect(mostRecentImage.length).toEqual(1);
+          it('does not add the track to the public/tracks/uploads directory', function(done) {
+            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
+              expect(mostRecentTrack.length).toEqual(1);
 
-              let filename = mostRecentImage[0].path.split('/');
+              let filename = mostRecentTrack[0].path.split('/');
               filename = filename[filename.length - 1];
 
               fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
@@ -758,7 +758,7 @@ describe('Publishing an image', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  fs.readdir(`public/images/uploads`, (err, files) => {
+                  fs.readdir(`public/tracks/uploads`, (err, files) => {
                     if (err) return done.fail(err);
                     expect(files.length).toEqual(0);
                     expect(files.includes(filename)).toBe(false);
@@ -772,30 +772,30 @@ describe('Publishing an image', () => {
             });
           });
 
-          it('does not point the database path to the public/images/uploads directory', done => {
-            models.Image.find({ photographer: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-              expect(mostRecentImage.length).toEqual(1);
+          it('does not point the database path to the public/tracks/uploads directory', done => {
+            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
+              expect(mostRecentTrack.length).toEqual(1);
 
-              let filename = mostRecentImage[0].path.split('/');
+              let filename = mostRecentTrack[0].path.split('/');
               filename = filename[filename.length - 1];
 
-              models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                expect(images.length).toEqual(0);
+              models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
+                expect(tracks.length).toEqual(0);
 
-                models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(images => {
-                  expect(images.length).toEqual(1);
-                  expect(images[0].published).toEqual(null);
+                models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(tracks => {
+                  expect(tracks.length).toEqual(1);
+                  expect(tracks[0].published).toEqual(null);
 
                   browser.pressButton('Publish', err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
-                    models.Image.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published instanceof Date).toBe(true);
+                    models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].published instanceof Date).toBe(true);
 
-                      models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                        expect(images.length).toEqual(0);
+                      models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
+                        expect(tracks.length).toEqual(0);
 
                         done();
                       }).catch(err => {
@@ -819,7 +819,7 @@ describe('Publishing an image', () => {
 
         describe('readable resource', () => {
           beforeEach(done => {
-            browser.visit(`/image/${lanny.getAgentDirectory()}`, (err) => {
+            browser.visit(`/track/${lanny.getAgentDirectory()}`, (err) => {
               if (err) return done.fail(err);
               browser.assert.success();
               done();
@@ -827,38 +827,38 @@ describe('Publishing an image', () => {
           });
 
           it('does not show a publish button', () => {
-            browser.assert.elements('.publish-image-form', 0);
+            browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('does not remove the image from the agent\'s directory', function(done) {
+          it('does not remove the track from the agent\'s directory', function(done) {
             fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
               if (err) return done.fail(err);
               expect(files.length).toEqual(3);
-              expect(files.includes('lanny1.jpg')).toBe(true);
-              expect(files.includes('lanny2.jpg')).toBe(true);
-              expect(files.includes('lanny3.jpg')).toBe(true);
+              expect(files.includes('lanny1.ogg')).toBe(true);
+              expect(files.includes('lanny2.ogg')).toBe(true);
+              expect(files.includes('lanny3.ogg')).toBe(true);
 
               request(app)
-                .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                 .set('Cookie', browser.cookies)
                 .end(function(err, res) {
                   if (err) return done.fail(err);
                   expect(res.status).toEqual(302);
-                  expect(res.header.location).toEqual(`/image/${lanny.getAgentDirectory()}`);
+                  expect(res.header.location).toEqual(`/track/${lanny.getAgentDirectory()}`);
 
                   fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
                     if (err) return done.fail(err);
                     expect(files.length).toEqual(3);
-                    expect(files.includes('lanny1.jpg')).toBe(true);
-                    expect(files.includes('lanny2.jpg')).toBe(true);
-                    expect(files.includes('lanny3.jpg')).toBe(true);
+                    expect(files.includes('lanny1.ogg')).toBe(true);
+                    expect(files.includes('lanny2.ogg')).toBe(true);
+                    expect(files.includes('lanny3.ogg')).toBe(true);
 
-                    fs.readdir(`public/images/uploads`, (err, files) => {
+                    fs.readdir(`public/tracks/uploads`, (err, files) => {
                       if (err) return done.fail(err);
                       expect(files.length).toEqual(0);
-                      expect(files.includes('image1.jpg')).toBe(false);
-                      expect(files.includes('image2.jpg')).toBe(false);
-                      expect(files.includes('image3.jpg')).toBe(false);
+                      expect(files.includes('track1.ogg')).toBe(false);
+                      expect(files.includes('track2.ogg')).toBe(false);
+                      expect(files.includes('track3.ogg')).toBe(false);
 
                       done();
                     });
@@ -868,26 +868,26 @@ describe('Publishing an image', () => {
           });
 
           it('does not modify the database record\'s path property', done => {
-            models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-              expect(images.length).toEqual(0);
+            models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(0);
 
-              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].published).toEqual(null);
+              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].published).toEqual(null);
 
                 request(app)
-                  .post(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`)
+                  .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                   .set('Cookie', browser.cookies)
                   .expect(302)
                   .end(function(err, res) {
                     if (err) return done.fail(err);
 
-                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published).toEqual(null);
+                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].published).toEqual(null);
 
-                      models.Image.find({ path: `public/images/uploads/lanny1.jpg`}).then(images => {
-                        expect(images.length).toEqual(0);
+                      models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
+                        expect(tracks.length).toEqual(0);
 
                         done();
                       }).catch(err => {
@@ -921,9 +921,9 @@ describe('Publishing an image', () => {
               });
 
               it('doesn\'t render the Publish buttons', done => {
-                browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
-                  browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
-                  browser.assert.elements('.publish-image-form', 0);
+                browser.visit(`/track/${agent.getAgentDirectory()}`, (err) => {
+                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
+                  browser.assert.elements('.publish-track-form', 0);
                   done();
                 });
               });
@@ -933,43 +933,43 @@ describe('Publishing an image', () => {
 
               beforeEach(done => {
                 process.env.SUDO = agent.email;
-                browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+                browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
                   done();
                 });
               });
 
               it('renders the Publish button', () => {
                 browser.assert.success();
-                browser.assert.elements('.publish-image-form', 3);
+                browser.assert.elements('.publish-track-form', 3);
               });
 
-              it('does not point the database path to the public/images/uploads directory', done => {
-                models.Image.find({ photographer: lanny._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentImage => {
-                  expect(mostRecentImage.length).toEqual(1);
+              it('does not point the database path to the public/tracks/uploads directory', done => {
+                models.Track.find({ recordist: lanny._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
+                  expect(mostRecentTrack.length).toEqual(1);
 
-                  let filename = mostRecentImage[0].path.split('/');
+                  let filename = mostRecentTrack[0].path.split('/');
                   filename = filename[filename.length - 1];
 
-                  models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                    expect(images.length).toEqual(0);
+                  models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
+                    expect(tracks.length).toEqual(0);
 
-                    models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(images => {
-                      expect(images.length).toEqual(1);
-                      expect(images[0].published).toEqual(null);
+                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].published).toEqual(null);
 
                       browser.pressButton('Publish', err => {
                         if (err) return done.fail(err);
                         browser.assert.success();
 
-                        models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(images => {
-                          expect(images.length).toEqual(1);
-                          expect(images[0].published instanceof Date).toBe(true);
+                        models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(tracks => {
+                          expect(tracks.length).toEqual(1);
+                          expect(tracks[0].published instanceof Date).toBe(true);
 
-                          models.Image.find({ path: `public/images/uploads/${filename}`}).then(images => {
-                            expect(images.length).toEqual(0);
+                          models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
+                            expect(tracks.length).toEqual(0);
 
                             done();
                           }).catch(err => {
@@ -991,10 +991,10 @@ describe('Publishing an image', () => {
               });
 
               describe('unpublishing', () => {
-                let image;
+                let track;
                 beforeEach(done => {
-                  models.Image.find({ photographer: lanny._id }).sort({updatedAt: 'desc'}).then(images => {
-                    image = images[0];
+                  models.Track.find({ recordist: lanny._id }).sort({updatedAt: 'desc'}).then(tracks => {
+                    track = tracks[0];
                     browser.pressButton('Publish', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
@@ -1004,32 +1004,32 @@ describe('Publishing an image', () => {
                 });
 
                 it('shows an unpublish button on the agent\'s photo roll', () => {
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
-                  browser.assert.text(`form[action="/${image.path.replace('uploads', 'image')}"] button.publish-image`, 'Unpublish');
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
+                  browser.assert.text(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track`, 'Unpublish');
                 });
 
-                it('shows an unpublish button on the image\'s show view', done => {
-                  browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
-                  browser.clickLink(`a[href="/${image.path.replace('uploads', 'image')}"]`, err => {
+                it('shows an unpublish button on the track\'s show view', done => {
+                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
+                  browser.clickLink(`a[href="/${track.path.replace('uploads', 'track')}"]`, err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
-                    browser.assert.text('.publish-image-form button.publish-image', 'Unpublish');
+                    browser.assert.text('.publish-track-form button.publish-track', 'Unpublish');
                     done();
                   });
                 });
 
-                it('sets the image\'s published property to null in the database', done => {
-                  models.Image.find({ _id: image._id}).then(images => {
-                    expect(images.length).toEqual(1);
-                    expect(images[0].published).not.toEqual(null);
+                it('sets the track\'s published property to null in the database', done => {
+                  models.Track.find({ _id: track._id}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).not.toEqual(null);
 
                     browser.pressButton('Unpublish', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      models.Image.find({ _id: image._id}).then(images => {
-                        expect(images.length).toEqual(1);
-                        expect(images[0].published).toEqual(null);
+                      models.Track.find({ _id: track._id}).then(tracks => {
+                        expect(tracks.length).toEqual(1);
+                        expect(tracks[0].published).toEqual(null);
 
                         done();
                       }).catch(err => {
@@ -1042,7 +1042,7 @@ describe('Publishing an image', () => {
                 });
 
                 it('redirects to the referring page', done => {
-                  browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+                  browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
@@ -1050,7 +1050,7 @@ describe('Publishing an image', () => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
-                      browser.assert.url({ pathname: `/image/${lanny.getAgentDirectory()}` });
+                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
                       done();
                     });
                   });
