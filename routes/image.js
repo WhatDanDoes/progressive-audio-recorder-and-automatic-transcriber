@@ -49,7 +49,7 @@ function getAgentAlbum(page, req, res) {
 
   models.Agent.findOne({ email: `${req.params.agentId}@${req.params.domain}` }).then(agent => {
 
-    const query = { photographer: agent._id };
+    const query = { recordist: agent._id };
     if (agent.email !== req.user.email || (process.env.SUDO && req.user.email !== process.env.SUDO)) {
       query.flagged = false;
     }
@@ -66,7 +66,7 @@ function getAgentAlbum(page, req, res) {
       const token = jwt.sign(payload, process.env.SECRET, { expiresIn: '1h' });
 
       res.render('track/index', {
-        images: tracks,
+        tracks: tracks,
         messages: req.flash(),
         agent: req.user,
         nextPage: nextPage,
@@ -77,12 +77,12 @@ function getAgentAlbum(page, req, res) {
        });
     }).catch(err => {
       req.flash('error', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     });
 
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 };
 

@@ -1,9 +1,9 @@
       <section class="image-controls">
-        <form action="<%= `/${image.path.replace('uploads', 'image')}?_method=DELETE` %>" method="post" class="delete-image-form">
+        <form action="<%= `/${track.path.replace('uploads', 'track')}?_method=DELETE` %>" method="post" class="delete-image-form">
           <button class="delete-image" type="submit">Delete</button>
         </form>
         <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
-            <% if (image.flagged) { %>
+            <% if (track.flagged) { %>
               <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-image-form">
                 <button class="publish-image" type="submit">
                   Deflag

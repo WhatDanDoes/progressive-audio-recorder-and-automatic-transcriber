@@ -57,7 +57,6 @@ describe('authentication', function() {
     });
 
     it('displays the login form if not logged in', function() {
-      //browser.assert.attribute('a', 'href', '/login');
       browser.assert.element("a[href='/login']");
     });
 
@@ -69,7 +68,7 @@ describe('authentication', function() {
 
       beforeEach(done => {
         stubAuth0Sessions(agent.email, DOMAIN, err => {
-          if (err) done.fail(err);
+          if (err) return done.fail(err);
           done();
         });
       });
@@ -85,12 +84,12 @@ describe('authentication', function() {
             'public/images/uploads': {}
           });
 
-          const images = [
-            { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-            { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+          const tracks = [
+            { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+            { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
           ];
-          models.Image.create(images).then(results => {
+          models.Track.create(tracks).then(results => {
 
             browser.clickLink('Login', err => {
               if (err) done.fail(err);
@@ -118,14 +117,13 @@ describe('authentication', function() {
           browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
         });
 
-        it('displays image submission history', function() {
+        it('displays track submission history', function() {
           expect(browser.queryAll('.image').length).toEqual(3);
         });
 
-        it('displays link to the agent\'s images', function() {
-          browser.assert.link('nav ul li a', 'Images', `/image/${agent.getAgentDirectory()}`);
+        it('displays link to the agent\'s tracks', function() {
+          browser.assert.link('nav ul li a', 'Tracks', `/track/${agent.getAgentDirectory()}`);
         });
-
 
         describe('logout', function() {
 
