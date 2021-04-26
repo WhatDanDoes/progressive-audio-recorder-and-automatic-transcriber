@@ -10,7 +10,7 @@ const mockAndUnmock = require('../../support/mockAndUnmock')(mock);
 
 const jwt = require('jsonwebtoken');
 
-describe('image upload API', () => {
+describe('track upload API', () => {
 
   let agent, token;
 
@@ -44,15 +44,15 @@ describe('image upload API', () => {
     });
   });
 
-  describe('POST image/', () => {
+  describe('POST track/', () => {
 
     describe('unauthenticated access', () => {
 
       it('returns 401 error', done => {
         request(app)
-          .post('/image')
+          .post('/track')
           .set('Accept', 'application/json')
-          .attach('docs', 'spec/files/troll.jpg')
+          .attach('docs', 'spec/files/troll.ogg')
           .expect('Content-Type', /json/)
           .expect(401)
           .end(function(err, res) {
@@ -71,9 +71,9 @@ describe('image upload API', () => {
           }
           expect(files.length).toEqual(0);
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
-            .attach('docs', 'spec/files/troll.jpg')
+            .attach('docs', 'spec/files/troll.ogg')
             .expect('Content-Type', /json/)
             .expect(401)
             .end(function(err, res) {
@@ -93,12 +93,12 @@ describe('image upload API', () => {
       });
 
       it('does not create a database record', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
-            .attach('docs', 'spec/files/troll.jpg')
+            .attach('docs', 'spec/files/troll.ogg')
             .expect('Content-Type', /json/)
             .expect(401)
             .end(function(err, res) {
@@ -106,8 +106,8 @@ describe('image upload API', () => {
                 return done.fail(err);
               }
 
-              models.Image.find({}).then(images => {
-                expect(images.length).toEqual(0);
+              models.Track.find({}).then(tracks => {
+                expect(tracks.length).toEqual(0);
 
                 done();
               }).catch(err => {
@@ -123,17 +123,17 @@ describe('image upload API', () => {
     describe('authenticated access', () => {
       it('responds with 201 on successful receipt of file', done => {
         request(app)
-          .post('/image')
+          .post('/track')
           .set('Accept', 'application/json')
           .field('token', token)
-          .attach('docs', 'spec/files/troll.jpg')
+          .attach('docs', 'spec/files/troll.ogg')
           .expect('Content-Type', /json/)
           .expect(201)
           .end(function(err, res) {
             if (err) {
               return done.fail(err);
             }
-            expect(res.body.message).toEqual('Image received');
+            expect(res.body.message).toEqual('Track received');
             done();
           });
       });
@@ -146,16 +146,16 @@ describe('image upload API', () => {
           expect(files.length).toEqual(0);
 
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.jpg')
+            .attach('docs', 'spec/files/troll.ogg')
             .expect(201)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
-              expect(res.body.message).toEqual('Image received');
+              expect(res.body.message).toEqual('Track received');
 
               fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 
@@ -177,11 +177,11 @@ describe('image upload API', () => {
           }
           expect(files.length).toEqual(0);
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.jpg')
-            .attach('docs', 'spec/files/troll.png')
+            .attach('docs', 'spec/files/troll.ogg')
+            .attach('docs', 'spec/files/troll.wav')
             .expect('Content-Type', /json/)
             .expect(201)
             .end(function(err, res) {
@@ -208,16 +208,16 @@ describe('image upload API', () => {
           expect(files.length).toEqual(0);
 
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.jpg')
+            .attach('docs', 'spec/files/troll.ogg')
             .expect(201)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
-              expect(res.body.message).toEqual('Image received');
+              expect(res.body.message).toEqual('Track received');
 
               fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 
@@ -227,16 +227,16 @@ describe('image upload API', () => {
                 expect(files.length).toEqual(1);
 
                 request(app)
-                  .post('/image')
+                  .post('/track')
                   .set('Accept', 'application/json')
                   .field('token', token)
-                  .attach('docs', 'spec/files/troll.jpg')
+                  .attach('docs', 'spec/files/troll.ogg')
                   .expect(201)
                   .end(function(err, res) {
                     if (err) {
                       return done.fail(err);
                     }
-                    expect(res.body.message).toEqual('Image received');
+                    expect(res.body.message).toEqual('Track received');
 
                     fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
 
@@ -254,22 +254,22 @@ describe('image upload API', () => {
       });
 
       it('creates a database record', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.jpg')
+            .attach('docs', 'spec/files/troll.ogg')
             .expect(201)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
 
-              models.Image.find({}).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+              models.Track.find({}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 
                 done();
               }).catch(err => {
@@ -282,25 +282,25 @@ describe('image upload API', () => {
       });
 
       it('writes a database record for each attached file', done => {
-        models.Image.find({}).then(images => {
-          expect(images.length).toEqual(0);
+        models.Track.find({}).then(tracks => {
+          expect(tracks.length).toEqual(0);
 
           request(app)
-            .post('/image')
+            .post('/track')
             .set('Accept', 'application/json')
             .field('token', token)
-            .attach('docs', 'spec/files/troll.jpg')
-            .attach('docs', 'spec/files/troll.png')
+            .attach('docs', 'spec/files/troll.ogg')
+            .attach('docs', 'spec/files/troll.wav')
             .expect('Content-Type', /json/)
             .expect(201)
             .end(function(err, res) {
               if (err) {
                 return done.fail(err);
               }
-              models.Image.find({}).then(images => {
-                expect(images.length).toEqual(2);
-                expect(images[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-                expect(images[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+              models.Track.find({}).then(tracks => {
+                expect(tracks.length).toEqual(2);
+                expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                expect(tracks[1].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
 
                 done();
               }).catch(err => {
@@ -312,9 +312,9 @@ describe('image upload API', () => {
         });
       });
 
-      it('returns a 400 error if no image is defined', done => {
+      it('returns a 400 error if no track is defined', done => {
         request(app)
-          .post('/image')
+          .post('/track')
           .set('Accept', 'application/json')
           .field('token', token)
           .expect('Content-Type', /json/)
@@ -323,7 +323,7 @@ describe('image upload API', () => {
             if (err) {
               return done.fail(err);
             }
-            expect(res.body.message).toEqual('No image provided');
+            expect(res.body.message).toEqual('No track provided');
             done();
           });
       });
