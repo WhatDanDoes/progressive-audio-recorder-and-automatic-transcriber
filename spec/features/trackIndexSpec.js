@@ -21,7 +21,7 @@ const stubAuth0Sessions = require('../support/stubAuth0Sessions');
 const mock = require('mock-fs');
 const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 
-describe('imageIndexSpec', () => {
+describe('trackIndexSpec', () => {
   let browser, agent, lanny;
 
   beforeEach(function(done) {
@@ -61,24 +61,24 @@ describe('imageIndexSpec', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.success();
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
             done();
           });
         }).catch(err => {
@@ -95,15 +95,15 @@ describe('imageIndexSpec', () => {
 
       it('displays an add-photo form', done => {
         browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
-        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+        browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
 
           browser.assert.success();
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
           browser.assert.element('.deep-link');
-          browser.assert.element('form[action="/image"][method="post"]');
-          browser.assert.element('input[id="photos-input"][type="file"][accept="image/*"]');
-          browser.assert.text('label[for="photos-input"]', 'Add photos');
+          browser.assert.element('form[action="/track"][method="post"]');
+          browser.assert.element('input[id="photos-input"][type="file"][accept="audio/*"]');
+          browser.assert.text('label[for="photos-input"]', 'Add track');
           browser.assert.element('label[for="photos-input"] img[src="/images/bpe-logo.png"]');
           done();
         });
@@ -114,15 +114,15 @@ describe('imageIndexSpec', () => {
       //
 //      it('displays an Android deep link with JWT if browser is mobile', done => {
 //        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-//        // See `GET /image/:domain/:agentId`
+//        // See `GET /track/:domain/:agentId`
 //        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 //
 //        browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
-//        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+//        browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
 //          if (err) return done.fail(err);
 //
 //          browser.assert.success();
-//          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+//          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
 //          browser.assert.element(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
 //          browser.assert.element('.deep-link');
 //          done();
@@ -131,14 +131,14 @@ describe('imageIndexSpec', () => {
 //
 //      it('does not display an Android deep link if browser is not mobile', done => {
 //        // This is just easier than setting up a spy, because Auth0 stubbing needs `jwt`
-//        // See `GET /image/:domain/:agentId`
+//        // See `GET /track/:domain/:agentId`
 //        const token = jwt.sign({ email: agent.email }, process.env.SECRET, { expiresIn: '1h' });
 //
-//        browser.visit(`/image/${agent.getAgentDirectory()}`, err => {
+//        browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
 //          if (err) return done.fail(err);
 //          browser.assert.success();
 //
-//          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+//          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
 //          browser.assert.elements(`a[href="bpe://bpe?token=${token}&domain=${encodeURIComponent(process.env.DOMAIN)}"]`, 0);
 //          browser.assert.text('section h2', 'This web app is augmented with a native Android app');
 //          browser.assert.text('section h3', 'Login from your tablet or phone to send photos');
@@ -148,26 +148,26 @@ describe('imageIndexSpec', () => {
 //      });
 
       it('allows an agent to view his own album', () => {
-        browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
-        browser.assert.elements('article.post section.image img', 3);
-        browser.assert.elements('article.post section.image-controls', 3);
+        browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
+        browser.assert.elements('article.post section.track img', 3);
+        browser.assert.elements('article.post section.track-controls', 3);
       });
 
       it('allows an agent to view an album he can read', done => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/image/${lanny.getAgentDirectory()}`, err => {
+        browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.text('main h2:last-child', 'No images');
+          browser.assert.text('main h2:last-child', 'No tracks');
           done();
         });
       });
 
       it('creates an agent directory if it does not exist already', done => {
         expect(fs.existsSync(`uploads/${lanny.getAgentDirectory()}`)).toBe(false);
-        browser.visit(`/image/${lanny.getAgentDirectory()}`, function(err) {
+        browser.visit(`/track/${lanny.getAgentDirectory()}`, function(err) {
           if (err) return done.fail(err);
           browser.assert.success();
           expect(fs.existsSync(`uploads/${lanny.getAgentDirectory()}`)).toBe(true);
@@ -175,11 +175,11 @@ describe('imageIndexSpec', () => {
         });
       });
 
-      it('redirects /image to agent\'s personal album', done => {
-        browser.visit(`/image`, function(err) {
+      it('redirects /track to agent\'s personal album', done => {
+        browser.visit(`/track`, function(err) {
           if (err) return done.fail(err);
           browser.assert.redirected();
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}`});
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
           done();
         });
       });
@@ -191,7 +191,7 @@ describe('imageIndexSpec', () => {
           expect(agent.canRead.length).toEqual(1);
           expect(agent.canRead[0]).not.toEqual(troy._id);
 
-          browser.visit(`/image/${troy.getAgentDirectory()}`, function(err) {
+          browser.visit(`/track/${troy.getAgentDirectory()}`, function(err) {
             if (err) return done.fail(err);
             browser.assert.redirected();
             browser.assert.url({ pathname: '/'});
@@ -207,7 +207,7 @@ describe('imageIndexSpec', () => {
 
   describe('unauthenticated', () => {
     it('redirects home (which is where the login form is located)', done => {
-      browser.visit(`/image/${agent.getAgentDirectory()}`, function(err) {
+      browser.visit(`/track/${agent.getAgentDirectory()}`, function(err) {
         if (err) return done.fail(err);
         browser.assert.redirected();
         browser.assert.url({ pathname: '/'});
@@ -216,8 +216,8 @@ describe('imageIndexSpec', () => {
       });
     });
 
-    it('redirects /image to home', done => {
-      browser.visit('/image', function(err) {
+    it('redirects /track to home', done => {
+      browser.visit('/track', function(err) {
         if (err) return done.fail(err);
         browser.assert.redirected();
         browser.assert.url({ pathname: '/'});
@@ -233,22 +233,22 @@ describe('imageIndexSpec', () => {
       stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) done.fail(err);
 
-        // Create a bunch of images
+        // Create a bunch of tracks
         let files = {},
-            images = [];
+            tracks = [];
         for (let i = 0; i < 70; i++) {
-          files[`image${i}.jpg`] = fs.readFileSync('spec/files/troll.jpg');
-          images.push({ path: `uploads/${agent.getAgentDirectory()}/image${i}.jpg`, photographer: agent._id });
+          files[`track${i}.ogg`] = fs.readFileSync('spec/files/troll.ogg');
+          tracks.push({ path: `uploads/${agent.getAgentDirectory()}/track${i}.ogg`, recordist: agent._id });
         }
 
         mockAndUnmock({ [`uploads/${agent.getAgentDirectory()}`]: files });
 
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
             browser.assert.success();
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
             done();
           });
         }).catch(err => {
@@ -261,37 +261,37 @@ describe('imageIndexSpec', () => {
       mock.restore();
     });
 
-    it('paginates images in the agent\'s album', done => {
-      browser.visit(`/image/${agent.getAgentDirectory()}`, (err) => {
+    it('paginates tracks in the agent\'s album', done => {
+      browser.visit(`/track/${agent.getAgentDirectory()}`, (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.elements('section.image img', 30);
+        browser.assert.elements('section.track img', 30);
         browser.assert.elements('#next-page', 2);
-        browser.assert.link('#next-page', 'Next', `/image/${agent.getAgentDirectory()}/page/2`);
+        browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/2`);
         browser.assert.elements('#previous-page', 0);
 
         browser.clickLink('#next-page', (err) => {
           if (err) return done.fail(err);
-          browser.assert.elements('section.image img', 30);
-          browser.assert.link('#next-page', 'Next', `/image/${agent.getAgentDirectory()}/page/3`);
-          browser.assert.link('#prev-page', 'Previous', `/image/${agent.getAgentDirectory()}/page/1`);
+          browser.assert.elements('section.track img', 30);
+          browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/3`);
+          browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/1`);
 
           browser.clickLink('#next-page', (err) => {
             if (err) return done.fail(err);
-            browser.assert.elements('section.image img', 10);
+            browser.assert.elements('section.track img', 10);
             browser.assert.elements('#next-page', 0);
-            browser.assert.link('#prev-page', 'Previous', `/image/${agent.getAgentDirectory()}/page/2`);
+            browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/2`);
 
             browser.clickLink('#prev-page', (err) => {
               if (err) return done.fail(err);
-              browser.assert.elements('section.image img', 30);
-              browser.assert.link('#next-page', 'Next', `/image/${agent.getAgentDirectory()}/page/3`);
-              browser.assert.link('#prev-page', 'Previous', `/image/${agent.getAgentDirectory()}/page/1`);
+              browser.assert.elements('section.track img', 30);
+              browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/3`);
+              browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/1`);
 
               browser.clickLink('#prev-page', (err) => {
                 if (err) return done.fail(err);
-                browser.assert.elements('section.image img', 30);
-                browser.assert.link('#next-page', 'Next', `/image/${agent.getAgentDirectory()}/page/2`);
+                browser.assert.elements('section.track img', 30);
+                browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/2`);
                 browser.assert.elements('#previous-page', 0);
 
                 done();
@@ -303,18 +303,18 @@ describe('imageIndexSpec', () => {
     });
 
     it('doesn\'t barf if paginating beyond the bounds', done => {
-      browser.visit(`/image/${agent.getAgentDirectory()}/page/10`, (err) => {
+      browser.visit(`/track/${agent.getAgentDirectory()}/page/10`, (err) => {
         if (err) return done.fail(err);
-        browser.assert.text('main h2:last-child', 'No images');
+        browser.assert.text('main h2:last-child', 'No tracks');
 
-        browser.visit(`/image/${agent.getAgentDirectory()}/page/0`, (err) => {
+        browser.visit(`/track/${agent.getAgentDirectory()}/page/0`, (err) => {
           if (err) return done.fail(err);
-          browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
           browser.assert.elements('.alert.alert-danger', 0);
 
-          browser.visit(`/image/${agent.getAgentDirectory()}/page/-1`, (err) => {
+          browser.visit(`/track/${agent.getAgentDirectory()}/page/-1`, (err) => {
             if (err) return done.fail(err);
-            browser.assert.url({ pathname: `/image/${agent.getAgentDirectory()}` });
+            browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
             browser.assert.elements('.alert.alert-danger', 0);
 
             done();
