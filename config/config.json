@@ -1,27 +1,27 @@
 {
   "development": {
-    "username": "auth0_photo_server",
+    "username": "progressive_audio_recorder",
     "password": "secret",
-    "database": "auth0_photo_server_development",
+    "database": "progressive_audio_recorder_development",
     "host": "localhost"
   },
   "test": {
-    "username": "auth0_photo_server",
+    "username": "progressive_audio_recorder",
     "password": "secret",
-    "database": "auth0_photo_server_test",
+    "database": "progressive_audio_recorder_test",
     "host": "localhost"
   },
   "staging": {
-    "username": "auth0_photo_server",
+    "username": "progressive_audio_recorder",
     "password": "secret",
-    "database": "auth0_photo_server_staging",
+    "database": "progressive_audio_recorder_staging",
     "host": "mongo",
     "dialect": "mongodb"
   },
   "production": {
-    "username": "auth0_photo_server",
+    "username": "progressive_audio_recorder",
     "password": "secret",
-    "database": "auth0_photo_server_production",
+    "database": "progressive_audio_recorder_production",
     "host": "mongo",
     "dialect": "mongodb"
   }

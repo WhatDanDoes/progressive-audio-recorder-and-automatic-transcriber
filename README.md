@@ -1,21 +1,13 @@
-auth0-photo-server
-==================
+progressive-audio-recorder
+==========================
 
-`node`/`express` backend for receiving photos sent by the [basic-photo-economizer](https://github.com/WhatDanDoes/basic-photo-economizer) (my first `react-native` Android app).
+`node`/`express` backend for receiving audio collected by a remote device.
 
-The `auth0-photo-server` may be considered a _hard fork_ of the [basic-photo-server](https://github.com/WhatDanDoes/basic-photo-server), though the repository was never actually forked. This project is motivated by the need to determine how to properly leverage the service provided by the [SIL Identity](https://silid.languagetechnology.org) app. While the _basic_ version of the photo server allows for traditional email-password authentication, this version provides access to anyone who can authenticate against a recognized third-party authority (only Gmail, for the moment). In turn, the app organizer (i.e., me) will be able to decide the level at which an authenticated agent may operate.
-
-This is a living document. It will change over time. In pursuing the goals of this project, third-party developers who wish to incorporate their software into the SIL ecosystem will have this project as an example from which to work.
+The `progressive-audio-recorder` may be considered a _hard fork_ of the [auth0-photo-server](https://github.com/WhatDanDoes/auth0-photo-server), though the repository was never actually forked.
 
 ## Basic Functionality
 
-This is a Progressive Web Application. It uses cameras when available and defaults to simple file upload when not. Photos taken with this app are reduced in size for transmission. Upon submission, the economized photo can be found in the agent's personal photo album, whereupon it may be _deleted_ or _published_ to the public photo roll. Authenticated agents can _like_, comment, or flag photos. Currently, only one agent may post to the public photo wall. There is no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
-
-## Auth0 Enhanced Functionality
-
-The Identity platform handles authentication and basic organization structuring. The `auth0-photo-server` is ideally suited to consume the services it currently offers and will likely reveal shortcomings in the process. At the time of writing, agents with varying permission levels can create _teams_ and arrange those under _organizational_ umbrellas. This by itself mirrors the expectation that an agent might invite others to contribute to a photo album, or be granted permission to publish photos to the public roll.
-
-The most current deployment can be found at https://wycliffe.photos.
+This is a Progressive Web Application. It uses audio when available and defaults to simple file upload when not. Upon audio stream completion, the file can be found in the agent's personal album, whereupon it may be _deleted_ or _published_ to the public library. Authenticated agents can _like_, comment, or flag audio tracks. Currently, only one agent may post to the public audio wall. There is no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
 
 ## Setup
 
@@ -72,7 +64,7 @@ npm start
 In the application directory:
 
 ```
-cd auth0-photo-server
+cd progressive-audio-recorder
 cp .env.example .env # <- don't forget to configure
 NODE_ENV=production npm install
 ```
@@ -88,7 +80,7 @@ docker-compose -f docker-compose.prod.yml up -d
 Connect to DB container like this:
 
 ```
-docker-compose -f docker-compose.prod.yml exec mongo mongo auth0_photo_server_production
+docker-compose -f docker-compose.prod.yml exec mongo mongo progressive_audio_recorder_production
 ```
 
 Show databases:
