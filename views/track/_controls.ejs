@@ -1,17 +1,17 @@
-      <section class="image-controls">
-        <form action="<%= `/${track.path.replace('uploads', 'track')}?_method=DELETE` %>" method="post" class="delete-image-form">
-          <button class="delete-image" type="submit">Delete</button>
+      <section class="track-controls">
+        <form action="<%= `/${track.path.replace('uploads', 'track')}?_method=DELETE` %>" method="post" class="delete-track-form">
+          <button class="delete-track" type="submit">Delete</button>
         </form>
         <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
             <% if (track.flagged) { %>
-              <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-image-form">
-                <button class="publish-image" type="submit">
+              <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-track-form">
+                <button class="publish-track" type="submit">
                   Deflag
                 </button>
               </form>
             <% } else { %>
-              <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-image-form">
-                <button class="publish-image" type="submit">
+              <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-track-form">
+                <button class="publish-track" type="submit">
                   <%= track.published ? 'Unpublish' : 'Publish' %>
                 </button>
               </form>

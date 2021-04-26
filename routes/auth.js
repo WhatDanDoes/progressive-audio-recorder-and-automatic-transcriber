@@ -42,7 +42,7 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
         }
 
         req.flash('info', 'Hello, ' + req.user.email + '!');
-        res.redirect(returnTo || `/image/${req.user.getAgentDirectory()}`);
+        res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
       });
     });
   }

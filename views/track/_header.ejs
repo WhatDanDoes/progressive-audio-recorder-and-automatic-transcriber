@@ -1,14 +1,14 @@
 <header>
-  <img class="avatar" src="<%= image.photographer.get('picture') %>" />
+  <img class="avatar" src="<%= track.recordist.get('picture') %>" />
   <aside>
-    <div><%= image.photographer.get('nickname') %></div>
-    <time><%= image.updatedAt %></time>
+    <div><%= track.recordist.get('nickname') %></div>
+    <time><%= track.updatedAt %></time>
   </aside>
   <span class="post-menu">
     <i class="fas fa-ellipsis-h"></i>
     <div class="dropdown-content">
-      <form action="<%= `/${image.path.replace('uploads', 'image')}/flag?_method=PATCH` %>" method="post" class="flag-image-form">
-        <button class="flag-image" type="submit">Flag post</button>
+      <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="flag-track-form">
+        <button class="flag-track" type="submit">Flag post</button>
       </form>
     </div>
   </span>

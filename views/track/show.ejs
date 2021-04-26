@@ -3,16 +3,16 @@
   <main>
     <article class="post">
       <% include _header %>
-      <section class="image">
-        <img src="/<%= image.path %>" />
+      <section class="track">
+        <img src="/<%= track.path %>" />
       </section>
       <% include _feedbackControls %>
       <section class="notes">
-        <% for (let note of image.notes) { %>
+        <% for (let note of track.notes) { %>
           <article class="note">
             <header>
               <% if (note.author._id.toString() === agent._id.toString() ||
-                     image.photographer._id.toString() === agent._id.toString() ||
+                     track.recordist._id.toString() === agent._id.toString() ||
                      (process.env.SUDO && process.env.SUDO === agent.email)) { %>
                 <% include _noteControls %>
               <% } %>
@@ -26,7 +26,7 @@
         <% } %>
       </section>
       <section class="likes">
-        <% for (let like of image.likes) { %>
+        <% for (let like of track.likes) { %>
           <article class="like">
             <header>
               <img class="avatar" src="<%= like.get('picture') %>" />

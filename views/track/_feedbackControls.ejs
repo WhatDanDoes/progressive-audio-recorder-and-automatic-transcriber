@@ -1,20 +1,20 @@
             <section class='feedback-controls'>
               <div>
-                <i class="like-button <%= image.likes.find(l => l.email === agent.email) ? 'fas' : 'far' %> fa-heart" onclick="like('<%= image.path %>', this)">
-                  <% if (image.likes.length + image.notes.length) { %>
-                    <%= image.likes.length + image.notes.length %> note<%= image.likes.length + image.notes.length === 1 ? '' : 's' %>
+                <i class="like-button <%= track.likes.find(l => l.email === agent.email) ? 'fas' : 'far' %> fa-heart" onclick="like('<%= track.path %>', this)">
+                  <% if (track.likes.length + track.notes.length) { %>
+                    <%= track.likes.length + track.notes.length %> note<%= track.likes.length + track.notes.length === 1 ? '' : 's' %>
                   <% } %>
                 </i>
 
                 <span class="accordion">
-                  <input type="checkbox" id="<%= image._id %>-accordion" />
-                  <label for="<%= image._id %>-accordion">
+                  <input type="checkbox" id="<%= track._id %>-accordion" />
+                  <label for="<%= track._id %>-accordion">
                     <i class="far fa-comment"></i>
                   </label>
 
                   <span class="content">
-                    <form action="<%= `/${image.path.replace('uploads', 'image')}/note` %>" method="post" class="post-note-form" id="<%= image._id %>-note">
-                      <textarea name="text" form="<%= image._id %>-note" maxlength=500></textarea>
+                    <form action="<%= `/${track.path.replace('uploads', 'track')}/note` %>" method="post" class="post-note-form" id="<%= track._id %>-note">
+                      <textarea name="text" form="<%= track._id %>-note" maxlength=500></textarea>
                       <button class="post-note" type="submit">
                         Post
                       </button>

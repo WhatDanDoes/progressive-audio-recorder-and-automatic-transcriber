@@ -20,6 +20,7 @@ module.exports = function(mock) {
       'public/stylesheets/fontawesome-free-5.9.0-web/css/all.css': fs.readFileSync('public/stylesheets/fontawesome-free-5.9.0-web/css/all.css'),
       'spec/files/bus.mjpeg': fs.readFileSync('spec/files/bus.mjpeg'),
       'spec/files/troll.jpg': fs.readFileSync('spec/files/troll.jpg'),
+      'spec/files/troll.ogg': fs.readFileSync('spec/files/troll.ogg'),
       'spec/files/troll.png': fs.readFileSync('spec/files/troll.png'),
       'views/index.ejs': fs.readFileSync('views/index.ejs'),
       'views/_partials/appLink.ejs': fs.readFileSync('views/_partials/appLink.ejs'),

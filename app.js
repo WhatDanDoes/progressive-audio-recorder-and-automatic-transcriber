@@ -129,8 +129,8 @@ app.use(express.static(path.join(__dirname, 'public')));
  * Protected static assets
  */
 app.use(`/uploads`, [function(req, res, next) {
-  models.Track.findOne({ path: `uploads${req.path}`, published: { '$ne': null } }).then(image => {
-    if (image) {
+  models.Track.findOne({ path: `uploads${req.path}`, published: { '$ne': null } }).then(track => {
+    if (track) {
       return next();
     }
 
@@ -166,7 +166,7 @@ app.use(methodOverride('_method'));
  */
 app.use('/', require('./routes/index')); // Keep a close eye on this and the following
 app.use('/', require('./routes/auth'));
-app.use('/image', require('./routes/image'));
+app.use('/track', require('./routes/track'));
 app.use('/agent', require('./routes/agent'));
 
 // catch 404 and forward to error handler

@@ -28,7 +28,7 @@ let storage = multer.diskStorage({
 let upload = multer({ storage: storage });
 
 /**
- * GET /image
+ * GET /track
  */
 router.get('/', (req, res) => {
   if (!req.isAuthenticated()) {
@@ -36,13 +36,13 @@ router.get('/', (req, res) => {
     return res.redirect('/');
   }
 
-  res.redirect(`/image/${req.user.getAgentDirectory()}`);
+  res.redirect(`/track/${req.user.getAgentDirectory()}`);
 });
 
 /**
  * This consolidates the functionality required of
- * - GET /image/:domain/:agentId
- * - GET /image/:domain/:agentId/page/:num
+ * - GET /track/:domain/:agentId
+ * - GET /track/:domain/:agentId/page/:num
  */
 function getAgentAlbum(page, req, res) {
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
@@ -87,7 +87,7 @@ function getAgentAlbum(page, req, res) {
 };
 
 /**
- * GET /image/:domain/:agentId
+ * GET /track/:domain/:agentId
  */
 router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
 
@@ -99,14 +99,14 @@ router.get('/:domain/:agentId', ensureAuthorized, (req, res) => {
 });
 
 /**
- * GET /image/:domain/:agentId/page/:num
+ * GET /track/:domain/:agentId/page/:num
  */
 router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => {
 
   const page = parseInt(req.params.num);
 
   if (page <= 0) {
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   }
 
   return getAgentAlbum(page, req, res);
@@ -114,9 +114,9 @@ router.get('/:domain/:agentId/page/:num', ensureAuthorized, (req, res, next) => 
 
 
 /**
- * GET /image/:domain/:agentId/:imageId
+ * GET /track/:domain/:agentId/:trackId
  */
-router.get('/:domain/:agentId/:imageId', (req, res) => {
+router.get('/:domain/:agentId/:trackId', (req, res) => {
   if (!req.isAuthenticated()) {
     req.flash('error', 'You need to login first');
     return res.redirect('/');
@@ -124,22 +124,22 @@ router.get('/:domain/:agentId/:imageId', (req, res) => {
 
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
-  models.Image.findOne({ path: filePath })
-    .populate('photographer')
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
+  models.Track.findOne({ path: filePath })
+    .populate('recordist')
     .populate('likes')
-    .populate({ path: 'notes', populate: { path: 'author', model: 'Agent' }}).then(image => {
+    .populate({ path: 'notes', populate: { path: 'author', model: 'Agent' }}).then(track => {
 
-    if (image.published && !image.flagged) {
-      return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
+    if (track.published && !track.flagged) {
+      return res.render('track/show', { track: track, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
     }
 
-    if (image.flagged) {
-      req.flash('error', 'Image flagged');
+    if (track.flagged) {
+      req.flash('error', 'Track flagged');
       if (process.env.SUDO === req.user.email) {
-        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
+        return res.render('track/show', { track: track, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
       }
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     }
 
     req.user.getReadables((err, readables) => {
@@ -148,89 +148,89 @@ router.get('/:domain/:agentId/:imageId', (req, res) => {
         return res.redirect('/');
       }
       if (readables.includes(`${req.params.domain}/${req.params.agentId}`)) {
-        return res.render('image/show', { image: image, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
+        return res.render('track/show', { track: track, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
       }
       req.flash('error', 'You are not authorized to access that resource');
       return res.redirect('/');
     });
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * POST /image/:domain/:agentId/:imageId
+ * POST /track/:domain/:agentId/:trackId
  */
-router.post('/:domain/:agentId/:imageId', ensureAuthorized, (req, res) => {
+router.post('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
   let canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
 
   if (process.env.SUDO && req.user.email !== process.env.SUDO) {
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`);
   }
 
   if (!canWrite) {
     req.flash('info', 'You do not have access to that resource');
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   }
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
 
-  models.Image.findOne({ path: filePath }).then(image => {
+  models.Track.findOne({ path: filePath }).then(track => {
     const origin = url.parse(req.get('referer'));
 
-    if (image.published) {
-      image.published = null;
-      req.flash('success', 'Image unpublished');
+    if (track.published) {
+      track.published = null;
+      req.flash('success', 'Track unpublished');
     }
     else {
-      image.published = new Date();
-      req.flash('success', 'Image published');
+      track.published = new Date();
+      req.flash('success', 'Track published');
     }
-    image.save().then(image => {
+    track.save().then(track => {
       res.redirect(origin.pathname || '/');
     }).catch(err => {
       req.flash('error', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     });
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * PATCH /image/:domain/:agentId/:imageId/flag
+ * PATCH /track/:domain/:agentId/:trackId/flag
  */
-router.patch('/:domain/:agentId/:imageId/flag', ensureAuthorized, (req, res) => {
+router.patch('/:domain/:agentId/:trackId/flag', ensureAuthorized, (req, res) => {
   const origin = url.parse(req.get('referer'));
-  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}` : '/';
+  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}` : '/';
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
 
-  models.Image.findOne({ path: filePath }).then(image => {
+  models.Track.findOne({ path: filePath }).then(track => {
 
-    if (image.flagged && process.env.SUDO && req.user.email === process.env.SUDO) {
-      image.flagged = false;
-      image.save().then(result => {
-        req.flash('success', 'Image deflagged');
+    if (track.flagged && process.env.SUDO && req.user.email === process.env.SUDO) {
+      track.flagged = false;
+      track.save().then(result => {
+        req.flash('success', 'Track deflagged');
       }).catch(err => {
         req.flash('error', err.message);
       }).finally(() => {
         res.redirect(returnTo);
       });
     }
-    else if (image.flaggers.indexOf(req.user._id.toString()) > -1) {
+    else if (track.flaggers.indexOf(req.user._id.toString()) > -1) {
       req.flash('error', 'This post has administrative approval');
       res.redirect(returnTo);
     }
     else {
-      image.flag(req.user, (err, image) => {
+      track.flag(req.user, (err, track) => {
         if (err) {
           req.flash('error', err.message);
         }
         else {
-          req.flash('success', 'Image flagged');
+          req.flash('success', 'Track flagged');
         }
 
         res.redirect(returnTo);
@@ -243,37 +243,37 @@ router.patch('/:domain/:agentId/:imageId/flag', ensureAuthorized, (req, res) => 
 });
 
 /**
- * PATCH /image/:domain/:agentId/:imageId/like
+ * PATCH /track/:domain/:agentId/:trackId/like
  */
-router.patch('/:domain/:agentId/:imageId/like', (req, res) => {
+router.patch('/:domain/:agentId/:trackId/like', (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'You are not logged in' });
   }
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
-  models.Image.findOne({ path: filePath }).then(image => {
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
+  models.Track.findOne({ path: filePath }).then(track => {
 
-    const likeIndex = image.likes.indexOf(req.user._id);
+    const likeIndex = track.likes.indexOf(req.user._id);
     if (likeIndex < 0) {
-      image.likes.push(req.user._id);
+      track.likes.push(req.user._id);
     }
     else {
-      image.likes.splice(likeIndex, 1);
+      track.likes.splice(likeIndex, 1);
     }
-    image.save().then(result => {
+    track.save().then(result => {
       res.status(201).json(result);
     }).catch(err => {
       req.flash('error', err.message);
-      return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     });
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * POST /image
+ * POST /track
  */
 router.post('/', upload.array('docs', 8), function(req, res, next) {
     // If coming from the native app
@@ -292,12 +292,12 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
     return res.redirect('/');
   }
 
-  // No image provided
+  // No track provided
   if (!req.files || !req.files.length) {
     if (req.headers['accept'] === 'application/json') {
-      return res.status(400).json({ message: 'No image provided' });
+      return res.status(400).json({ message: 'No track provided' });
     }
-    req.flash('error', 'No image provided');
+    req.flash('error', 'No track provided');
     return res.redirect(req.headers.referer);
   }
 
@@ -328,7 +328,7 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
         return done(err);
       }
 
-      models.Image.create({ path: path.dest, photographer: req.user._id }).then(image => {
+      models.Track.create({ path: path.dest, recordist: req.user._id }).then(track => {
         recursiveSave(done);
       }).catch(err => {
         done(err);
@@ -345,42 +345,42 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
       return res.redirect(req.headers.referer);
     }
     if (req.headers['accept'] === 'application/json') {
-      return res.status(201).json({ message: 'Image received' });
+      return res.status(201).json({ message: 'Track received' });
     }
-    req.flash('success', 'Image received');
+    req.flash('success', 'Track received');
     return res.redirect(req.headers.referer);
   });
 });
 
 /**
- * DELETE /image/:domain/:agentId/:imageId
+ * DELETE /track/:domain/:agentId/:trackId
  */
-router.delete('/:domain/:agentId/:imageId', ensureAuthorized, function(req, res) {
+router.delete('/:domain/:agentId/:trackId', ensureAuthorized, function(req, res) {
   const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
   if(!canWrite){
     req.flash('error', 'You are not authorized to delete that resource');
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   }
 
-  const imagePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
+  const trackPath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
 
-  models.Image.deleteOne({ path: imagePath }).then(results => {
-    fs.unlink(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`, (err) => {
+  models.Track.deleteOne({ path: trackPath }).then(results => {
+    fs.unlink(`uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`, (err) => {
       if (err) {
         req.flash('info', err.message);
-        return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+        return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
       }
-      req.flash('info', 'Image deleted');
-      res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+      req.flash('info', 'Track deleted');
+      res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     });
   }).catch(err => {
     req.flash('error', err.message);
-    res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * GET /image/flagged
+ * GET /track/flagged
  */
 router.get('/flagged', (req, res) => {
   if (!req.isAuthenticated()) {
@@ -393,39 +393,39 @@ router.get('/flagged', (req, res) => {
     return res.redirect('/');
   }
 
-  models.Image.find({ flagged: true }).then(images => {
-    res.render('image/flagged', {
-      images: images,
+  models.Track.find({ flagged: true }).then(tracks => {
+    res.render('track/flagged', {
+      tracks: tracks,
       messages: req.flash(),
       agent: req.user,
     });
 
   }).catch(err => {
     req.flash('error', err.message);
-    res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * POST /image/:domain/:agentId/:imageId/note
+ * POST /track/:domain/:agentId/:trackId/note
  */
-router.post('/:domain/:agentId/:imageId/note', (req, res) => {
+router.post('/:domain/:agentId/:trackId/note', (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'You are not logged in' });
   }
 
   const origin = url.parse(req.get('referer'));
-  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}` : '/';
+  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}` : '/';
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
-  models.Image.findOne({ path: filePath }).then(image => {
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
+  models.Track.findOne({ path: filePath }).then(track => {
 
-    image.notes.push({
+    track.notes.push({
       author: req.user,
       text: req.body.text
     });
 
-    image.save().then(result => {
+    track.save().then(result => {
       req.flash('success', 'Note posted');
       return res.redirect(returnTo);
     }).catch(err => {
@@ -439,35 +439,35 @@ router.post('/:domain/:agentId/:imageId/note', (req, res) => {
     });
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
 /**
- * DELETE /image/:domain/:agentId/:imageId/note/:noteId
+ * DELETE /track/:domain/:agentId/:trackId/note/:noteId
  */
-router.delete('/:domain/:agentId/:imageId/note/:noteId', (req, res) => {
+router.delete('/:domain/:agentId/:trackId/note/:noteId', (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'You are not logged in' });
   }
 
-  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.imageId}`;
-  models.Image.findOne({ path: filePath }).then(image => {
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
+  models.Track.findOne({ path: filePath }).then(track => {
 
-    const note = image.notes.find(n => n._id.toString() === req.params.noteId);
+    const note = track.notes.find(n => n._id.toString() === req.params.noteId);
 
-    if (req.user._id.toString() !== image.photographer.toString() &&
+    if (req.user._id.toString() !== track.recordist.toString() &&
         req.user._id.toString() !== note.author.toString() &&
         process.env.SUDO !== req.user.email) {
         return res.status(403).json({ message: 'You are not authorized to access that resource' });
     }
 
-    image.notes.id(req.params.noteId).remove();
+    track.notes.id(req.params.noteId).remove();
 
     const origin = url.parse(req.get('referer'));
-    const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/image/${req.params.domain}/${req.params.agentId}/${req.params.imageId}` : '/';
+    const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}` : '/';
 
-    image.save().then(result => {
+    track.save().then(result => {
       req.flash('success', 'Note deleted');
       return res.redirect(returnTo);
     }).catch(err => {
@@ -476,7 +476,7 @@ router.delete('/:domain/:agentId/:imageId/note/:noteId', (req, res) => {
     });
   }).catch(err => {
     req.flash('error', err.message);
-    return res.redirect(`/image/${req.params.domain}/${req.params.agentId}`);
+    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
   });
 });
 
