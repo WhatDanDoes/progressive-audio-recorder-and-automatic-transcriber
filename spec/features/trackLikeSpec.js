@@ -30,7 +30,7 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Liking an image', () => {
+describe('Liking a track', () => {
 
   let browser, agent, lanny;
 
@@ -65,9 +65,9 @@ describe('Liking an image', () => {
   });
 
   describe('unauthenticated', () => {
-    it('does not allow liking an image', done => {
+    it('does not allow liking a track', done => {
       request(app)
-        .patch(`/image/${agent.getAgentDirectory()}/image2.jpg/like`)
+        .patch(`/track/${agent.getAgentDirectory()}/track2.ogg/like`)
         .end((err, res) => {
           if (err) return done.fail(err);
           expect(res.status).toEqual(401);
@@ -84,27 +84,27 @@ describe('Liking an image', () => {
 
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-            'image1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'image3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           [`uploads/${lanny.getAgentDirectory()}`]: {
-            'lanny1.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny2.jpg': fs.readFileSync('spec/files/troll.jpg'),
-            'lanny3.jpg': fs.readFileSync('spec/files/troll.jpg'),
+            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
-          'public/images/uploads': {}
+          'public/tracks/uploads': {}
         });
 
-        const images = [
-          { path: `uploads/${agent.getAgentDirectory()}/image1.jpg`, photographer: agent._id, published: new Date() },
-          { path: `uploads/${agent.getAgentDirectory()}/image2.jpg`, photographer: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/image3.jpg`, photographer: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.jpg`, photographer: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.jpg`, photographer: lanny._id },
+        const tracks = [
+          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
+          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
         ];
-        models.Image.create(images).then(results => {
+        models.Track.create(tracks).then(results => {
 
           browser.clickLink('Login', err => {
             if (err) done.fail(err);
@@ -133,20 +133,20 @@ describe('Liking an image', () => {
       it('displays the pluralized note count', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
-        models.Image.where('published').ne(null).then(images => {
-          expect(images.length).toEqual(1);
-          expect(images[0].likes.length).toEqual(0);
+        models.Track.where('published').ne(null).then(tracks => {
+          expect(tracks.length).toEqual(1);
+          expect(tracks[0].likes.length).toEqual(0);
 
-          images[0].likes.push(lanny._id);
-          images[0].save().then(res => {
+          tracks[0].likes.push(lanny._id);
+          tracks[0].save().then(res => {
 
             browser.visit('/', err => {
               if (err) return done.fail(err);
 
               browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
-              images[0].likes.push(agent._id);
-              images[0].save().then(res => {
+              tracks[0].likes.push(agent._id);
+              tracks[0].save().then(res => {
                 browser.visit('/', err => {
                   if (err) return done.fail(err);
 
@@ -181,17 +181,17 @@ describe('Liking an image', () => {
       });
 
       it('updates the database', done => {
-        models.Image.where('published').ne(null).then(images => {
-          expect(images.length).toEqual(1);
-          expect(images[0].likes.length).toEqual(0);
+        models.Track.where('published').ne(null).then(tracks => {
+          expect(tracks.length).toEqual(1);
+          expect(tracks[0].likes.length).toEqual(0);
 
           browser.click('article.post section.feedback-controls i.like-button.fa-heart');
 
           setTimeout(() => {
-            models.Image.where('published').ne(null).then(images => {
-              expect(images.length).toEqual(1);
-              expect(images[0].likes.length).toEqual(1);
-              expect(images[0].likes[0]._id).toEqual(agent._id);
+            models.Track.where('published').ne(null).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].likes.length).toEqual(1);
+              expect(tracks[0].likes[0]._id).toEqual(agent._id);
 
               done();
             }).catch(err => {
@@ -235,12 +235,12 @@ describe('Liking an image', () => {
       });
 
       it('displays the pluralized note count', done => {
-        models.Image.where('published').ne(null).then(images => {
-          expect(images.length).toEqual(1);
-          expect(images[0].likes.length).toEqual(0);
+        models.Track.where('published').ne(null).then(tracks => {
+          expect(tracks.length).toEqual(1);
+          expect(tracks[0].likes.length).toEqual(0);
 
-          images[0].likes.push(lanny._id);
-          images[0].save().then(res => {
+          tracks[0].likes.push(lanny._id);
+          tracks[0].save().then(res => {
 
             browser.visit('/', err => {
               if (err) return done.fail(err);
@@ -285,15 +285,15 @@ describe('Liking an image', () => {
         });
 
         it('updates the database', done => {
-          models.Image.where('published').ne(null).then(images => {
-            expect(images.length).toEqual(1);
-            expect(images[0].likes.length).toEqual(1);
+          models.Track.where('published').ne(null).then(tracks => {
+            expect(tracks.length).toEqual(1);
+            expect(tracks[0].likes.length).toEqual(1);
             browser.click('article.post section.feedback-controls i.like-button.fa-heart');
 
             setTimeout(() => {
-              models.Image.where('published').ne(null).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].likes.length).toEqual(0);
+              models.Track.where('published').ne(null).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].likes.length).toEqual(0);
 
                 done();
               }).catch(err => {
@@ -342,7 +342,7 @@ describe('Liking an image', () => {
       beforeEach(done => {
         models.Agent.findOne({ _id: agent._id }).then(result => {
           agent = result;
-          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) done.fail(err);
             browser.assert.success();
             done();
@@ -355,21 +355,21 @@ describe('Liking an image', () => {
       it('displays the pluralized note count', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
-        models.Image.where('published').ne(null).then(images => {
-          expect(images.length).toEqual(1);
-          expect(images[0].likes.length).toEqual(0);
+        models.Track.where('published').ne(null).then(tracks => {
+          expect(tracks.length).toEqual(1);
+          expect(tracks[0].likes.length).toEqual(0);
 
-          images[0].likes.push(lanny._id);
-          images[0].save().then(res => {
+          tracks[0].likes.push(lanny._id);
+          tracks[0].save().then(res => {
 
-            browser.visit(`/${images[0].path.replace('uploads', 'image')}`, err => {
+            browser.visit(`/${tracks[0].path.replace('uploads', 'track')}`, err => {
               if (err) return done.fail(err);
 
               browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
-              images[0].likes.push(agent._id);
-              images[0].save().then(res => {
-                browser.visit(`/${images[0].path.replace('uploads', 'image')}`, err => {
+              tracks[0].likes.push(agent._id);
+              tracks[0].save().then(res => {
+                browser.visit(`/${tracks[0].path.replace('uploads', 'track')}`, err => {
                   if (err) return done.fail(err);
 
                   browser.assert.text('article.post section.feedback-controls i.like-button', '2 notes');
@@ -440,17 +440,17 @@ describe('Liking an image', () => {
       });
 
       it('updates the database', done => {
-        models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
-          expect(images.length).toEqual(1);
-          expect(images[0].likes.length).toEqual(0);
+        models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(tracks => {
+          expect(tracks.length).toEqual(1);
+          expect(tracks[0].likes.length).toEqual(0);
 
           browser.click('article.post section.feedback-controls i.like-button.fa-heart');
 
           setTimeout(() => {
-            models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
-              expect(images.length).toEqual(1);
-              expect(images[0].likes.length).toEqual(1);
-              expect(images[0].likes[0]._id).toEqual(agent._id);
+            models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].likes.length).toEqual(1);
+              expect(tracks[0].likes[0]._id).toEqual(agent._id);
 
               done();
             }).catch(err => {
@@ -473,7 +473,7 @@ describe('Liking an image', () => {
           browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 1);
           browser.assert.elements('article.post section.feedback-controls i.like-button.far.fa-heart', 0);
 
-          browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) return done.fail(err);
 
             browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 1);
@@ -507,15 +507,15 @@ describe('Liking an image', () => {
         });
 
         it('updates the database', done => {
-          models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
-            expect(images.length).toEqual(1);
-            expect(images[0].likes.length).toEqual(1);
+          models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(tracks => {
+            expect(tracks.length).toEqual(1);
+            expect(tracks[0].likes.length).toEqual(1);
             browser.click('article.post section.feedback-controls i.like-button.fa-heart');
 
             setTimeout(() => {
-              models.Image.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.jpg` }).then(images => {
-                expect(images.length).toEqual(1);
-                expect(images[0].likes.length).toEqual(0);
+              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].likes.length).toEqual(0);
 
                 done();
               }).catch(err => {
@@ -538,7 +538,7 @@ describe('Liking an image', () => {
             browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 0);
             browser.assert.elements('article.post section.feedback-controls i.like-button.far.fa-heart', 1);
 
-            browser.visit(`/image/${lanny.getAgentDirectory()}/lanny1.jpg`, err => {
+            browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
               if (err) return done.fail(err);
 
               browser.assert.elements('article.post section.feedback-controls i.like-button.fas.fa-heart', 0);

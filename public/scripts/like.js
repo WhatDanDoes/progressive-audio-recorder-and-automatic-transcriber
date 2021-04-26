@@ -1,5 +1,5 @@
 function like(path, el) {
-  fetch(`/image${path.replace('uploads', '')}/like`, {
+  fetch(`/track${path.replace('uploads', '')}/like`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
