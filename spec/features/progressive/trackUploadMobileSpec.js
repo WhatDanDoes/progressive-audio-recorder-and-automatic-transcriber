@@ -92,7 +92,7 @@ describe('track mobile upload', () => {
 
   describe('progressive interface', () => {
 
-    it('executes the camera.js client-side script when logged in', done => {
+    it('executes the mic.js client-side script when logged in', done => {
       /**
        * Zombie JS, being what it is, doesn't have any user media. This is how I
        * mock that functionality for testing
@@ -106,7 +106,7 @@ describe('track mobile upload', () => {
       });
 
       let executed = false;
-      let re = new RegExp('camera\.js');
+      let re = new RegExp('mic\.js');
       let browser = new Browser({ loadCss: true });
 
       browser.on('evaluated', (code, result, filename) => {
