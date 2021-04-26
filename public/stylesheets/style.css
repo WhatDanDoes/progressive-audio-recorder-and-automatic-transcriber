@@ -234,10 +234,6 @@ h3 {
 
 /**
  * albums
-.album {
-  margin-left: 1em;
-  margin-right: 1em;
-}
  */
 .stakeholder .quantity,
 .agent .permissions,
@@ -335,18 +331,7 @@ textarea {
 }
 
 /**
- * 2016-11-22
- * LGT
- * http://stackoverflow.com/questions/14942081/detect-if-a-browser-in-a-mobile-device-ios-android-phone-tablet-is-used
-@media (max-resolution: 1dppx) {
-  #datepicker {
-    pointer-events: none;
-  }
-}
- */
-
-/**
- * show images
+ * Show tracks
  */
 h2 {
   font-size: 1.25em;
@@ -354,19 +339,6 @@ h2 {
   margin-bottom: 0.5em;
   padding: 0.25em;
 }
-
-/**
- * list items
- */
-/*
-.agent,
-.image {
-  padding: 0.5em 1em 0.5em 1em;
-  border-bottom-style: solid;
-  border-width: 1px;
-  border-color: #CFD8DC;
-}
-*/
 
 .pending {
   color: #90A4AE;
@@ -384,23 +356,15 @@ h2 {
   color: #32ff32;
 }
 
-.image .album {
+.track .album {
   float: left;
-/*
-  width: 70%;
-*/
 }
 
-/*
-.image .date {
-  margin-left: 70%;
-}
-*/
 /**
- * Image controls
+ * Track controls
  */
-.image-controls form,
-#image-controls form {
+.track-controls form,
+#track-controls form {
   position: relative;
   display: inline;
 }
@@ -408,8 +372,8 @@ h2 {
 /**
  * Delete image
  */
-button[type="submit"].delete-image,
-button[type="submit"]#delete-image {
+button[type="submit"].delete-track,
+button[type="submit"]#delete-track {
   padding: 0.5em;
   background: #ff4c4c;
   font-size: 1em;
@@ -420,8 +384,8 @@ button[type="submit"]#delete-image {
 /**
  * Publish image
  */
-button[type="submit"].publish-image,
-button[type="submit"]#publish-image {
+button[type="submit"].publish-track,
+button[type="submit"]#publish-track {
   padding: 0.5em;
   background: green;
   font-size: 1em;
@@ -507,11 +471,6 @@ input[type=checkbox] + label:before { letter-spacing: 10px; } /* space between c
 /*input[type=checkbox]:checked + label:before { content: "\f046"; } /* checked icon */
 input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 /*input[type=checkbox]:checked + label:before { letter-spacing: 5px; } /* allow space for check mark */
-
-#new-agent-form input[type=submit] {
- /* margin: 1em;
-  float: right;*/
-}
 
 /**
  * Footer
