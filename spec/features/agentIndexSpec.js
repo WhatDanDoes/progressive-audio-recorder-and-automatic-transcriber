@@ -84,7 +84,7 @@ describe('agentIndexSpec', () => {
           'public/tracks/uploads': {}
         });
 
-        // BPE deep-link only shows up for mobile
+        // 2021-4-26 Is the explicit type of device relevant now that I'm interested in media inputs?
         browser.headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36'};
 
         browser.clickLink('Login', err => {
@@ -111,13 +111,6 @@ describe('agentIndexSpec', () => {
         browser.assert.url({ pathname: '/agent'});
         browser.assert.text('h2', `Hello, ${agent.email}`);
       });
-
-      //
-      // Removing augmented native app...
-      //
-//      it('displays an Android deep link with JWT', () => {
-//        browser.assert.element(`a[href="bpe://bpe?token=somejwtstring&domain=${encodeURIComponent(process.env.DOMAIN)}"]`);
-//      });
 
       it('displays an add-photo form', () => {
         browser.assert.element('.deep-link');
