@@ -13,7 +13,7 @@ module.exports = function(mock) {
     mock({
       ...mocks,
       'public/images/mic-logo.png': fs.readFileSync('public/images/mic-logo.png'),
-      'public/scripts/foobar404/wave/dist/bundle.cjs.js': fs.readFileSync('public/scripts/foobar404/wave/dist/bundle.cjs.js'),
+      'public/scripts/foobar404/wave/dist/bundle.iife.js': fs.readFileSync('public/scripts/foobar404/wave/dist/bundle.iife.js'),
       'public/scripts/mic.js': fs.readFileSync('public/scripts/mic.js'),
       'public/scripts/like.js': fs.readFileSync('public/scripts/like.js'),
       'public/scripts/upload.js': fs.readFileSync('public/scripts/upload.js'),

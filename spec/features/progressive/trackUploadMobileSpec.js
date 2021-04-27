@@ -155,7 +155,7 @@ describe('track mobile upload', () => {
 
       let executed = false;
       // See foobar404/wave dependency
-      let re = new RegExp('bundle\.cjs\.js');
+      let re = new RegExp('bundle\.iife\.js');
       let browser = new Browser({ loadCss: true });
 
       browser.on('evaluated', (code, result, filename) => {
