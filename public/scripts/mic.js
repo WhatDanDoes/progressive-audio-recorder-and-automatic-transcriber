@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         section.innerHTML = `
           <div id="mic-button">
             <img src="/images/mic-logo.png"><br>
-            Add photos
+            Record audio
           </div>
           <div id="mic">
             <div id="spinner">Streaming...</div>
@@ -35,13 +35,10 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
         const launchMicButton = document.getElementById('mic-button');
         const mic = document.getElementById('mic');
-//        const visualizer = document.getElementById('visualizer');
-//        const context = visualizer.getContext('2d');
         const listener = document.getElementById('listener');
         const stop = document.getElementById('stop');
-//        const sender = document.getElementById('sender');
-//        const spinner = document.getElementById('spinner');
-//
+        const spinner = document.getElementById('spinner');
+
 //        const cancel = document.getElementById('cancel');
 //        // Cancel the option to send the photo
 //        cancel.addEventListener('click', () => {
@@ -50,42 +47,50 @@ document.addEventListener('DOMContentLoaded', function(event) {
 //
         const send = document.getElementById('send');
         // Send the audio to the server
+        let sendWasClicked = false;
         send.addEventListener('click', () => {
 
 console.log('SENDING');
+          sendWasClicked = true;
+
           spinner.style.display = 'block';
           send.style.display = 'none';
           cancel.style.display = 'none';
 
+          if (recorder.state === 'inactive') {
 
-          let blob = new Blob(chunks, { type: 'ogg' });
-
-//          visualizer.toBlob(function(blob) {
-          const formData = new FormData();
-          formData.append('docs', blob, 'blob.ogg');
 
 //            spinner.style.display = 'block';
 //            send.style.display = 'none';
 //            cancel.style.display = 'none';
 //
-          fetch('/track', {
-            method: 'POST',
-            body: formData,
-            redirect: 'manual',
-            headers: {
-              referer: window.location
-            }
-          })
-          .then(res => {
-            hideMic();
-            // Automatically following redirect does not re-render the document
-            window.location.href = res.url;
-          });
+//          fetch('/track', {
+//            method: 'POST',
+//            body: formData,
+//            redirect: 'manual',
+//            headers: {
+//              referer: window.location
+//            }
+//          })
+//          .then(res => {
+//            hideMic();
+//            // Automatically following redirect does not re-render the document
+//            window.location.href = res.url;
+//          });
+
+          }
+
+
+
+
+          stopAllStreams();
+
+          //let blob = new Blob(chunks, { type: 'ogg' });
+          //let blob = new Blob(chunks);
+
+//          visualizer.toBlob(function(blob) {
 //          }, 'image/jpeg', 0.8);
         });
-//
-//
-//        const player = document.getElementById('player');
 
         // Initialized on app load
         let recorder, chunks, stream;
@@ -106,32 +111,6 @@ console.log('SENDING');
           stream = null;
         };
 
-//        const capture = document.getElementById('capture');
-//        // Draw the video frame to the canvas.
-//        capture.addEventListener('click', () => {
-//          showPhotoViewer();
-//          context.drawImage(player, 0, 0, visualizer.width, visualizer.height);
-//          stopAllStreams();
-//        });
-//
-//        // Reverse button is only relevant if there is more than one video input
-//        const reverseButton = document.getElementById('reverse-camera');
-//        reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
-//        reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
-//
-//        if (devices.length > 1) {
-//          reverseButton.addEventListener('click', function(evt) {
-//            stopAllStreams();
-//            mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
-//
-//            // More for testing than UX
-//            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
-//            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
-//
-//            launchMic(mediaConstraints);
-//          });
-//        }
-//
         /**
          * Hide mic
          */
@@ -141,48 +120,6 @@ console.log('SENDING');
           send.style.display = 'none';
           cancel.style.display = 'none';
         };
-
-//        /**
-//         * Show photo visualizer
-//         */
-//        function showPhotoViewer() {
-//          // Make large DOM canvas and small style canvas
-//          visualizer.width = player.videoWidth;
-//          visualizer.height = player.videoHeight;
-//
-//          mic.style.display = 'block';
-//          player.style.display = 'none';
-//          listener.style.display = 'none';
-//          capture.style.display = 'none';
-//          visualizer.style.display = 'block';
-//          sender.style.display = 'block';
-//          reverseButton.style.display = 'none';
-//        };
-//
-//        /**
-//         * 2021-3-26
-//         *
-//         * It kind of seems like the `video` element and its associated
-//         * APIs are a little picky. I'm not entirely certain on how to best
-//         * destroy an element and its streams.
-//         *
-//         * Most internet lore speaks of this:
-//         * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
-//         *
-//         * The camera behaves much better on desktop Chrome that it does in
-//         * Android.
-//         *
-//         * Found the trick! https://github.com/twilio/twilio-video-app-react/issues/355#issuecomment-780368725
-//         *
-//         * It's a long-standing bug in Chrome.
-//         */
-//        // Close mic and return to app
-//        const goBackButton = document.getElementById('go-back');
-//        goBackButton.addEventListener('click', function cb(evt) {
-//          stopAllStreams();
-//          hideMic();
-//        });
-//
 
         // Close mic, stop stream, and return to app
         cancel.addEventListener('click', function cb(evt) {
@@ -210,18 +147,84 @@ console.log('SENDING');
         function launchMic(constraints) {
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(s) {
+//console.log(s);
             stream = s;
+
+            // Audio visualization
+//            let wave = new Wave();
+//            wave.fromStream(stream, 'visualizer', {
+//              type: 'shine',
+//              colors: ['red', 'white', 'blue']
+//            });
 
             // Attach the audio stream to a recorder
             recorder = new MediaRecorder(stream);
 
-            recorder.start();
+            recorder.onstart = e => {
+              console.log('Recording started');
+            };
+
+            recorder.onstop = e => {
+              console.log('Recording stopped');
+            };
 
             recorder.ondataavailable = e => {
               console.log('Data received');
-//              chunks.push(e.data);
-//              if(recorder.state === 'inactive')  makeLink();
+              chunks.push(e.data);
+
+              if (recorder.state === 'inactive' && sendWasClicked) {
+                console.log('inactive');
+                console.log(chunks.length);
+
+                //let blob = new Blob(chunks);
+                let blob = new Blob(chunks, { type: chunks[0].type });
+                console.log(blob);
+
+                const formData = new FormData();
+                formData.append('docs', blob, 'blob.webm');
+
+                console.log(formData);
+
+                
+                fetch('/track', {
+                  method: 'POST',
+                  body: formData,
+                  redirect: 'manual',
+                  headers: {
+                    referer: window.location
+                  }
+                })
+                .then(res => {
+                  hideMic();
+                  // Automatically following redirect does not re-render the document
+                  window.location.href = res.url;
+                });
+
+              }
             };
+
+            recorder.start();
+
+
+//            navigator.mediaDevices.getUserMedia({audio:true})
+//                .then(stream => {
+//                  audioChunks = []; 
+//                  rec = new MediaRecorder(stream);
+//                  rec.ondataavailable = e => {
+//                    audioChunks.push(e.data);
+//                    if (rec.state == "inactive"){
+//                      let blob = new Blob(audioChunks,{type:'audio/x-mpeg-3'});
+//                      recordedAudio.src = URL.createObjectURL(blob);
+//                      recordedAudio.controls=true;
+//                      recordedAudio.autoplay=true;
+//                      audioDownload.href = recordedAudio.src;
+//                      audioDownload.download = 'mp3';
+//                      audioDownload.innerHTML = 'download';
+//                   }
+//                  }
+//                rec.start();  
+//                })
+//                .catch(e=>console.log(e));
 
             setInitialMicState();
 
@@ -233,6 +236,7 @@ console.log('SENDING');
         };
 
         launchMicButton.addEventListener('click', function(evt) {
+          sendWasClicked = false;
           chunks = [];
           launchMic(mediaConstraints);
         });
