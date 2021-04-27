@@ -651,7 +651,7 @@ article.note header .note-menu:hover .dropdown-content {
  * The controls were loosely adapted from:
  * https://blog.prototypr.io/make-a-camera-web-app-tutorial-part-1-ec284af8dddf
  */
-#camera {
+#mic {
   position: fixed;
   display: none;
   width: 100%;
@@ -663,25 +663,25 @@ article.note header .note-menu:hover .dropdown-content {
   z-index: 2;
 }
 
-#camera canvas#viewer {
+#mic canvas#visualizer {
   width: 100%;
   height: 100%;
   z-index: 4;
 }
 
-#camera video#player {
+#mic video#player {
   width: 100%;
   height: 100%;
   z-index: 4;
 }
 
-#camera nav {
+#mic nav {
   position: fixed;
   bottom: 3em;
   z-index: 5;
 }
 
-#camera nav button {
+#mic nav button {
   width: 5em;
   height: 5em;
   background-color: rgb(255,255,255,0.3);
@@ -695,13 +695,12 @@ article.note header .note-menu:hover .dropdown-content {
   text-align: center;
 }
 
-#camera nav button#capture,
-#camera nav button#send {
+#mic nav button#send {
   left: calc(50% - 2.5em);
 }
 
-#camera nav button#cancel,
-#camera nav button#go-back {
+#mic nav button#cancel,
+#mic nav button#go-back {
   left: calc(100% - 5em);
 }
 

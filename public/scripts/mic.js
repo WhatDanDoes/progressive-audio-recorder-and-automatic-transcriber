@@ -2,224 +2,239 @@ document.addEventListener('DOMContentLoaded', function(event) {
   const supported = 'mediaDevices' in navigator;
 
   if (supported) {
-    // Does this device have a camera?
+    // Does this device have a mic?
     navigator.mediaDevices.enumerateDevices().then(function(devices) {
 
       // If mobile, it probably has at least a front and back camera
-      devices = devices.filter(d => d.kind === 'videoinput');
+      devices = devices.filter(d => d.kind === 'audioinput');
       if (devices.length) {
 
         const mediaConstraints = {
-          audio: false,
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 4096 },
-            height: { ideal: 2160 }
-          }
+          audio: true,
         };
 
         /**
-         * Swap out basic image upload form for camera and launcher
+         * Swap out basic image upload form for mic and launcher
          */
         const section = document.querySelector('.deep-link');
-        const defaultImageForm = section.innerHTML;
+        const defaultUploadForm = section.innerHTML;
         section.innerHTML = `
-          <div id="camera-button">
+          <div id="mic-button">
             <img src="/images/mic-logo.png"><br>
             Add photos
           </div>
-          <div id="camera">
-            <div id="spinner">Sending...</div>
-            <video id="player" autoplay></video>
-            <canvas id="viewer"></canvas>
-            <nav id="shooter">
-              <button id="reverse-camera">Reverse</button>
-              <button id="capture">Capture</button>
-              <button id="go-back">Back</button>
-            </nav>
-            <nav id="sender">
+          <div id="mic">
+            <div id="spinner">Streaming...</div>
+            <canvas id="visualizer"></canvas>
+            <nav id="listener">
               <button id="send">Send</button>
               <button id="cancel">Cancel</button>
             </nav>
           </div>
         `;
 
-        const launchCameraButton = document.getElementById('camera-button');
-        const camera = document.getElementById('camera');
-        const viewer = document.getElementById('viewer');
-        const context = viewer.getContext('2d');
-        const shooter = document.getElementById('shooter');
-        const sender = document.getElementById('sender');
-        const spinner = document.getElementById('spinner');
-
-        const cancel = document.getElementById('cancel');
-        // Cancel the option to send the photo
-        cancel.addEventListener('click', () => {
-          launchCamera(mediaConstraints);
-        });
-
+        const launchMicButton = document.getElementById('mic-button');
+        const mic = document.getElementById('mic');
+//        const visualizer = document.getElementById('visualizer');
+//        const context = visualizer.getContext('2d');
+        const listener = document.getElementById('listener');
+        const stop = document.getElementById('stop');
+//        const sender = document.getElementById('sender');
+//        const spinner = document.getElementById('spinner');
+//
+//        const cancel = document.getElementById('cancel');
+//        // Cancel the option to send the photo
+//        cancel.addEventListener('click', () => {
+//          launchMic(mediaConstraints);
+//        });
+//
         const send = document.getElementById('send');
-        // Send the photo to the server
+        // Send the audio to the server
         send.addEventListener('click', () => {
-          viewer.toBlob(function(blob) {
-            const formData = new FormData();
-            formData.append('docs', blob, 'blob.jpg');
 
-            spinner.style.display = 'block';
-            send.style.display = 'none';
-            cancel.style.display = 'none';
+console.log('SENDING');
+          spinner.style.display = 'block';
+          send.style.display = 'none';
+          cancel.style.display = 'none';
 
-            fetch('/track', {
-              method: 'POST',
-              body: formData,
-              redirect: 'manual',
-              headers: {
-                referer: window.location
-              }
-            })
-            .then(res => {
-              hideCamera();
-              // Automatically following redirect does not re-render the document
-              window.location.href = res.url;
-            });
-          }, 'image/jpeg', 0.8);
+
+          let blob = new Blob(chunks, { type: 'ogg' });
+
+//          visualizer.toBlob(function(blob) {
+          const formData = new FormData();
+          formData.append('docs', blob, 'blob.ogg');
+
+//            spinner.style.display = 'block';
+//            send.style.display = 'none';
+//            cancel.style.display = 'none';
+//
+          fetch('/track', {
+            method: 'POST',
+            body: formData,
+            redirect: 'manual',
+            headers: {
+              referer: window.location
+            }
+          })
+          .then(res => {
+            hideMic();
+            // Automatically following redirect does not re-render the document
+            window.location.href = res.url;
+          });
+//          }, 'image/jpeg', 0.8);
         });
+//
+//
+//        const player = document.getElementById('player');
 
+        // Initialized on app load
+        let recorder, chunks, stream;
 
-        const player = document.getElementById('player');
         // Stop all incoming streams
         function stopAllStreams() {
-          player.srcObject.getTracks().forEach(track => {
-            player.srcObject.removeTrack(track);
+          try {
+            recorder.stop();
+          }
+          catch (e) {
+            // Just in case the stream is `inactive` or something
+            console.error(e);
+          }
+          stream.getTracks().forEach(track => {
+            stream.removeTrack(track);
             track.stop();
           });
-          player.srcObject = null;
-        }
+          stream = null;
+        };
 
-        const capture = document.getElementById('capture');
-        // Draw the video frame to the canvas.
-        capture.addEventListener('click', () => {
-          showPhotoViewer();
-          context.drawImage(player, 0, 0, viewer.width, viewer.height);
+//        const capture = document.getElementById('capture');
+//        // Draw the video frame to the canvas.
+//        capture.addEventListener('click', () => {
+//          showPhotoViewer();
+//          context.drawImage(player, 0, 0, visualizer.width, visualizer.height);
+//          stopAllStreams();
+//        });
+//
+//        // Reverse button is only relevant if there is more than one video input
+//        const reverseButton = document.getElementById('reverse-camera');
+//        reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
+//        reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
+//
+//        if (devices.length > 1) {
+//          reverseButton.addEventListener('click', function(evt) {
+//            stopAllStreams();
+//            mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
+//
+//            // More for testing than UX
+//            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
+//            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
+//
+//            launchMic(mediaConstraints);
+//          });
+//        }
+//
+        /**
+         * Hide mic
+         */
+        function hideMic() {
+          mic.style.display = 'none';
+          visualizer.style.display = 'none';
+          send.style.display = 'none';
+          cancel.style.display = 'none';
+        };
+
+//        /**
+//         * Show photo visualizer
+//         */
+//        function showPhotoViewer() {
+//          // Make large DOM canvas and small style canvas
+//          visualizer.width = player.videoWidth;
+//          visualizer.height = player.videoHeight;
+//
+//          mic.style.display = 'block';
+//          player.style.display = 'none';
+//          listener.style.display = 'none';
+//          capture.style.display = 'none';
+//          visualizer.style.display = 'block';
+//          sender.style.display = 'block';
+//          reverseButton.style.display = 'none';
+//        };
+//
+//        /**
+//         * 2021-3-26
+//         *
+//         * It kind of seems like the `video` element and its associated
+//         * APIs are a little picky. I'm not entirely certain on how to best
+//         * destroy an element and its streams.
+//         *
+//         * Most internet lore speaks of this:
+//         * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
+//         *
+//         * The camera behaves much better on desktop Chrome that it does in
+//         * Android.
+//         *
+//         * Found the trick! https://github.com/twilio/twilio-video-app-react/issues/355#issuecomment-780368725
+//         *
+//         * It's a long-standing bug in Chrome.
+//         */
+//        // Close mic and return to app
+//        const goBackButton = document.getElementById('go-back');
+//        goBackButton.addEventListener('click', function cb(evt) {
+//          stopAllStreams();
+//          hideMic();
+//        });
+//
+
+        // Close mic, stop stream, and return to app
+        cancel.addEventListener('click', function cb(evt) {
           stopAllStreams();
+          hideMic();
         });
 
-        // Reverse button is only relevant if there is more than one video input
-        const reverseButton = document.getElementById('reverse-camera');
-        reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
-        reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
-
-        if (devices.length > 1) {
-          reverseButton.addEventListener('click', function(evt) {
-            stopAllStreams();
-            mediaConstraints.video.facingMode = mediaConstraints.video.facingMode === 'environment' ? 'user': 'environment';
-
-            // More for testing than UX
-            reverseButton.setAttribute('aria-label', mediaConstraints.video.facingMode);
-            reverseButton.setAttribute('capture', mediaConstraints.video.facingMode);
-
-            launchCamera(mediaConstraints);
-          });
-        }
 
         /**
-         * Hide camera
+         * The mic interface on launch
          */
-        function hideCamera() {
-          camera.style.display = 'none';
-          player.style.display = 'none';
-          shooter.style.display = 'none';
-          capture.style.display = 'none';
-          viewer.style.display = 'none';
-          sender.style.display = 'none';
-          reverseButton.style.display = 'none';
-          spinner.style.display = 'none';
+        function setInitialMicState() {
+          mic.style.display = 'block';
+          listener.style.display = 'block';
+          visualizer.style.display = 'block';
+          send.style.display = 'block';
+          cancel.style.display = 'block';
         };
 
         /**
-         * Show photo viewer
-         */
-        function showPhotoViewer() {
-          // Make large DOM canvas and small style canvas
-          viewer.width = player.videoWidth;
-          viewer.height = player.videoHeight;
-
-          camera.style.display = 'block';
-          player.style.display = 'none';
-          shooter.style.display = 'none';
-          capture.style.display = 'none';
-          viewer.style.display = 'block';
-          sender.style.display = 'block';
-          reverseButton.style.display = 'none';
-        };
-
-        /**
-         * 2021-3-26
-         *
-         * It kind of seems like the `video` element and its associated
-         * APIs are a little picky. I'm not entirely certain on how to best
-         * destroy an element and its streams.
-         *
-         * Most internet lore speaks of this:
-         * https://stackoverflow.com/questions/3258587/how-to-properly-unload-destroy-a-video-element/40419032
-         *
-         * The camera behaves much better on desktop Chrome that it does in
-         * Android.
-         *
-         * Found the trick! https://github.com/twilio/twilio-video-app-react/issues/355#issuecomment-780368725
-         *
-         * It's a long-standing bug in Chrome.
-         */
-        // Close camera and return to app
-        const goBackButton = document.getElementById('go-back');
-        goBackButton.addEventListener('click', function cb(evt) {
-          stopAllStreams();
-          hideCamera();
-        });
-
-        /**
-         * The camera interface on launch
-         */
-        function setInitialCameraState() {
-          camera.style.display = 'block';
-          player.style.display = 'block';
-          shooter.style.display = 'block';
-          capture.style.display = 'block';
-          viewer.style.display = 'none';
-          sender.style.display = 'none';
-          spinner.style.display = 'none';
-
-          if (devices.length > 1) {
-            reverseButton.style.display = 'block';
-          }
-          else {
-            reverseButton.style.display = 'none';
-          }
-        };
-
-        /**
-         * Launch the camera
+         * Launch the mic
          *
          * @param Object - user media constraints
          */
-        function launchCamera(constraints) {
+        function launchMic(constraints) {
 
-          navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+          navigator.mediaDevices.getUserMedia(constraints).then(function(s) {
+            stream = s;
 
-            // Attach the video stream to the video element and autoplay.
-            player.srcObject = stream;
+            // Attach the audio stream to a recorder
+            recorder = new MediaRecorder(stream);
 
-            setInitialCameraState();
+            recorder.start();
+
+            recorder.ondataavailable = e => {
+              console.log('Data received');
+//              chunks.push(e.data);
+//              if(recorder.state === 'inactive')  makeLink();
+            };
+
+            setInitialMicState();
 
           }).catch(function(err) {
             console.error(err);
-            section.innerHTML = defaultImageForm;
-            camera.remove();
+            section.innerHTML = defaultUploadForm;
+            mic.remove();
           });
         };
 
-        launchCameraButton.addEventListener('click', function(evt) {
-          launchCamera(mediaConstraints);
+        launchMicButton.addEventListener('click', function(evt) {
+          chunks = [];
+          launchMic(mediaConstraints);
         });
       }
     }).catch(function(err) {
