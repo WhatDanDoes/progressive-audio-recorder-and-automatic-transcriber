@@ -18,6 +18,7 @@ module.exports = function(mock) {
       'public/scripts/upload.js': fs.readFileSync('public/scripts/upload.js'),
       'public/stylesheets/style.css': fs.readFileSync('public/stylesheets/style.css'),
       'public/stylesheets/fontawesome-free-5.9.0-web/css/all.css': fs.readFileSync('public/stylesheets/fontawesome-free-5.9.0-web/css/all.css'),
+      'public/stylesheets/foobar404/wave/dist/bundle.cjs.js': fs.readFileSync('public/stylesheets/foobar404/wave/dist/bundle.cjs.js'),
       'spec/files/bus.mjpeg': fs.readFileSync('spec/files/bus.mjpeg'),
       'spec/files/troll.jpg': fs.readFileSync('spec/files/troll.jpg'),
       'spec/files/troll.ogg': fs.readFileSync('spec/files/troll.ogg'),
