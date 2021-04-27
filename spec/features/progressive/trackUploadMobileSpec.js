@@ -133,7 +133,43 @@ describe('track mobile upload', () => {
         expect(executed).toBe(false);
 
         browser.clickLink('Login', err => {
-          if (err) done.fail(err);
+          if (err) return done.fail(err);
+          expect(executed).toBe(true);
+          done();
+        });
+      });
+    });
+
+    it('executes the wave audio visualizer client-side script when logged in', done => {
+      /**
+       * Zombie JS, being what it is, doesn't have any user media. This is how I
+       * mock that functionality for testing
+       */
+      Browser.extend(function(browser) {
+        browser.on('response', (req, res) => {
+          if (browser.window) {
+            browser.window.navigator.mediaDevices = _mediaDevices;
+          }
+        });
+      });
+
+      let executed = false;
+      // See foobar404/wave dependency
+      let re = new RegExp('bundle\.cjs\.js');
+      let browser = new Browser({ loadCss: true });
+
+      browser.on('evaluated', (code, result, filename) => {
+        if (re.test(filename)) {
+          executed = true;
+        }
+      });
+
+      browser.visit('/', err => {
+        if (err) return done.fail(err);
+        expect(executed).toBe(false);
+
+        browser.clickLink('Login', err => {
+          if (err) return done.fail(err);
           expect(executed).toBe(true);
           done();
         });
@@ -580,7 +616,7 @@ describe('track mobile upload', () => {
 
                 describe('#send button', () => {
                   // See above.
-                  fit('displays a friendly message upon successful receipt of file', async () => {
+                  it('displays a friendly message upon successful receipt of file', async () => {
 console.log("TESTING");
                     let redirected = false;
                     page.on('response', response => {
