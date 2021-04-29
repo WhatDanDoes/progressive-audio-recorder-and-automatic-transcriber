@@ -276,7 +276,6 @@ router.patch('/:domain/:agentId/:trackId/like', (req, res) => {
  * POST /track
  */
 router.post('/', upload.array('docs', 8), function(req, res, next) {
-console.log("HIT THE ENDPOINT");
     // If provided a JWT
     if (req.headers['accept'] === 'application/json') {
       return jwtAuth(req, res, next);
