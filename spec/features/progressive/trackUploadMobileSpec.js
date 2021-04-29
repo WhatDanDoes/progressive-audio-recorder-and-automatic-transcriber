@@ -554,13 +554,11 @@ describe('track mobile upload', () => {
 
                 const APP_URL = `http://localhost:${PORT}`;
                 const puppeteer = require('puppeteer');
-                // The `default` reference is temporary until `nock-puppeteer`
-                // 1.0.6 is released
-                const useNock = require('nock-puppeteer').default;
+                const useNock = require('nock-puppeteer');
                 const path = require('path');
 
                 let puppetBrowser, page;
-                beforeEach(async (done) => {
+                beforeEach(async done => {
 
                   try {
                     puppetBrowser = await puppeteer.launch({
@@ -574,6 +572,7 @@ describe('track mobile upload', () => {
                     });
                     page = await puppetBrowser.newPage();
                     page.on('console', msg => console.log('PAGE LOG:', msg.text().toString()));
+
                     useNock(page, [`https://${process.env.AUTH0_DOMAIN}`]);
 
                     stubAuth0Sessions(agent.email,`localhost:${PORT}` , async err => {
@@ -585,25 +584,30 @@ describe('track mobile upload', () => {
                       await page.click('#login-link');
                       await page.waitForSelector('#mic-button');
 
-                      // Make sure the audio is playing
-                      page.evaluate(async () => {
-                        return new Promise((resolve, reject) => {
-//                          const player = document.getElementById('player');
-//
-//                          player.onplay = async () => {
-//                            resolve();
-//                          };
-                        });
-                      }).then(async() => {
-                        await page.waitForSelector('#send');
-                        done();
-                      });
+//                      // Make sure the audio is playing
+//                      page.evaluate(async () => {
+//                        return new Promise((resolve, reject) => {
+////                          const player = document.getElementById('player');
+////
+////                          player.onplay = async () => {
+////                            resolve();
+////                          };
+//                        });
+//                      }).then(async() => {
+//                        await page.waitForSelector('#send');
+//                        done();
+//                      });
 
                       expect(await page.$('#mic-button')).toBeTruthy();
                       expect(await page.$('#tracks-form')).toBeFalsy();
 
-                      // Open the mic app
-                      await page.click('#mic-button');
+                    // Open the mic app
+                    await page.click('#mic-button');
+                    await page.waitForTimeout(500);
+
+//                      await page.click('#mic-button');
+//                      await page.waitForSelector('#send');
+                      done();
                     });
                   } catch (e) {
                     console.log(e);
@@ -615,10 +619,9 @@ describe('track mobile upload', () => {
                 });
 
                 describe('#send button', () => {
-                  // See above.
                   it('displays a friendly message upon successful receipt of file', async () => {
-console.log("TESTING");
                     let redirected = false;
+
                     page.on('response', response => {
                       const status = response.status()
                       if ((status >= 300) && (status <= 399)) {
@@ -626,124 +629,128 @@ console.log("TESTING");
                       }
                     });
 
+                    await page.waitForSelector('#send');
                     await page.click('#send');
+
                     await page.waitForSelector('.alert.alert-success');
                     expect(page.url()).toEqual(`${APP_URL}/track/${agent.getAgentDirectory()}`);
                     expect(redirected).toBe(true);
                   });
 
-//                  it('hides the mic interface', async done => {
-//                    let micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                    expect(micIsVisible).toBe(true);
-//
-//                    await page.waitForSelector('div#mic', { visible: true });
-//                    page.click('#send').then(async () => {
-//                      await page.waitForSelector('.alert.alert-success');
-//                      await page.waitForSelector('div#mic');
-//
-//                      micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                      expect(micIsVisible).toBe(false);
-//
-//                      done();
-//                    });
-//                  });
-//
-//                  // See above.
-//                  it('writes the file to the disk on agent\'s first access', done => {
-//                    fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//                      if (err) {
-//                        return done.fail(err);
-//                      }
-//                      expect(files.length).toEqual(0);
-//
-//                      page.click('#send').then(async () => {
-//                        await page.waitForSelector('.alert.alert-success');
-//                        await page.waitForSelector('div#mic');
-//
-//                        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-//                          if (err) {
-//                            return done.fail(err);
-//                          }
-//                          expect(files.length).toEqual(1);
-//                          done();
-//                        });
-//                      });
-//                    });
-//                  });
-//
-//                  // See above.
-//                  it('creates a database record', done => {
-//                    models.Track.find({}).then(tracks => {
-//                      expect(tracks.length).toEqual(0);
-//
-//                      page.click('#send').then(async () => {
-//                        await page.waitForSelector('.alert.alert-success');
-//                        await page.waitForSelector('div#mic');
-//
-//                        models.Track.find({}).then(tracks => {
-//                          expect(tracks.length).toEqual(1);
-//                          expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
-//                          done();
-//                        }).catch(err => {
-//                          done.fail(err);
-//                        });
-//                      }).catch(err => {
-//                        done.fail(err);
-//                      });
-//                    }).catch(err => {
-//                      done.fail(err);
-//                    });
-//                  });
-//
-//                  // See above.
-//                  it('lands in the right spot with an updated track list', async done => {
-//                    let posts = await page.$$('.post');
-//                    expect(posts.length).toEqual(0);
-//                    page.click('#send').then(async () => {
-//                      await page.waitForSelector('.alert.alert-success');
-//                      await page.waitForSelector('div#mic');
-//
-//                      expect(page.url()).toEqual(`${APP_URL}/track/${agent.getAgentDirectory()}`);
-//
-//                      posts = await page.$$('.post');
-//                      expect(posts.length).toEqual(1);
-//
-//                      done();
-//                    }).catch(err => {
-//                      done.fail(err);
-//                    });
-//                  });
-//
-//                  /**
-//                   * 2021-4-16
-//                   *
-//                   * Testing spinners has always proven weirdly challenging.
-//                   *
-//                   * As with other frameworks, the tests execute so quickly
-//                   * that the spinner never renders. This tests to make sure
-//                   * the spinner and mic disappear after an upload.
-//                   *
-//                   * There's a test in the zombie block for the intermediary
-//                   * spinner/sender button behaviour.
-//                   */
-//                  it('reveals and hides a progress spinner', async () => {
-//                    let micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                    expect(micIsVisible).toBe(true);
-//
-//                    let spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                    expect(spinnerIsVisible).toBe(false);
-//
-//                    await page.click('#send');
-//
-//                    await page.waitForSelector('.alert.alert-success');
-//                    await page.waitForSelector('div#mic');
-//
-//                    spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                    expect(spinnerIsVisible).toBe(false);
-//
-//                    micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
-//                    expect(micIsVisible).toBe(false);
-//                  });
+                  it('hides the mic interface', async done => {
+                    let micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                    expect(micIsVisible).toBe(true);
+
+                    await page.waitForSelector('div#mic', { visible: true });
+                    page.click('#send').then(async () => {
+                      await page.waitForSelector('.alert.alert-success');
+                      await page.waitForSelector('div#mic');
+
+                      micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                      expect(micIsVisible).toBe(false);
+
+                      done();
+                    });
+                  });
+
+                  it('writes the file to the disk on agent\'s first access', done => {
+                    fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                      if (err) {
+                        return done.fail(err);
+                      }
+                      expect(files.length).toEqual(0);
+
+                      page.click('#send').then(async () => {
+                        await page.waitForSelector('.alert.alert-success');
+                        await page.waitForSelector('div#mic');
+
+                        fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                          if (err) {
+                            return done.fail(err);
+                          }
+                          expect(files.length).toEqual(1);
+                          done();
+                        });
+                      });
+                    });
+                  });
+
+                  it('creates a database record', done => {
+                    models.Track.find({}).then(tracks => {
+                      expect(tracks.length).toEqual(0);
+
+                      page.click('#send').then(async () => {
+                        await page.waitForSelector('.alert.alert-success');
+                        await page.waitForSelector('div#mic');
+
+                        models.Track.find({}).then(tracks => {
+                          expect(tracks.length).toEqual(1);
+                          expect(tracks[0].path).toMatch(`uploads/${agent.getAgentDirectory()}/`);
+                          done();
+                        }).catch(err => {
+                          done.fail(err);
+                        });
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+
+                  it('lands in the right spot with an updated track list', async done => {
+                    let posts = await page.$$('.post');
+                    expect(posts.length).toEqual(0);
+                    page.click('#send').then(async () => {
+                      await page.waitForSelector('.alert.alert-success');
+                      await page.waitForSelector('div#mic');
+
+                      expect(page.url()).toEqual(`${APP_URL}/track/${agent.getAgentDirectory()}`);
+
+                      posts = await page.$$('.post');
+                      expect(posts.length).toEqual(1);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    });
+                  });
+
+                  /**
+                   * 2021-4-16
+                   *
+                   * Testing spinners has always proven weirdly challenging.
+                   *
+                   * As with other frameworks, the tests execute so quickly
+                   * that the spinner never renders. This tests to make sure
+                   * the spinner and mic disappear after an upload.
+                   *
+                   * There's a test in the zombie block for the intermediary
+                   * spinner/sender button behaviour.
+                   *
+                   * 2021-4-29
+                   *
+                   * Note to self: zombie fell short because it can't send
+                   * a file via fetch.
+                   */
+                  it('reveals and hides a progress spinner', async () => {
+                    let micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                    expect(micIsVisible).toBe(true);
+
+                    let spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                    expect(spinnerIsVisible).toBe(false);
+
+                    await page.click('#send');
+
+                    await page.waitForSelector('.alert.alert-success');
+                    await page.waitForSelector('div#mic');
+
+                    spinnerIsVisible = await page.$eval('#spinner', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                    expect(spinnerIsVisible).toBe(false);
+
+                    micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
+                    expect(micIsVisible).toBe(false);
+                  });
                 });
               });
             });
