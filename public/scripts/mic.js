@@ -57,39 +57,7 @@ console.log('SENDING');
           send.style.display = 'none';
           cancel.style.display = 'none';
 
-          if (recorder.state === 'inactive') {
-
-
-//            spinner.style.display = 'block';
-//            send.style.display = 'none';
-//            cancel.style.display = 'none';
-//
-//          fetch('/track', {
-//            method: 'POST',
-//            body: formData,
-//            redirect: 'manual',
-//            headers: {
-//              referer: window.location
-//            }
-//          })
-//          .then(res => {
-//            hideMic();
-//            // Automatically following redirect does not re-render the document
-//            window.location.href = res.url;
-//          });
-
-          }
-
-
-
-
           stopAllStreams();
-
-          //let blob = new Blob(chunks, { type: 'ogg' });
-          //let blob = new Blob(chunks);
-
-//          visualizer.toBlob(function(blob) {
-//          }, 'image/jpeg', 0.8);
         });
 
         // Initialized on app load
