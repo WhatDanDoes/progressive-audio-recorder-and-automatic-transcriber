@@ -172,30 +172,7 @@ console.log('SENDING');
             };
 
             recorder.start();
-
-
-//            navigator.mediaDevices.getUserMedia({audio:true})
-//                .then(stream => {
-//                  audioChunks = []; 
-//                  rec = new MediaRecorder(stream);
-//                  rec.ondataavailable = e => {
-//                    audioChunks.push(e.data);
-//                    if (rec.state == "inactive"){
-//                      let blob = new Blob(audioChunks,{type:'audio/x-mpeg-3'});
-//                      recordedAudio.src = URL.createObjectURL(blob);
-//                      recordedAudio.controls=true;
-//                      recordedAudio.autoplay=true;
-//                      audioDownload.href = recordedAudio.src;
-//                      audioDownload.download = 'mp3';
-//                      audioDownload.innerHTML = 'download';
-//                   }
-//                  }
-//                rec.start();  
-//                })
-//                .catch(e=>console.log(e));
-
             setInitialMicState();
-
           }).catch(function(err) {
             console.error(err);
             section.innerHTML = defaultUploadForm;
