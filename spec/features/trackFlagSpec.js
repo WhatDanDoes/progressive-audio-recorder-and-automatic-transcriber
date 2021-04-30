@@ -540,7 +540,7 @@ describe('Flagging a track', () => {
                   browser.visit(`/track/${lanny.getAgentDirectory()}`, (err) => {
                     if (err) return done.fail(err);
 
-                    browser.assert.elements(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 0);
+                    browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 0);
 
                     browser.visit('/track/flagged', err => {
                       if (err) return done.fail(err);
@@ -554,7 +554,7 @@ describe('Flagging a track', () => {
                           if (err) return done.fail(err);
                           browser.assert.success();
 
-                          browser.assert.element(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+                          browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
                           done();
                         });
                       });
@@ -575,14 +575,14 @@ describe('Flagging a track', () => {
 
                       browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
                         if (err) return done.fail(err);
-                        browser.assert.element(`.track img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+                        browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
                         browser.pressButton('Flag post', err => {
                           if (err) return done.fail(err);
                           browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
 
                           browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
-                          browser.assert.element(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+                          browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
                           done();
                         });
@@ -927,14 +927,15 @@ describe('Flagging a track', () => {
 
                       browser.visit(`/${track.path.replace('uploads', 'track')}`, err => {
                         if (err) return done.fail(err);
-                        browser.assert.element(`.track img[src="/${track.path}"]`);
+                        //browser.assert.element(`.track img[src="/${track.path}"]`);
+                        browser.assert.element(`.track figure audio[src="/${track.path}"]`);
 
                         browser.pressButton('Flag post', err => {
                           if (err) return done.fail(err);
                           browser.assert.url({ pathname: `/track/${track.recordist.getAgentDirectory()}` });
 
                           browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
-                          browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`);
+                          browser.assert.element(`.track figure figcaption a[href="/${track.path.replace('uploads', 'track')}"]`);
 
                           done();
                         });

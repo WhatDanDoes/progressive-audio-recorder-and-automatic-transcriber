@@ -101,12 +101,15 @@ describe('trackShowSpec', () => {
     describe('authorized', () => {
       it('allows an agent to click and view his own track', done => {
         browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
-        browser.assert.element(`.track a[href="/track/${agent.getAgentDirectory()}/track1.ogg"] img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`);
+        browser.assert.element(`.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
         browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.assert.element(`img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`);
+          browser.assert.element('article.post section.track figure figcaption a');
+          browser.assert.element('article.post section.track figure audio ');
+          browser.assert.element('article.post section.track-controls');
+
           browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
           browser.assert.element('article.post header aside div');
           browser.assert.element('article.post header aside time');
@@ -127,7 +130,7 @@ describe('trackShowSpec', () => {
         browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+          browser.assert.element(`audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
           browser.assert.elements('.delete-track-form', 0);
           done();
         });
@@ -169,7 +172,7 @@ describe('trackShowSpec', () => {
             if (err) return done.fail(err);
 
             browser.assert.elements('.alert.alert-danger', 0);
-            browser.assert.element(`img[src="/uploads/${lanny.getAgentDirectory()}/lanny2.ogg"]`);
+            browser.assert.element(`audio[src="/uploads/${lanny.getAgentDirectory()}/lanny2.ogg"]`);
             browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny2.ogg` });
             done();
           });

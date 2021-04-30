@@ -111,7 +111,8 @@ describe('trackIndexSpec', () => {
 
       it('allows an agent to view his own album', () => {
         browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
-        browser.assert.elements('article.post section.track img', 3);
+        browser.assert.elements('article.post section.track figure figcaption a', 3);
+        browser.assert.elements('article.post section.track figure audio ', 3);
         browser.assert.elements('article.post section.track-controls', 3);
       });
 
@@ -227,32 +228,33 @@ describe('trackIndexSpec', () => {
       browser.visit(`/track/${agent.getAgentDirectory()}`, (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.elements('section.track img', 30);
+        browser.assert.elements('section.track figure audio', 30);
+
         browser.assert.elements('#next-page', 2);
         browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/2`);
         browser.assert.elements('#previous-page', 0);
 
         browser.clickLink('#next-page', (err) => {
           if (err) return done.fail(err);
-          browser.assert.elements('section.track img', 30);
+          browser.assert.elements('section.track figure audio', 30);
           browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/3`);
           browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/1`);
 
           browser.clickLink('#next-page', (err) => {
             if (err) return done.fail(err);
-            browser.assert.elements('section.track img', 10);
+            browser.assert.elements('section.track figure audio', 10);
             browser.assert.elements('#next-page', 0);
             browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/2`);
 
             browser.clickLink('#prev-page', (err) => {
               if (err) return done.fail(err);
-              browser.assert.elements('section.track img', 30);
+              browser.assert.elements('section.track figure audio', 30);
               browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/3`);
               browser.assert.link('#prev-page', 'Previous', `/track/${agent.getAgentDirectory()}/page/1`);
 
               browser.clickLink('#prev-page', (err) => {
                 if (err) return done.fail(err);
-                browser.assert.elements('section.track img', 30);
+                browser.assert.elements('section.track figure audio', 30);
                 browser.assert.link('#next-page', 'Next', `/track/${agent.getAgentDirectory()}/page/2`);
                 browser.assert.elements('#previous-page', 0);
 
