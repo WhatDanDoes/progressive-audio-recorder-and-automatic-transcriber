@@ -4,7 +4,19 @@
     <article class="post">
       <% include _header %>
       <section class="track">
-        <img src="/<%= track.path %>" />
+        <figure>
+          <figcaption>
+            <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
+              <%= `/${track.path.replace('uploads', 'track')}` %>
+            </a>
+          </figcaption>
+          <audio
+            controls
+            src="<%= `/${track.path}` %>">
+              Your browser does not support the
+              <code>audio</code> element.
+          </audio>
+        </figure>
       </section>
       <% include _feedbackControls %>
       <section class="notes">
