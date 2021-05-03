@@ -663,8 +663,11 @@ article.note header .note-menu:hover .dropdown-content {
   z-index: 2;
 }
 
-#mic canvas#visualizer {
+canvas#visualizer {
   width: 100%;
+}
+
+#mic canvas#visualizer {
   height: 100%;
   z-index: 4;
 }
