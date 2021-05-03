@@ -9,9 +9,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
       devices = devices.filter(d => d.kind === 'audioinput');
       if (devices.length) {
 
-        const mediaConstraints = {
-          audio: true,
-        };
+        const wave = new Wave();
 
         /**
          * Swap out basic image upload form for mic and launcher
@@ -38,21 +36,14 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const listener = document.getElementById('listener');
         const stop = document.getElementById('stop');
         const spinner = document.getElementById('spinner');
+        const visualizer = document.getElementById('visualizer');
+        const cancel = document.getElementById('cancel');
 
-//        const cancel = document.getElementById('cancel');
-//        // Cancel the option to send the photo
-//        cancel.addEventListener('click', () => {
-//          launchMic(mediaConstraints);
-//        });
-//
         const send = document.getElementById('send');
         // Send the audio to the server
         let sendWasClicked = false;
         send.addEventListener('click', () => {
-
-console.log('SENDING');
           sendWasClicked = true;
-
           spinner.style.display = 'block';
           send.style.display = 'none';
           cancel.style.display = 'none';
@@ -65,6 +56,7 @@ console.log('SENDING');
 
         // Stop all incoming streams
         function stopAllStreams() {
+          wave.stopStream();
           try {
             recorder.stop();
           }
@@ -95,7 +87,6 @@ console.log('SENDING');
           hideMic();
         });
 
-
         /**
          * The mic interface on launch
          */
@@ -115,21 +106,16 @@ console.log('SENDING');
         function launchMic(constraints) {
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(s) {
-//console.log(s);
             stream = s;
-
-            // Audio visualization
-//            let wave = new Wave();
-//            wave.fromStream(stream, 'visualizer', {
-//              type: 'shine',
-//              colors: ['red', 'white', 'blue']
-//            });
 
             // Attach the audio stream to a recorder
             recorder = new MediaRecorder(stream);
 
             recorder.onstart = e => {
               console.log('Recording started');
+
+              // Audio visualization
+              wave.fromStream(stream, 'visualizer', { type: 'wave' });
             };
 
             recorder.onstop = e => {
@@ -149,11 +135,8 @@ console.log('SENDING');
                 console.log(blob);
 
                 const formData = new FormData();
-                formData.append('docs', blob, 'blob.webm');
+                formData.append('docs', blob);
 
-                console.log(formData);
-
-                
                 fetch('/track', {
                   method: 'POST',
                   body: formData,
@@ -183,7 +166,7 @@ console.log('SENDING');
         launchMicButton.addEventListener('click', function(evt) {
           sendWasClicked = false;
           chunks = [];
-          launchMic(mediaConstraints);
+          launchMic({ audio: true });
         });
       }
     }).catch(function(err) {
