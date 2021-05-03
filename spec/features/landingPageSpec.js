@@ -127,9 +127,9 @@ describe('landing page', () => {
         if (err) return done.fail(err);
         browser.assert.success();
 
-        browser.assert.elements('article.post section.track img', 2);
-        browser.assert.elements(`article.post section.track img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
-        browser.assert.elements(`article.post section.track img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
+        browser.assert.elements('article.post section.track audio', 2);
+        browser.assert.elements(`article.post section.track audio[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.track audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
         // No links to show pic view
         browser.assert.elements('article.post section.track a', 0);
@@ -173,32 +173,32 @@ describe('landing page', () => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.elements('section img', 30);
+          browser.assert.elements('section audio', 30);
           browser.assert.elements('#next-page', 2);
           browser.assert.link('#next-page', 'Next >', '/page/2');
           browser.assert.elements('#previous-page', 0);
 
           browser.clickLink('#next-page', (err) => {
             if (err) return done.fail(err);
-            browser.assert.elements('section img', 30);
+            browser.assert.elements('section audio', 30);
             browser.assert.link('#next-page', 'Next >', '/page/3');
             browser.assert.link('#prev-page', '< Previous', '/page/1');
 
             browser.clickLink('#next-page', (err) => {
               if (err) return done.fail(err);
-              browser.assert.elements('section img', 10);
+              browser.assert.elements('section audio', 10);
               browser.assert.elements('#next-page', 0);
               browser.assert.link('#prev-page', '< Previous', '/page/2');
 
               browser.clickLink('#prev-page', (err) => {
                 if (err) return done.fail(err);
-                browser.assert.elements('section img', 30);
+                browser.assert.elements('section audio', 30);
                 browser.assert.link('#next-page', 'Next >', '/page/3');
                 browser.assert.link('#prev-page', '< Previous', '/page/1');
 
                 browser.clickLink('#prev-page', (err) => {
                   if (err) return done.fail(err);
-                  browser.assert.elements('section img', 30);
+                  browser.assert.elements('section audio', 30);
                   browser.assert.link('#next-page', 'Next >', '/page/2');
                   browser.assert.elements('#previous-page', 0);
 
@@ -352,11 +352,12 @@ describe('landing page', () => {
         if (err) return done.fail(err);
         browser.assert.success();
 
-        browser.assert.elements('article.post section.track img', 2);
-        browser.assert.elements(`article.post section.track img[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
-        browser.assert.elements(`article.post section.track img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
+        browser.assert.elements('article.post section.track audio', 2);
+        browser.assert.elements(`article.post section.track audio[src="/uploads/${agent.getAgentDirectory()}/track1.ogg"]`, 1);
+        browser.assert.elements(`article.post section.track audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 1);
 
-        // Links to show pic view
+        // Links to show track view
+        //browser.assert.elements('article.post section.track figure figcaption a', 2);
         browser.assert.element(`article.post section.track a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
         browser.assert.element(`article.post section.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
@@ -405,32 +406,32 @@ describe('landing page', () => {
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
           browser.assert.success();
-          browser.assert.elements('section img', 30);
+          browser.assert.elements('section audio', 30);
           browser.assert.elements('#next-page', 2);
           browser.assert.link('#next-page', 'Next >', '/page/2');
           browser.assert.elements('#previous-page', 0);
 
           browser.clickLink('#next-page', (err) => {
             if (err) return done.fail(err);
-            browser.assert.elements('section img', 30);
+            browser.assert.elements('section audio', 30);
             browser.assert.link('#next-page', 'Next >', '/page/3');
             browser.assert.link('#prev-page', '< Previous', '/page/1');
 
             browser.clickLink('#next-page', (err) => {
               if (err) return done.fail(err);
-              browser.assert.elements('section img', 10);
+              browser.assert.elements('section audio', 10);
               browser.assert.elements('#next-page', 0);
               browser.assert.link('#prev-page', '< Previous', '/page/2');
 
               browser.clickLink('#prev-page', (err) => {
                 if (err) return done.fail(err);
-                browser.assert.elements('section img', 30);
+                browser.assert.elements('section audio', 30);
                 browser.assert.link('#next-page', 'Next >', '/page/3');
                 browser.assert.link('#prev-page', '< Previous', '/page/1');
 
                 browser.clickLink('#prev-page', (err) => {
                   if (err) return done.fail(err);
-                  browser.assert.elements('section img', 30);
+                  browser.assert.elements('section audio', 30);
                   browser.assert.link('#next-page', 'Next >', '/page/2');
                   browser.assert.elements('#previous-page', 0);
 

@@ -527,8 +527,9 @@ describe('Flagging a track', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.elements('section.track img', 1);
-                  browser.assert.element(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"] img[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+                  browser.assert.elements('section.track audio', 1);
+                  browser.assert.element(`.track audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+                  browser.assert.element(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
                   browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"]`);
                   browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg?_method=DELETE"]`);
                   done();
@@ -879,8 +880,9 @@ describe('Flagging a track', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.elements('section.track img', 1);
-                  browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`);
+                  browser.assert.elements('section.track audio', 1);
+                  browser.assert.element(`.track audio[src="/${track.path}"]`);
+                  browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"]`);
                   browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}/flag?_method=PATCH"][method="post"]`);
                   browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}?_method=DELETE"]`);
                   done();
@@ -906,7 +908,8 @@ describe('Flagging a track', () => {
                           if (err) return done.fail(err);
                           browser.assert.success();
 
-                          browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`);
+                          browser.assert.element(`.track audio[src="/${track.path}"]`);
+                          browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"]`);
                           done();
                         });
                       });
