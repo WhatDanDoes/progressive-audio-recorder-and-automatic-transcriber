@@ -15,6 +15,7 @@ const mkdirp = require('mkdirp');
 const isMobile = require('is-mobile');
 const url = require('url');
 const marked = require('marked');
+const mime = require('mime-types');
 
 const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
@@ -308,7 +309,7 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
     if (req.files.length > 1) {
       newFileName = `${newFileName}-${index++}`;
     }
-    newFileName = `${newFileName}.${file.path.split('.').pop()}`;
+    newFileName = `${newFileName}.${mime.extension(file.mimetype)}`;
 
     let parts = req.user.email.split('@');
     const agentDirectory = `${parts[1]}/${parts[0]}` ;

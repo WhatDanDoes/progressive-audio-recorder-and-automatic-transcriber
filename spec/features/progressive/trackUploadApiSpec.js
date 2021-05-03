@@ -120,6 +120,7 @@ describe('track upload API', () => {
             done.fail(err);
           });
         });
+
       });
 
       describe('audio stream', () => {
@@ -453,6 +454,37 @@ describe('track upload API', () => {
               expect(res.body.message).toEqual('No track provided');
               done();
             });
+        });
+
+        it('uses the blob type to determine file extension', done => {
+          fs.readdir('uploads', (err, files) => {
+            if (err) {
+              return done.fail(err);
+            }
+            expect(files.length).toEqual(0);
+
+            request(app)
+              .post('/track')
+              .set('Accept', 'application/json')
+              .field('token', token)
+              .attach('docs', 'spec/files/troll.ogg', { contentType: 'text/plain' })
+              .expect('Content-Type', /json/)
+              .expect(201)
+              .end(function(err, res) {
+                if (err) {
+                  return done.fail(err);
+                }
+
+                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(files.length).toEqual(1);
+                  expect(files[0].split('.')[1]).toEqual('txt');
+                  done();
+                });
+              });
+          });
         });
       });
 
