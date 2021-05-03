@@ -99,6 +99,24 @@ describe('trackShowSpec', () => {
     });
 
     describe('authorized', () => {
+      it('executes the wave audio visualizer client-side script', done => {
+        let executed = false;
+        // See foobar404/wave dependency
+        let re = new RegExp('bundle\.iife\.js');
+
+        browser.on('evaluated', (code, result, filename) => {
+          if (re.test(filename)) {
+            executed = true;
+          }
+        });
+
+        browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
+          if (err) return done.fail(err);
+          expect(executed).toBe(true);
+          done();
+        });
+      });
+
       it('allows an agent to click and view his own track', done => {
         browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
         browser.assert.element(`.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
@@ -106,6 +124,7 @@ describe('trackShowSpec', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
+          browser.assert.element('article.post section.track canvas#visualizer');
           browser.assert.element('article.post section.track figure figcaption a');
           browser.assert.element('article.post section.track figure audio ');
           browser.assert.element('article.post section.track-controls');

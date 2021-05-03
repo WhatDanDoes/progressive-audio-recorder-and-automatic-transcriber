@@ -54,6 +54,26 @@ describe('landing page', () => {
     });
   });
 
+  it('executes the wave audio visualizer client-side script', done => {
+    let executed = false;
+    // See foobar404/wave dependency
+    let re = new RegExp('bundle\.iife\.js');
+    let browser = new Browser({ loadCss: true });
+
+    browser.on('evaluated', (code, result, filename) => {
+      if (re.test(filename)) {
+        executed = true;
+      }
+    });
+
+    browser.visit('/', err => {
+      if (err) return done.fail(err);
+      expect(executed).toBe(true);
+
+      done();
+    });
+  });
+
   describe('unauthenticated', () => {
 
     beforeEach(done => {

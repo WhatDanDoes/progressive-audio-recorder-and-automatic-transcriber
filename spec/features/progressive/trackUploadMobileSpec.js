@@ -137,42 +137,6 @@ describe('track mobile upload', () => {
       });
     });
 
-    it('executes the wave audio visualizer client-side script when logged in', done => {
-      /**
-       * Zombie JS, being what it is, doesn't have any user media. This is how I
-       * mock that functionality for testing
-       */
-      Browser.extend(function(browser) {
-        browser.on('response', (req, res) => {
-          if (browser.window) {
-            browser.window.navigator.mediaDevices = _mediaDevices;
-          }
-        });
-      });
-
-      let executed = false;
-      // See foobar404/wave dependency
-      let re = new RegExp('bundle\.iife\.js');
-      let browser = new Browser({ loadCss: true });
-
-      browser.on('evaluated', (code, result, filename) => {
-        if (re.test(filename)) {
-          executed = true;
-        }
-      });
-
-      browser.visit('/', err => {
-        if (err) return done.fail(err);
-        expect(executed).toBe(false);
-
-        browser.clickLink('Login', err => {
-          if (err) return done.fail(err);
-          expect(executed).toBe(true);
-          done();
-        });
-      });
-    });
-
     describe('no media devices', () => {
       it('displays the basic file upload form', done => {
         let browser = new Browser();
