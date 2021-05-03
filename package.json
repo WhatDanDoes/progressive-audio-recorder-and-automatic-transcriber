@@ -36,7 +36,6 @@
     "time-stamp": "^2.2.0"
   },
   "devDependencies": {
-    "cross-blob": "^2.0.0",
     "jasmine": "^3.7.0",
     "mock-fs": "^4.13.0",
     "nock": "^13.0.11",
