@@ -12,11 +12,28 @@
           <% } %>
           <section class="track">
           <% if (agent) { %>
-            <a href="/<%= track.path.replace('uploads', 'track') %>">
-              <img src="/<%= track.path %>" />
-            </a>
+            <figure>
+              <figcaption>
+                <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
+                  <%= `/${track.path.replace('uploads', 'track')}` %>
+                </a>
+              </figcaption>
+              <audio
+                controls
+                src="<%= `/${track.path}` %>">
+                  Your browser does not support the
+                  <code>audio</code> element.
+              </audio>
+            </figure>
           <% } else { %>
-            <img src="/<%= track.path %>" />
+            <figure>
+              <audio
+                controls
+                src="<%= `/${track.path}` %>">
+                  Your browser does not support the
+                  <code>audio</code> element.
+              </audio>
+            </figure>
           <% } %>
           </section>
           <% if (agent) { %>

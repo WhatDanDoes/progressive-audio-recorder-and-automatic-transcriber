@@ -12,6 +12,7 @@
           </figcaption>
           <canvas id="visualizer"></canvas>
           <audio
+            id="audio-source"
             controls
             src="<%= `/${track.path}` %>">
               Your browser does not support the
@@ -55,5 +56,9 @@
       <% } %>
     </article>
   </main>
+  <script>
+    let wave = new Wave();
+    wave.fromElement('audio-source','visualizer', { type: 'wave' });
+  </script>
 <% include ../_partials/footer %>
 

@@ -6,9 +6,19 @@
     <% } else { %>
       <% for (let track of tracks) { %>
         <section class="track">
-          <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
-            <img src="<%= `/${track.path}` %>" />
-          </a>
+          <figure>
+            <figcaption>
+              <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
+                <%= `/${track.path.replace('uploads', 'track')}` %>
+              </a>
+            </figcaption>
+            <audio
+              controls
+              src="<%= `/${track.path}` %>">
+                Your browser does not support the
+                <code>audio</code> element.
+            </audio>
+          </figure>
         </section>
         <% include ./_controls %>
       <% } %>
