@@ -14,9 +14,6 @@ const DOMAIN = 'example.com';
 Browser.localhost(DOMAIN, PORT);
 const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
-const Blob = require('node-blob');
-
-
 describe('track mobile upload', () => {
 
   /**
