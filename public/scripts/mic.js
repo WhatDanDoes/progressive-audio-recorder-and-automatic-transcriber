@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         section.innerHTML = `
           <div id="mic-button">
             <img src="/images/mic-logo.png"><br>
-            Record audio
+            Record
           </div>
           <div id="mic">
             <div id="spinner">Streaming...</div>
