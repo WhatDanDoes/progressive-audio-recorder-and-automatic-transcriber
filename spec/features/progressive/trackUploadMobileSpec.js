@@ -244,7 +244,30 @@ describe('track mobile upload', () => {
           browser.clickLink('Login', err => {
             if (err) return done.fail(err);
             browser.assert.element('#mic-button');
-            browser.assert.elements('#tracks-form', 0);
+            done();
+          });
+        });
+      });
+
+      it('displays the default file uploader', done => {
+        /**
+         * Mock browser MediaDevices interface
+         */
+        Browser.extend(function(browser) {
+          browser.on('response', (req, res) => {
+            if (browser.window) {
+              browser.window.navigator.mediaDevices = mediaDevices;
+            }
+          });
+        });
+
+        let browser = new Browser();
+        browser.visit('/', err => {
+          if (err) return done.fail(err);
+
+          browser.clickLink('Login', err => {
+            if (err) return done.fail(err);
+            browser.assert.element('#tracks-form');
             done();
           });
         });
@@ -275,7 +298,7 @@ describe('track mobile upload', () => {
             browser.clickLink('Login', err => {
               if (err) return done.fail(err);
               browser.assert.element('#mic-button');
-              browser.assert.elements('#tracks-form', 0);
+              browser.assert.element('#tracks-form');
               done();
             });
           });
@@ -581,7 +604,7 @@ describe('track mobile upload', () => {
 //                      });
 
                       expect(await page.$('#mic-button')).toBeTruthy();
-                      expect(await page.$('#tracks-form')).toBeFalsy();
+                      expect(await page.$('#tracks-form')).toBeTruthy();
 
                       // Open the mic app
                       await page.click('#mic-button');

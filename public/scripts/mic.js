@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
         /**
          * Swap out basic image upload form for mic and launcher
          */
-        const section = document.querySelector('.deep-link');
+        const section = document.getElementById('mic-app');
         const defaultUploadForm = section.innerHTML;
         section.innerHTML = `
           <div id="mic-button">

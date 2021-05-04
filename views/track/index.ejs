@@ -1,6 +1,15 @@
 <% include ../_partials/head %>
   <% include ../_partials/messages %>
   <main>
+    <section class="deep-link">
+      <form action="/track" method="post" id="tracks-form" enctype="multipart/form-data">
+        <input id="tracks-input" type="file" accept="audio/*" name="docs" multiple>
+        <label for="tracks-input">
+          <img src="/images/file-upload.png"><br>
+          Upload audio file
+        </label>
+      </form>
+    </section>
     <% include ../_partials/appLink %>
     <% if (!tracks.length) { %>
       <h2>No tracks</h2>
@@ -30,6 +39,6 @@
       <% } %>
       <% include ./_pager %>
     <% } %>
-  </main> 
+  </main>
 <% include ../_partials/footer %>
 

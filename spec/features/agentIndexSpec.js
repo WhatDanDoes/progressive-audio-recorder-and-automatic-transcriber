@@ -113,11 +113,11 @@ describe('agentIndexSpec', () => {
       });
 
       it('displays an add-track form', () => {
-        browser.assert.element('.deep-link');
+        browser.assert.elements('.deep-link', 2);
         browser.assert.element('form[action="/track"][method="post"]');
         browser.assert.element('input[id="tracks-input"][type="file"][accept="audio/*"]');
-        browser.assert.text('label[for="tracks-input"]', 'Add track');
-        browser.assert.element('label[for="tracks-input"] img[src="/images/mic-logo.png"]');
+        browser.assert.text('label[for="tracks-input"]', 'Upload audio file');
+        browser.assert.element('label[for="tracks-input"] img[src="/images/file-upload.png"]');
       });
 
       it('shows a list of albums the agent can read', () => {
