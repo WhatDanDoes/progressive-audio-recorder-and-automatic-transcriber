@@ -589,12 +589,19 @@ article.note .note-content {
   border-radius: 3px;
 }
 
+.feedback-controls {
+  font-size: 1.5em;
+  margin-top: 3em;
+  margin-bottom: 1.5em;
+}
+
 /**
  * Accordion
  *
  * 2020-11-5
  * https://supfort.com/pure-css-accordion-without-javascript
  */
+
 .accordion input[type="checkbox"] {
   display: none;
 }
@@ -606,7 +613,7 @@ article.note .note-content {
   cursor: pointer;
   border-radius: 3px;
   transition: ease .5s;
-  float: right;
+/*  float: right;*/
 }
 
 .accordion label:hover {

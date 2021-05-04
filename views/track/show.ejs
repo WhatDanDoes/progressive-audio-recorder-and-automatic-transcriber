@@ -20,6 +20,10 @@
           </audio>
         </figure>
       </section>
+      <% if (canWrite) { %>
+        <% include _controls %>
+      <% } %>
+
       <% include _feedbackControls %>
       <section class="notes">
         <% for (let note of track.notes) { %>
@@ -51,9 +55,6 @@
           </article>
         <% } %>
       </section>
-      <% if (canWrite) { %>
-        <% include _controls %>
-      <% } %>
     </article>
   </main>
   <script>
