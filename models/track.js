@@ -56,10 +56,15 @@ module.exports = function(mongoose) {
         maxlength: [500, 'That note is too long (max 500 characters)'],
       }
     }],
+    transcription: {
+      type: Schema.Types.String,
+      default: '',
+      trim: true,
+      maxlength: [1000000, 'That note is too long (max 1000000 characters)'],
+    },
   }, {
     timestamps: true
   });
-
 
   TrackSchema.methods.toggleFlagged = function(done) {
     this.flagged = !this.flagged;

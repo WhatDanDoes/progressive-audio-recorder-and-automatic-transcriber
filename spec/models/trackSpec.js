@@ -90,12 +90,14 @@ describe('Track', () => {
       expect(track.flaggers).toEqual([]);
       expect(track.published).toEqual(null);
       expect(track.likes).toEqual([]);
+      expect(track.transcription).toEqual('');
       track.save().then(obj => {
         expect(track.flagged).toBe(false);
         expect(track.flaggers).toEqual([]);
         expect(track.published).toEqual(null);
         expect(track.likes).toEqual([]);
         expect(track.notes).toEqual([]);
+        expect(track.transcription).toEqual('');
         done();
       }).catch(error => {
         done.fail(error);
