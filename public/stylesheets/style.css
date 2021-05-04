@@ -371,6 +371,13 @@ h2 {
 /**
  * Track controls
  */
+.track-controls {
+  width: 90%;
+  margin-top: 2em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .track-controls form,
 #track-controls form {
   position: relative;
@@ -526,6 +533,7 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
  */
 
 article.post {
+  margin-top: 4em;
   margin-bottom: 2em;
 }
 
