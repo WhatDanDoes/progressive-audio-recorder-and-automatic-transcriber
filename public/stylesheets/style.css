@@ -374,7 +374,6 @@ h2 {
  */
 button[type="submit"].delete-track,
 button[type="submit"]#delete-track {
-  padding: 0.5em;
   background: #ff4c4c;
   font-size: 1em;
   width: 2.5em;
