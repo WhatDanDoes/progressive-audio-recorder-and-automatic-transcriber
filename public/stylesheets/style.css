@@ -491,7 +491,15 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 .deep-link {
   width: 100%;
   text-align: center;
+  padding: 2em;
+  color: #00B7FF;
+  cursor: pointer;
 }
+
+.deep-link form {
+  font-size: 1em;
+}
+
 .deep-link img {
   width: 30%;
   border-radius: 1em;
