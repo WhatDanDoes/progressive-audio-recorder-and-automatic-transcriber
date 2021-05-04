@@ -268,6 +268,7 @@ button[type="submit"] {
   border: 1px solid #4f83cc;
   border-radius: 25px;
   background-color: #4f83cc;
+  cursor: pointer;
 }
 
 .form-group {
@@ -371,6 +372,7 @@ h2 {
 /**
  * Track controls
  */
+/*.post-controls,*/
 .track-controls {
   width: 90%;
   margin-top: 2em;
@@ -378,6 +380,7 @@ h2 {
   margin-right: auto;
 }
 
+/*.post-controls,*/
 .track-controls form,
 #track-controls form {
   position: relative;
@@ -406,6 +409,18 @@ button[type="submit"]#publish-track {
   border: 1px solid green;
   float: right;
 }
+
+/**
+ * Post note
+ */
+button[type="submit"].post-note,
+button[type="submit"]#post-note {
+  font-size: 0.5em;
+  width: 2.5em;
+  float: right;
+}
+
+
 
 /**
  * Tool tips
@@ -541,6 +556,7 @@ article.post header .post-menu {
   position: relative;
   display: inline-block;
   float: right;
+  cursor: pointer;
 }
 
 article.post header .post-menu .dropdown-content {
@@ -603,6 +619,10 @@ article.note .note-content {
   margin-bottom: 1.5em;
 }
 
+.like-button {
+  cursor: pointer;
+}
+
 /**
  * Accordion
  *
@@ -658,6 +678,7 @@ article.note header .note-menu {
   position: relative;
   display: inline-block;
   float: right;
+  cursor: pointer;
 }
 
 article.note header .note-menu .dropdown-content {

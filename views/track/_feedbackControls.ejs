@@ -15,9 +15,11 @@
                   <span class="content">
                     <form action="<%= `/${track.path.replace('uploads', 'track')}/note` %>" method="post" class="post-note-form" id="<%= track._id %>-note">
                       <textarea name="text" form="<%= track._id %>-note" maxlength=500></textarea>
-                      <button class="post-note" type="submit">
-                        Post
-                      </button>
+                      <div class="post-controls">
+                        <button class="post-note" type="submit" aria-label="Post">
+                          <i class="fas fa-paper-plane"></i>
+                        </button>
+                      </div>
                     </form>
                   </span>
                 </span>

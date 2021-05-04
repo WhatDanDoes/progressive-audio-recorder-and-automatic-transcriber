@@ -204,7 +204,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.fill('textarea', 'Groovy, baby! Yeah!');
-                browser.pressButton('Post', err => {
+                browser.pressButton('.post-note[aria-label="Post"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
