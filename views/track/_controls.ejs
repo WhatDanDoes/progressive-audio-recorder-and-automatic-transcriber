@@ -1,6 +1,8 @@
       <section class="track-controls">
         <form action="<%= `/${track.path.replace('uploads', 'track')}?_method=DELETE` %>" method="post" class="delete-track-form">
-          <button class="delete-track" type="submit">Delete</button>
+          <button class="delete-track" type="submit" aria-label="Delete">
+            <i class="fas fa-trash-alt"></i>
+          </button>
         </form>
         <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
             <% if (track.flagged) { %>
@@ -11,7 +13,7 @@
               </form>
             <% } else { %>
               <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-track-form">
-                <button class="publish-track" type="submit">
+                <button class="publish-track" type="submit" aria-Label="<%= track.published ? 'Unpublish' : 'Publish' %>">
                   <%= track.published ? 'Unpublish' : 'Publish' %>
                 </button>
               </form>

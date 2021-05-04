@@ -145,7 +145,7 @@ describe('Deleting an track', () => {
           });
 
           it('redirects to the origin album if the delete is successful', function(done) {
-            browser.pressButton('Delete', function(err) {
+            browser.pressButton('button[aria-label="Delete"]', function(err) {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -161,7 +161,7 @@ describe('Deleting an track', () => {
               expect(files.length).toEqual(3);
               expect(files.includes('track1.ogg')).toBe(true);
 
-              browser.pressButton('Delete', function(err) {
+              browser.pressButton('button[aria-label="Delete"]', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -180,7 +180,7 @@ describe('Deleting an track', () => {
             models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg` }).then(tracks => {
               expect(tracks.length).toEqual(1);
 
-              browser.pressButton('Delete', function(err) {
+              browser.pressButton('button[aria-label="Delete"]', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -401,7 +401,7 @@ describe('Deleting an track', () => {
                   models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                     expect(tracks.length).toEqual(1);
 
-                    browser.pressButton('Delete', err => {
+                    browser.pressButton('button[aria-label="Delete"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
@@ -493,7 +493,7 @@ describe('Deleting an track', () => {
           });
 
           it('redirects to the origin album if the delete is successful', done => {
-            browser.pressButton('Delete', err => {
+            browser.pressButton('button[aria-label="Delete"]', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -515,7 +515,7 @@ describe('Deleting an track', () => {
                 expect(files.length).toEqual(3);
                 expect(files.includes(filename)).toBe(true);
 
-                browser.pressButton('Delete', err => {
+                browser.pressButton('button[aria-label="Delete"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -628,7 +628,7 @@ describe('Deleting an track', () => {
                   models.Track.find({ recordist: lanny._id, published: null }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
                     expect(mostRecentTrack.length).toEqual(1);
 
-                    browser.pressButton('Delete', err => {
+                    browser.pressButton('button[aria-label="Delete"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 

@@ -370,14 +370,14 @@ h2 {
 }
 
 /**
- * Delete image
+ * Delete track
  */
 button[type="submit"].delete-track,
 button[type="submit"]#delete-track {
   padding: 0.5em;
   background: #ff4c4c;
   font-size: 1em;
-  width: 30%;
+  width: 2.5em;
   border: 1px solid #ff1919;
 }
 
