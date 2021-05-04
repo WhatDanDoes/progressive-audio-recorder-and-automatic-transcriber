@@ -144,7 +144,7 @@ describe('Publishing a track', () => {
           });
 
           it('redirects to referring page if the publish is successful', done => {
-            browser.pressButton('Publish', err => {
+            browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -160,7 +160,7 @@ describe('Publishing a track', () => {
               expect(files.length).toEqual(3);
               expect(files.includes('track1.ogg')).toBe(true);
 
-              browser.pressButton('Publish', function(err) {
+              browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -181,7 +181,7 @@ describe('Publishing a track', () => {
               expect(files.length).toEqual(3);
               expect(files.includes('track1.ogg')).toBe(true);
 
-              browser.pressButton('Publish', function(err) {
+              browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -204,7 +204,7 @@ describe('Publishing a track', () => {
                 expect(tracks.length).toEqual(1);
                 expect(tracks[0].published).toEqual(null);
 
-                browser.pressButton('Publish', err => {
+                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -233,7 +233,7 @@ describe('Publishing a track', () => {
 
           describe('unpublishing', () => {
             beforeEach(done => {
-              browser.pressButton('Publish', err => {
+              browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
                 done();
@@ -245,14 +245,14 @@ describe('Publishing a track', () => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                browser.assert.text(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"] button.publish-track`, 'Unpublish');
+                browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"] button.publish-track[aria-label="Unpublish"]`);
                 done();
               });
             });
 
             it('shows an unpublish button on the track\'s show view', () => {
               browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
-              browser.assert.text('.publish-track-form button.publish-track', 'Unpublish');
+              browser.assert.element('.publish-track-form button.publish-track[aria-label="Unpublish"]');
             });
 
             it('sets the track\'s published property to null in the database', done => {
@@ -262,7 +262,7 @@ describe('Publishing a track', () => {
                 expect(tracks.length).toEqual(1);
                 expect(tracks[0].published).not.toEqual(null);
 
-                browser.pressButton('Unpublish', err => {
+                browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -285,7 +285,7 @@ describe('Publishing a track', () => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
-                browser.pressButton('Unpublish', err => {
+                browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -580,7 +580,7 @@ describe('Publishing a track', () => {
 
               it('redirects to the referer page', done => {
                 browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                browser.pressButton('Publish', err => {
+                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -597,7 +597,7 @@ describe('Publishing a track', () => {
                     expect(tracks.length).toEqual(1);
                     expect(tracks[0].published).toEqual(null);
 
-                    browser.pressButton('Publish', err => {
+                    browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
@@ -700,7 +700,7 @@ describe('Publishing a track', () => {
             // 2020-10-2 https://stackoverflow.com/a/40264336/1356582
             //
 
-            browser.pressButton('Publish', err => {
+            browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -723,7 +723,7 @@ describe('Publishing a track', () => {
                 expect(files.includes(filename)).toBe(true);
 
                 // Cf., Publish notes above
-                browser.pressButton('Publish', err => {
+                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -754,7 +754,7 @@ describe('Publishing a track', () => {
                 expect(files.includes(filename)).toBe(true);
 
                 // Cf., Publish notes above
-                browser.pressButton('Publish', function(err) {
+                browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -786,7 +786,7 @@ describe('Publishing a track', () => {
                   expect(tracks.length).toEqual(1);
                   expect(tracks[0].published).toEqual(null);
 
-                  browser.pressButton('Publish', err => {
+                  browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
@@ -960,7 +960,7 @@ describe('Publishing a track', () => {
                       expect(tracks.length).toEqual(1);
                       expect(tracks[0].published).toEqual(null);
 
-                      browser.pressButton('Publish', err => {
+                      browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                         if (err) return done.fail(err);
                         browser.assert.success();
 
@@ -995,7 +995,7 @@ describe('Publishing a track', () => {
                 beforeEach(done => {
                   models.Track.find({ recordist: lanny._id }).sort({updatedAt: 'desc'}).then(tracks => {
                     track = tracks[0];
-                    browser.pressButton('Publish', err => {
+                    browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
                       done();
@@ -1005,7 +1005,7 @@ describe('Publishing a track', () => {
 
                 it('shows an unpublish button on the agent\'s audio roll', () => {
                   browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  browser.assert.text(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track`, 'Unpublish');
+                  browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track[aria-label="Unpublish"]`);
                 });
 
                 it('shows an unpublish button on the track\'s show view', done => {
@@ -1013,7 +1013,7 @@ describe('Publishing a track', () => {
                   browser.clickLink(`a[href="/${track.path.replace('uploads', 'track')}"]`, err => {
                     if (err) return done.fail(err);
                     browser.assert.success();
-                    browser.assert.text('.publish-track-form button.publish-track', 'Unpublish');
+                    browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track[aria-label="Unpublish"]`);
                     done();
                   });
                 });
@@ -1023,7 +1023,7 @@ describe('Publishing a track', () => {
                     expect(tracks.length).toEqual(1);
                     expect(tracks[0].published).not.toEqual(null);
 
-                    browser.pressButton('Unpublish', err => {
+                    browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 
@@ -1046,7 +1046,7 @@ describe('Publishing a track', () => {
                     if (err) return done.fail(err);
                     browser.assert.success();
 
-                    browser.pressButton('Unpublish', err => {
+                    browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
                       if (err) return done.fail(err);
                       browser.assert.success();
 

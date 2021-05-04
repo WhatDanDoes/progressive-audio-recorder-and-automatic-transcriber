@@ -14,7 +14,11 @@
             <% } else { %>
               <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-track-form">
                 <button class="publish-track" type="submit" aria-Label="<%= track.published ? 'Unpublish' : 'Publish' %>">
-                  <%= track.published ? 'Unpublish' : 'Publish' %>
+                  <% if (track.published) { %>
+                    <i class="far fa-eye">
+                  <% } else { %>
+                    <i class="far fa-eye-slash"></i>
+                  <% } %>
                 </button>
               </form>
             <% } %>

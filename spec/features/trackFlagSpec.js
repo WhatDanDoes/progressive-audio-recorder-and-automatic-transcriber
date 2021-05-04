@@ -200,7 +200,7 @@ describe('Flagging a track', () => {
             browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
               if (err) return done.fail(err);
               browser.assert.element(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`)
-              browser.assert.text(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"] button.publish-track`, 'Publish');
+              browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"] button.publish-track[aria-label="Publish"]`);
 
               browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
                 if (err) return done.fail(err);
@@ -209,7 +209,7 @@ describe('Flagging a track', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.elements(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg/flag?_method=PATCH"][method="post"] button.publish-track`, 'Deflag');
+                  browser.assert.text(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg/flag?_method=PATCH"][method="post"] button.publish-track`, 'Deflag');
                   done();
                 });
               });

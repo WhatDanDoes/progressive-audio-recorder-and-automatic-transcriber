@@ -356,6 +356,14 @@ h2 {
   color: #32ff32;
 }
 
+.track {
+  text-align: center;
+}
+
+.track figcaption {
+  text-align: left;
+}
+
 .track .album {
   float: left;
 }
@@ -385,10 +393,9 @@ button[type="submit"]#delete-track {
  */
 button[type="submit"].publish-track,
 button[type="submit"]#publish-track {
-  padding: 0.5em;
   background: green;
   font-size: 1em;
-  width: 30%;
+  width: 2.5em;
   border: 1px solid green;
   float: right;
 }
