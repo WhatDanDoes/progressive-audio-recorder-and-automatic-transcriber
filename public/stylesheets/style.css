@@ -491,7 +491,8 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 .deep-link {
   width: 100%;
   text-align: center;
-  padding: 2em;
+  padding-top: 2em;
+  padding-bottom: 2em;
   color: #00B7FF;
   cursor: pointer;
 }
