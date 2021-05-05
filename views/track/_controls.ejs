@@ -7,8 +7,8 @@
         <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
             <% if (track.flagged) { %>
               <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-track-form">
-                <button class="publish-track" type="submit">
-                  Deflag
+                <button class="publish-track" type="submit" aria-label="Deflag">
+                  <i class="far fa-flag"></i>
                 </button>
               </form>
             <% } else { %>

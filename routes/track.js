@@ -203,9 +203,17 @@ router.post('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
 /**
  * PATCH /track/:domain/:agentId/:trackId/flag
  */
-router.patch('/:domain/:agentId/:trackId/flag', ensureAuthorized, (req, res) => {
-  const origin = url.parse(req.get('referer'));
-  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}` : '/';
+router.patch('/:domain/:agentId/:trackId/flag', (req, res) => {
+  if (!req.isAuthenticated()) {
+    req.flash('error', 'You need to login first');
+    return res.redirect('/');
+  }
+
+  let returnTo = '/';
+  if (req.get('referer')) {
+    const origin = url.parse(req.get('referer'));
+    returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}` : '/';
+  }
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
 
@@ -226,15 +234,30 @@ router.patch('/:domain/:agentId/:trackId/flag', ensureAuthorized, (req, res) => 
       res.redirect(returnTo);
     }
     else {
-      track.flag(req.user, (err, track) => {
+      req.user.getReadables((err, readables) => {
         if (err) {
           req.flash('error', err.message);
-        }
-        else {
-          req.flash('success', 'Track flagged');
+          return res.redirect(returnTo);
         }
 
-        res.redirect(returnTo);
+        const canRead = readables.includes(`${req.params.domain}/${req.params.agentId}`);
+
+        if (track.published || canRead) {
+          track.flag(req.user, (err, track) => {
+            if (err) {
+              req.flash('error', err.message);
+            }
+            else {
+              req.flash('success', 'Track flagged');
+            }
+
+            res.redirect(returnTo);
+          });
+        }
+        else {
+          req.flash('error', 'You are not authorized to access that resource');
+          return res.redirect('/');
+        }
       });
     }
   }).catch(err => {
@@ -455,8 +478,11 @@ router.post('/:domain/:agentId/:trackId/note', (req, res) => {
     return res.status(401).json({ message: 'You are not logged in' });
   }
 
-  const origin = url.parse(req.get('referer'));
-  const returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}` : '/';
+  let returnTo = '/';
+  if (req.get('referer')) {
+    const origin = url.parse(req.get('referer'));
+    returnTo = RegExp(req.params.domain).test(origin.pathname) ? `/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}` : '/';
+  }
 
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
   models.Track.findOne({ path: filePath }).then(track => {
