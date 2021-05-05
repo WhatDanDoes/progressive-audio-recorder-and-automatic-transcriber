@@ -68,21 +68,21 @@ module.exports = function(mongoose) {
 
   TrackSchema.methods.toggleFlagged = function(done) {
     this.flagged = !this.flagged;
-    this.save((err, image) => {
+    this.save((err, track) => {
       if (err) {
         return done(err);
       }
-      done(null, image);
+      done(null, track);
     });
   };
 
   TrackSchema.methods.togglePublished = function(done) {
     this.published = this.published ? null : new Date();
-    this.save((err, image) => {
+    this.save((err, track) => {
       if (err) {
         return done(err);
       }
-      done(null, image);
+      done(null, track);
     });
   };
 
@@ -99,11 +99,11 @@ module.exports = function(mongoose) {
       this.likes.push(agentId);
     }
 
-    this.save((err, image) => {
+    this.save((err, track) => {
       if (err) {
         return done(err);
       }
-      done(null, image);
+      done(null, track);
     });
   };
 
@@ -122,11 +122,11 @@ module.exports = function(mongoose) {
 
     this.flagged = this.flaggers.length > 0;
 
-    this.save((err, image) => {
+    this.save((err, track) => {
       if (err) {
         return done(err);
       }
-      done(null, image);
+      done(null, track);
     });
   };
 
