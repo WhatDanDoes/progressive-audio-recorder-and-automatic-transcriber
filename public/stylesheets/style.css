@@ -564,7 +564,6 @@ article.post {
 article.post header .post-menu {
   position: relative;
   display: inline-block;
-  float: right;
   cursor: pointer;
 }
 
