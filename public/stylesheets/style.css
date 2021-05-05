@@ -420,7 +420,14 @@ button[type="submit"]#post-note {
   float: right;
 }
 
-
+/**
+ * Flag track
+ */
+button[type="submit"].flag-track,
+button[type="submit"]#flag-track {
+  font-size: 0.5em;
+  width: 2.5em;
+}
 
 /**
  * Tool tips
@@ -563,7 +570,6 @@ article.post header .post-menu .dropdown-content {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   padding: 12px 16px;
   z-index: 1;

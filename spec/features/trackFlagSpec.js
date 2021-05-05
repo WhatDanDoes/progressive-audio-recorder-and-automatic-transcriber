@@ -155,7 +155,7 @@ describe('Flagging a track', () => {
           });
 
           it('redirects to the referer if the flag is successful', done => {
-            browser.pressButton('Flag post', err => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
               if (err) return done.fail(err);
 
               browser.assert.success();
@@ -171,7 +171,7 @@ describe('Flagging a track', () => {
               expect(tracks[0].flagged).toBe(false);
               expect(tracks[0].flaggers).toEqual([]);
 
-              browser.pressButton('Flag post', err => {
+              browser.pressButton('button[aria-label="Flag"]', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -205,7 +205,7 @@ describe('Flagging a track', () => {
               browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
                 if (err) return done.fail(err);
 
-                browser.pressButton('Flag post', err => {
+                browser.pressButton('button[aria-label="Flag"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -217,7 +217,7 @@ describe('Flagging a track', () => {
           });
 
           it('redirects to the referer if the track is flagged', done => {
-            browser.pressButton('Flag post', err => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
               if (err) return done.fail(err);
               browser.assert.success();
 
@@ -251,7 +251,7 @@ describe('Flagging a track', () => {
               expect(tracks[0].flagged).toBe(false);
               expect(tracks[0].flaggers).toEqual([]);
 
-              browser.pressButton('Flag post', err => {
+              browser.pressButton('button[aria-label="Flag"]', err => {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
@@ -278,7 +278,7 @@ describe('Flagging a track', () => {
               browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
                 if (err) return done.fail(err);
 
-                browser.pressButton('Flag post', err => {
+                browser.pressButton('button[aria-label="Flag"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -290,7 +290,7 @@ describe('Flagging a track', () => {
           });
 
           it('redirects to the referer if the track is flagged', done => {
-            browser.pressButton('Flag post', err => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
               if (err) return done.fail(err);
               browser.assert.success();
 
@@ -379,7 +379,7 @@ describe('Flagging a track', () => {
               browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
                 if (err) return done.fail(err);
 
-                browser.pressButton('Flag post', err => {
+                browser.pressButton('button[aria-label="Flag"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -578,7 +578,7 @@ describe('Flagging a track', () => {
                         if (err) return done.fail(err);
                         browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
-                        browser.pressButton('Flag post', err => {
+                        browser.pressButton('button[aria-label="Flag"]', err => {
                           if (err) return done.fail(err);
                           browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
 
@@ -687,7 +687,7 @@ describe('Flagging a track', () => {
           // 2020-10-2 https://stackoverflow.com/a/40264336/1356582
           //
 
-          browser.pressButton('Flag post', err => {
+          browser.pressButton('button[aria-label="Flag"]', err => {
             if (err) return done.fail(err);
             browser.assert.success();
             browser.assert.text('.alert.alert-success', 'Track flagged');
@@ -702,7 +702,7 @@ describe('Flagging a track', () => {
             expect(tracks[0].flagged).toBe(false);
             expect(tracks[0].flaggers).toEqual([]);
 
-            browser.pressButton('Flag post', err => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
               if (err) return done.fail(err);
               browser.assert.success();
 
@@ -727,7 +727,7 @@ describe('Flagging a track', () => {
 
             browser.assert.url('/');
             browser.assert.element(`a[href="/${tracks[0].path.replace('uploads', 'track')}"]`)
-            browser.pressButton('Flag post', err => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
               if (err) return done.fail(err);
               browser.assert.success();
 
@@ -751,7 +751,7 @@ describe('Flagging a track', () => {
               browser.visit('/', err => {
                 if (err) return done.fail(err);
 
-                browser.pressButton('Flag post', err => {
+                browser.pressButton('button[aria-label="Flag"]', err => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
@@ -933,7 +933,7 @@ describe('Flagging a track', () => {
                         //browser.assert.element(`.track img[src="/${track.path}"]`);
                         browser.assert.element(`.track figure audio[src="/${track.path}"]`);
 
-                        browser.pressButton('Flag post', err => {
+                        browser.pressButton('button[aria-label="Flag"]', err => {
                           if (err) return done.fail(err);
                           browser.assert.url({ pathname: `/track/${track.recordist.getAgentDirectory()}` });
 

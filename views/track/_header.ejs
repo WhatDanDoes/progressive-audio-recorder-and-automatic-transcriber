@@ -8,7 +8,9 @@
     <i class="fas fa-ellipsis-h"></i>
     <div class="dropdown-content">
       <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="flag-track-form">
-        <button class="flag-track" type="submit">Flag post</button>
+        <button class="flag-track" type="submit" aria-label="Flag">
+          <i class="fas fa-flag"></i>
+        </button>
       </form>
     </div>
   </span>
