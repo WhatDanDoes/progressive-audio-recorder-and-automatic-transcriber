@@ -641,10 +641,11 @@ describe('track mobile upload', () => {
                   });
 
                   it('hides the mic interface', async done => {
+                    await page.waitForSelector('div#mic', { visible: true });
+
                     let micIsVisible = await page.$eval('div#mic', e => window.getComputedStyle(e).getPropertyValue('display') !== 'none');
                     expect(micIsVisible).toBe(true);
 
-                    await page.waitForSelector('div#mic', { visible: true });
                     page.click('#send').then(async () => {
                       await page.waitForSelector('.alert.alert-success');
                       await page.waitForSelector('div#mic');
