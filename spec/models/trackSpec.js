@@ -214,7 +214,7 @@ describe('Track', () => {
         });
       });
 
-      it('adds agent to list of agents who flagged this track', done => {
+      it('adds agent to list of agents who flagged this track idempotently', done => {
         expect(track.flagged).toBe(false);
         expect(track.flaggers.length).toEqual(0);
         // flag
@@ -223,38 +223,39 @@ describe('Track', () => {
           expect(track.flagged).toBe(true);
           expect(track.flaggers.length).toEqual(1);
           expect(track.flaggers[0]).toEqual(agent._id);
-          // unflag
+          // flag again
           track.flag(agent, (err, track) => {
             if (err) return done.fail(err);
-            expect(track.flagged).toBe(false);
-            expect(track.flaggers.length).toEqual(0);
+            expect(track.flagged).toBe(true);
+            expect(track.flaggers.length).toEqual(1);
+            expect(track.flaggers[0]).toEqual(agent._id);
 
             done();
           });
         });
       });
 
-      it('adds agent to list of agents who flagged this track if passed an agent _id', done => {
+      it('adds agent to list of agents who flagged this track idempotently if passed an agent _id', done => {
         expect(track.flagged).toBe(false);
         expect(track.flaggers.length).toEqual(0);
-        // like
+        // flag
         track.flag(agent._id, (err, track) => {
           if (err) return done.fail(err);
           expect(track.flagged).toBe(true);
           expect(track.flaggers.length).toEqual(1);
           expect(track.flaggers[0]).toEqual(agent._id);
-          // unlike
+          // flag again
           track.flag(agent._id, (err, track) => {
             if (err) return done.fail(err);
-            expect(track.flagged).toBe(false);
-            expect(track.flaggers.length).toEqual(0);
+            expect(track.flagged).toBe(true);
+            expect(track.flaggers.length).toEqual(1);
+            expect(track.flaggers[0]).toEqual(agent._id);
 
             done();
           });
         });
       });
     });
-
 
     /**
      * #togglePublished

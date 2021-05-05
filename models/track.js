@@ -113,12 +113,10 @@ module.exports = function(mongoose) {
     }
 
     const flagIndex = this.flaggers.indexOf(agentId);
-    if (flagIndex > -1 ) {
+    if (flagIndex > -1) {
       this.flaggers.splice(agentId, 1);
     }
-    else {
-      this.flaggers.push(agentId);
-    }
+    this.flaggers.push(agentId);
 
     this.flagged = this.flaggers.length > 0;
 

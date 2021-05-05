@@ -229,7 +229,7 @@ router.patch('/:domain/:agentId/:trackId/flag', (req, res) => {
         res.redirect(returnTo);
       });
     }
-    else if (track.flaggers.indexOf(req.user._id.toString()) > -1) {
+    else if (track.flaggers.indexOf(req.user._id.toString()) > -1 && req.user.email !== process.env.SUDO) {
       req.flash('error', 'This post has administrative approval');
       res.redirect(returnTo);
     }

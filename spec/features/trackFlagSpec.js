@@ -35,6 +35,9 @@ describe('Flagging a track', () => {
   let browser, agent, lanny;
 
   beforeEach(done => {
+    // In case sudo is set in .env
+    delete process.env.SUDO;
+
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
     fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
@@ -650,6 +653,40 @@ describe('Flagging a track', () => {
                           browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
 
                           done();
+                        });
+                      });
+                    });
+                  });
+                });
+
+                it('does allow sudo to flag again', done => {
+                  browser.visit('/track/flagged', err => {
+                    if (err) return done.fail(err);
+                    browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
+
+                    browser.pressButton('button[aria-label="Deflag"]', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+                        if (err) return done.fail(err);
+                        browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+
+                        browser.pressButton('button[aria-label="Flag"]', err => {
+                          if (err) return done.fail(err);
+                          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
+
+                          browser.assert.text('.alert.alert-success', 'Track flagged');
+                          browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 0);
+
+                          browser.visit('/track/flagged', err => {
+                            if (err) return done.fail(err);
+                            browser.assert.success();
+
+                            browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
+
+                            done();
+                          });
                         });
                       });
                     });
