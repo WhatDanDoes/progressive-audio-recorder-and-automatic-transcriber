@@ -117,41 +117,62 @@ describe('trackShowSpec', () => {
         });
       });
 
-      it('allows an agent to click and view his own track', done => {
-        browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
-        browser.assert.element(`.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
-        browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
+      describe('owner', () => {
+        it('can click and view his own track', done => {
+          browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}`});
+          browser.assert.element(`.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
 
-          browser.assert.element('article.post section.track figure figcaption a');
-          browser.assert.element('article.post section.track canvas#visualizer');
-          browser.assert.element('article.post section.track figure audio ');
-          browser.assert.element('article.post section.track-controls');
+            browser.assert.element('article.post section.track figure figcaption h2');
+            browser.assert.element('article.post section.track figure figcaption a');
+            browser.assert.element('article.post section.track canvas#visualizer');
+            browser.assert.element('article.post section.track figure audio ');
+            browser.assert.element('article.post section.track-controls');
 
-          browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
-          browser.assert.element('article.post header aside div');
-          browser.assert.element('article.post header aside time');
-          browser.assert.element('article.post header span.post-menu');
-          browser.assert.element('article.post section.feedback-controls');
-          browser.assert.element('article.post section.feedback-controls i.like-button');
-          browser.assert.element('.delete-track-form');
-          browser.assert.element('.publish-track-form');
+            browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+            browser.assert.element('article.post header aside div');
+            browser.assert.element('article.post header aside time');
+            browser.assert.element('article.post header span.post-menu');
+            browser.assert.element('article.post section.feedback-controls');
+            browser.assert.element('article.post section.feedback-controls i.like-button');
+            browser.assert.element('.delete-track-form');
+            browser.assert.element('.publish-track-form');
 
-          done();
+            done();
+          });
+        });
+
+        it('receives an editable track name field', done => {
+          done.fail();
+        });
+
+        it('receives an editable transcription field', done => {
+          done.fail();
         });
       });
 
-      it('allows an agent to view a track to which he has permission to read', done => {
-        expect(agent.canRead.length).toEqual(1);
-        expect(agent.canRead[0]).toEqual(lanny._id);
+      describe('canRead agent', () => {
+        it('can view a track to which he has permission to read', done => {
+          expect(agent.canRead.length).toEqual(1);
+          expect(agent.canRead[0]).toEqual(lanny._id);
 
-        browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
-          browser.assert.element(`audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-          browser.assert.elements('.delete-track-form', 0);
-          done();
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+            browser.assert.element(`audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+            browser.assert.elements('.delete-track-form', 0);
+            done();
+          });
+        });
+
+        it('receives a non-editable track name field', done => {
+          done.fail();
+        });
+
+        it('receives a non-editable transcription field', done => {
+          done.fail();
         });
       });
     });
