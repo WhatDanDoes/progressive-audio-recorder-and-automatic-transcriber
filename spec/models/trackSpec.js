@@ -91,6 +91,7 @@ describe('Track', () => {
       expect(track.published).toEqual(null);
       expect(track.likes).toEqual([]);
       expect(track.transcription).toEqual('');
+      expect(track.name).toEqual('');
       track.save().then(obj => {
         expect(track.flagged).toBe(false);
         expect(track.flaggers).toEqual([]);
@@ -98,9 +99,31 @@ describe('Track', () => {
         expect(track.likes).toEqual([]);
         expect(track.notes).toEqual([]);
         expect(track.transcription).toEqual('');
+        expect(track.name).toEqual('');
         done();
       }).catch(error => {
         done.fail(error);
+      });
+    });
+
+    describe('name field', () => {
+      it('returns an error if string exceeds max length', done => {
+        // Max length
+        track.name = 'd'.repeat(128);
+        track.save().then(obj => {
+          expect(track.name).toEqual('d'.repeat(128));
+
+          // Too long!
+          track.name = 'd'.repeat(129);
+          track.save().then(obj => {
+            done.fail('Should not get here');
+          }).catch(error => {
+            expect(error.message).toMatch(/That name is too long \(max 128 characters\)/);
+            done();
+          });
+        }).catch(error => {
+          done.fail(error);
+        });
       });
     });
 

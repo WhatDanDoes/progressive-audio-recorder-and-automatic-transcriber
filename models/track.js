@@ -62,6 +62,12 @@ module.exports = function(mongoose) {
       trim: true,
       maxlength: [1000000, 'That note is too long (max 1000000 characters)'],
     },
+    name: {
+      type: Schema.Types.String,
+      default: '',
+      trim: true,
+      maxlength: [128, 'That name is too long (max 128 characters)'],
+    },
   }, {
     timestamps: true
   });
