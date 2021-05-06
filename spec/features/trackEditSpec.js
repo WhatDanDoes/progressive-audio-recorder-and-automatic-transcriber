@@ -272,21 +272,40 @@ describe('trackEditSpec', () => {
         describe('edit name field', () => {
 
           it('responds with forbidden', done => {
-            done.fail();
-          });
+            request(app)
+              .patch(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`)
+              .set('Cookie', browser.cookies)
+              .set('Accept', 'application/json')
+              .send({
+                name: 'Austin Powers',
+              })
+              .expect(403)
+              .end((err, res) => {
+                if (err) return done.fail(err);
 
-          it('does not touch the database', done => {
-            done.fail();
+                expect(res.body.message).toEqual('You are not authorized to access that resource');
+                done();
+              });
           });
         });
 
         describe('edit transcription field', () => {
-          it('responds with forbidden', done => {
-            done.fail();
-          });
 
-          it('does not touch the database', done => {
-            done.fail();
+          it('responds with forbidden', done => {
+            request(app)
+              .patch(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`)
+              .set('Cookie', browser.cookies)
+              .set('Accept', 'application/json')
+              .send({
+                transcription: 'Groovy, baby! Yeah...'
+              })
+              .expect(403)
+              .end((err, res) => {
+                if (err) return done.fail(err);
+
+                expect(res.body.message).toEqual('You are not authorized to access that resource');
+                done();
+              });
           });
         });
       });
