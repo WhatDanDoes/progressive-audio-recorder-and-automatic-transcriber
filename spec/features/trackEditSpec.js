@@ -107,6 +107,21 @@ describe('trackEditSpec', () => {
 
         describe('edit name field', () => {
 
+          describe('interface', () => {
+
+            it('has an edit button', done => {
+              done.fail();
+            });
+
+            it('reveals a cancel button when editing', done => {
+              done.fail();
+            });
+
+            it('reveals a save button when editing', done => {
+              done.fail();
+            });
+          });
+
           describe('successfully', () => {
 
             it('lands in the correct spot', done => {
@@ -139,6 +154,21 @@ describe('trackEditSpec', () => {
         });
 
         describe('edit transcription field', () => {
+
+          describe('interface', () => {
+
+            it('has an edit button', done => {
+              done.fail();
+            });
+
+            it('reveals a cancel button when editing', done => {
+              done.fail();
+            });
+
+            it('reveals a save button when editing', done => {
+              done.fail();
+            });
+          });
 
           describe('successfully', () => {
 
@@ -189,6 +219,21 @@ describe('trackEditSpec', () => {
 
         describe('edit name field', () => {
 
+          describe('interface', () => {
+
+            it('has an edit button', done => {
+              done.fail();
+            });
+
+            it('reveals a cancel button when editing', done => {
+              done.fail();
+            });
+
+            it('reveals a save button when editing', done => {
+              done.fail();
+            });
+          });
+
           describe('successfully', () => {
 
             it('lands in the correct spot', done => {
@@ -221,6 +266,21 @@ describe('trackEditSpec', () => {
         });
 
         describe('edit transcription field', () => {
+
+          describe('interface', () => {
+
+            it('has an edit button', done => {
+              done.fail();
+            });
+
+            it('reveals a cancel button when editing', done => {
+              done.fail();
+            });
+
+            it('reveals a save button when editing', done => {
+              done.fail();
+            });
+          });
 
           describe('successfully', () => {
 
