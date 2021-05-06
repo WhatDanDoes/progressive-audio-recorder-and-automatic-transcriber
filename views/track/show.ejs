@@ -8,9 +8,11 @@
           <figcaption>
             <h2>
               Name: <span id="track-name-field" contenteditable="<%= canWrite %>"></span>
-              <i id="edit-track-name" class="far fa-edit"></i>
-              <i id="cancel-edit-track-name" class="fas fa-trash" style="display:none;"></i>
-              <i id="save-track-name" class="fas fa-paper-plane" style="display:none;"></i>
+              <span class="editable-field-control">
+                <i id="edit-track-name" class="far fa-edit"></i>
+                <i id="cancel-edit-track-name" class="fas fa-trash" style="display:none;"></i>
+                <i id="save-track-name" class="fas fa-paper-plane" style="display:none;"></i>
+              </span>
             </h2>
             <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
               <%= `/${track.path.replace('uploads', 'track')}` %>
