@@ -24,6 +24,8 @@ describe('trackShowSpec', () => {
   let browser, agent, lanny;
 
   beforeEach(done => {
+    delete process.env.SUDO;
+
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
     fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
@@ -132,6 +134,56 @@ describe('trackShowSpec', () => {
             browser.assert.element('article.post section.track-controls');
 
             browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+            browser.assert.element('article.post header aside div');
+            browser.assert.element('article.post header aside time');
+            browser.assert.element('article.post header span.post-menu');
+            browser.assert.element('article.post section.feedback-controls');
+            browser.assert.element('article.post section.feedback-controls i.like-button');
+            browser.assert.element('.delete-track-form');
+            browser.assert.element('.publish-track-form');
+
+            done();
+          });
+        });
+
+        it('receives an editable track name field', done => {
+          done.fail();
+        });
+
+        it('receives an editable transcription field', done => {
+          done.fail();
+        });
+      });
+
+      describe('sudo', () => {
+
+         beforeEach(done => {
+           process.env.SUDO = agent.email;
+
+           agent.canRead.pop();
+           agent.save().then(obj => {
+             agent = obj;
+             expect(agent.canRead.length).toEqual(0);
+             done();
+           }).catch(err => {
+             done.fail(err);
+           });
+         });
+
+        it('can click a and view track', done => {
+          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}`});
+          browser.assert.element(`.track figure figcaption a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+          browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure figcaption h2');
+            browser.assert.element('article.post section.track figure figcaption a');
+            browser.assert.element('article.post section.track canvas#visualizer');
+            browser.assert.element('article.post section.track figure audio ');
+            browser.assert.element('article.post section.track-controls');
+
+            browser.assert.element(`article.post header img.avatar[src="${lanny.get('picture')}"]`);
             browser.assert.element('article.post header aside div');
             browser.assert.element('article.post header aside time');
             browser.assert.element('article.post header span.post-menu');
