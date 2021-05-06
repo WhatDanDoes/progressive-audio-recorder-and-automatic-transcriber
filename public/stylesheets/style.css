@@ -852,3 +852,10 @@ canvas#visualizer {
     transform: rotate(360deg);
   }
 }
+
+/**
+ * Track name editing
+ */
+.editable-field-control {
+  margin-left: 1em;
+}
