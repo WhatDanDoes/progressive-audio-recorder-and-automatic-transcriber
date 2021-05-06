@@ -201,6 +201,14 @@ router.post('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
 });
 
 /**
+ * PATCH /track/:domain/:agentId/:trackId
+ */
+router.patch('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
+  return res.redirect(`/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`);
+});
+
+
+/**
  * PATCH /track/:domain/:agentId/:trackId/flag
  */
 router.patch('/:domain/:agentId/:trackId/flag', (req, res) => {

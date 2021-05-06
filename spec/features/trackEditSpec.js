@@ -296,7 +296,8 @@ describe('trackEditSpec', () => {
   describe('unauthenticated', () => {
     it('does not allow editing a track', done => {
       request(app)
-        .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
+        .patch(`/track/${agent.getAgentDirectory()}/track2.ogg`)
+        .set('Accept', 'application/json')
         .send({
           name: 'Austin Powers',
           transcription: 'Groovy, baby! Yeah...'
@@ -304,7 +305,7 @@ describe('trackEditSpec', () => {
         .expect(401)
         .end((err, res) => {
           if (err) return done.fail(err);
-          expect(res.status).toEqual(401);
+
           expect(res.body.message).toEqual('You are not logged in');
           done();
         });
