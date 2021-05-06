@@ -147,11 +147,23 @@ describe('trackShowSpec', () => {
         });
 
         it('receives an editable track name field', done => {
-          done.fail();
+          browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="true"]');
+            done();
+          });
         });
 
-        it('receives an editable transcription field', done => {
-          done.fail();
+        it('receives an editable track transcription field', done => {
+          browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="true"]');
+            done();
+          });
         });
       });
 
@@ -170,12 +182,11 @@ describe('trackShowSpec', () => {
            });
          });
 
-        it('can click a and view track', done => {
-          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}`});
-          browser.assert.element(`.track figure figcaption a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-          browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
+        it('view a track', done => {
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
+            browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg`});
 
             browser.assert.element('article.post section.track figure figcaption h2');
             browser.assert.element('article.post section.track figure figcaption a');
@@ -183,7 +194,7 @@ describe('trackShowSpec', () => {
             browser.assert.element('article.post section.track figure audio ');
             browser.assert.element('article.post section.track-controls');
 
-            browser.assert.element(`article.post header img.avatar[src="${lanny.get('picture')}"]`);
+            browser.assert.element('article.post header img.avatar');
             browser.assert.element('article.post header aside div');
             browser.assert.element('article.post header aside time');
             browser.assert.element('article.post header span.post-menu');
@@ -197,11 +208,23 @@ describe('trackShowSpec', () => {
         });
 
         it('receives an editable track name field', done => {
-          done.fail();
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="true"]');
+            done();
+          });
         });
 
         it('receives an editable transcription field', done => {
-          done.fail();
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="true"]');
+            done();
+          });
         });
       });
 
@@ -220,11 +243,23 @@ describe('trackShowSpec', () => {
         });
 
         it('receives a non-editable track name field', done => {
-          done.fail();
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="false"]');
+            done();
+          });
         });
 
         it('receives a non-editable transcription field', done => {
-          done.fail();
+          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="false"]');
+            done();
+          });
         });
       });
     });

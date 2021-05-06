@@ -148,7 +148,7 @@ router.get('/:domain/:agentId/:trackId', (req, res) => {
         req.flash('error', err.message);
         return res.redirect('/');
       }
-      if (readables.includes(`${req.params.domain}/${req.params.agentId}`)) {
+      if (readables.includes(`${req.params.domain}/${req.params.agentId}`) || req.user.email === process.env.SUDO) {
         return res.render('track/show', { track: track, messages: req.flash(), agent: req.user, canWrite: canWrite, marked: marked });
       }
       req.flash('error', 'You are not authorized to access that resource');

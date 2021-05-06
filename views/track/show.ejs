@@ -6,10 +6,12 @@
       <section class="track">
         <figure>
           <figcaption>
+            <h2>Name: <span id="track-name-field" contenteditable="<%= canWrite %>"></span></h2>
             <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
               <%= `/${track.path.replace('uploads', 'track')}` %>
             </a>
           </figcaption>
+          <p id="track-transcription-field" contenteditable="<%= canWrite %>"></p>
           <canvas id="visualizer"></canvas>
           <audio
             id="audio-source"
