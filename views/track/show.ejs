@@ -6,7 +6,12 @@
       <section class="track">
         <figure>
           <figcaption>
-            <h2>Name: <span id="track-name-field" contenteditable="<%= canWrite %>"></span></h2>
+            <h2>
+              Name: <span id="track-name-field" contenteditable="<%= canWrite %>"></span>
+              <i id="edit-track-name" class="far fa-edit"></i>
+              <i id="cancel-edit-track-name" class="fas fa-trash" style="display:none;"></i>
+              <i id="save-track-name" class="fas fa-paper-plane" style="display:none;"></i>
+            </h2>
             <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
               <%= `/${track.path.replace('uploads', 'track')}` %>
             </a>
@@ -61,7 +66,39 @@
   </main>
   <script>
     let wave = new Wave();
-    wave.fromElement('audio-source','visualizer', { type: 'wave' });
+    if (AudioContext) {
+      wave.fromElement('audio-source','visualizer', { type: 'wave' });
+    }
+
+    let _originalTrackName;
+
+    const nameField = document.getElementById('track-name-field');
+
+    /**
+     * Edit track name buttons
+     */
+    const editButton = document.getElementById('edit-track-name');
+    const cancelButton = document.getElementById('cancel-edit-track-name');
+    const saveButton = document.getElementById('save-track-name');
+    editButton.addEventListener('click', e => {
+      _originalTrackName = nameField.innerHTML;
+
+      nameField.focus();
+      editButton.style.display = 'none';
+      cancelButton.style.display = '';
+      saveButton.style.display = '';
+    });
+
+    cancelButton.addEventListener('click', e => {
+      nameField.innerHTML = _originalTrackName;
+      nameField.blur();
+      editButton.style.display = '';
+      cancelButton.style.display = 'none';
+      saveButton.style.display = 'none';
+    });
+
+
   </script>
+
 <% include ../_partials/footer %>
 

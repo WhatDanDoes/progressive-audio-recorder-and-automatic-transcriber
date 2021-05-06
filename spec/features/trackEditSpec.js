@@ -27,7 +27,7 @@ describe('trackEditSpec', () => {
   beforeEach(done => {
     delete process.env.SUDO;
 
-    browser = new Browser({ waitDuration: '30s', loadCss: false });
+    browser = new Browser({ waitDuration: '30s', loadCss: true });
     //browser.debug();
     fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
       models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
@@ -105,21 +105,74 @@ describe('trackEditSpec', () => {
 
       describe('owner', () => {
 
+        beforeEach(done => {
+          browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, (err) => {
+            if (err) done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        });
+
         describe('edit name field', () => {
 
           describe('interface', () => {
 
-            it('has an edit button', done => {
-              done.fail();
+            it('has an edit button', () => {
+              browser.assert.element('.post .track figure figcaption h2 i#edit-track-name');
             });
 
             it('reveals a cancel button when editing', done => {
-              done.fail();
+              browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+              browser.click('i#edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                done();
+              });
             });
 
             it('reveals a save button when editing', done => {
-              done.fail();
+              browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+              browser.click('i#edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                done();
+              });
             });
+
+            it('hides the edit button when editing', done => {
+              browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+              browser.click('i#edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                done();
+              });
+            });
+
+            // 2021-5-6
+            // Might need puppeteer to test this...
+            // Zombie doesn't seem to recognize focus given to contenteditable elements
+//            fit('gives focus to name field when editing', done => {
+//console.log(browser.document.activeElement);
+//              browser.assert.hasFocus(null);
+//
+//
+//              browser.on('focus', element => {
+//console.log("TOOOK FOCUS");
+//console.log('element');
+//console.log(element);
+//              });
+//
+//              browser.click('i#edit-track-name', err => {
+//                if (err) return done.fail(err);
+//console.log(browser.document.activeElement);
+//
+//                //browser.assert.hasFocus('.post .track figure figcaption h2 span#track-name-field');
+//              });
+//            });
+
           });
 
           describe('successfully', () => {
@@ -135,20 +188,48 @@ describe('trackEditSpec', () => {
             it('updates the database', done => {
               done.fail();
             });
+
+            it('submits on Enter keypress', done => {
+              done.fail();
+            });
           });
 
           describe('cancelled', () => {
 
-            it('lands in the correct spot', done => {
-              done.fail();
+            beforeEach(done => {
+              browser.click('i#edit-track-name', err => {
+                if (err) return done.fail(err);
+                done();
+              });
+            });
+
+            it('resets the interface', done => {
+              browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+              browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+              browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+
+              browser.click('i#cancel-edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+
+                done();
+              });
             });
 
             it('resets the value', done => {
-              done.fail();
-            });
+              browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+              browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+              browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
 
-            it('does not touch the database', done => {
-              done.fail();
+              browser.click('i#cancel-edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                done();
+              });
             });
           });
         });
@@ -166,6 +247,14 @@ describe('trackEditSpec', () => {
             });
 
             it('reveals a save button when editing', done => {
+              done.fail();
+            });
+
+            it('does not submit on Enter keypress', done => {
+              done.fail();
+            });
+
+            it('submits on ctrl-s keypress', done => {
               done.fail();
             });
           });
