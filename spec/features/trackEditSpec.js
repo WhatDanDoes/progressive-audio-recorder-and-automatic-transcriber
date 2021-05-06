@@ -257,6 +257,10 @@ describe('trackEditSpec', () => {
             it('submits on ctrl-s keypress', done => {
               done.fail();
             });
+
+            it('reveals cancel and save buttons when field is given focus via direct click', done => {
+              done.fail();
+            });
           });
 
           describe('successfully', () => {
