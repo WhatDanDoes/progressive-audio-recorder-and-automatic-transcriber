@@ -110,12 +110,12 @@ describe('Track', () => {
       it('returns an error if string exceeds max length', done => {
         // Max length
         track.name = 'd'.repeat(128);
-        track.save().then(obj => {
+        track.save().then(track => {
           expect(track.name).toEqual('d'.repeat(128));
 
           // Too long!
           track.name = 'd'.repeat(129);
-          track.save().then(obj => {
+          track.save().then(track => {
             done.fail('Should not get here');
           }).catch(error => {
             expect(error.message).toMatch(/That name is too long \(max 128 characters\)/);

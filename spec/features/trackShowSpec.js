@@ -124,8 +124,8 @@ describe('trackShowSpec', () => {
           if (err) return done.fail(err);
           browser.assert.success();
 
-          browser.assert.element('article.post section.track canvas#visualizer');
           browser.assert.element('article.post section.track figure figcaption a');
+          browser.assert.element('article.post section.track canvas#visualizer');
           browser.assert.element('article.post section.track figure audio ');
           browser.assert.element('article.post section.track-controls');
 
