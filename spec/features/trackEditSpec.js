@@ -121,21 +121,13 @@ describe('trackEditSpec', () => {
               browser.assert.element('.post .track figure figcaption h2 i#edit-track-name');
             });
 
-            it('reveals a cancel button when editing', done => {
+            it('reveals cancel and save buttons when editing', done => {
               browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
-              browser.click('i#edit-track-name', err => {
-                if (err) return done.fail(err);
-
-                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
-                done();
-              });
-            });
-
-            it('reveals a save button when editing', done => {
               browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
               browser.click('i#edit-track-name', err => {
                 if (err) return done.fail(err);
 
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
                 browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
                 done();
               });
@@ -146,6 +138,24 @@ describe('trackEditSpec', () => {
               browser.click('i#edit-track-name', err => {
                 if (err) return done.fail(err);
 
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                done();
+              });
+            });
+
+            it('reveals cancel and save buttons when field is given focus via direct click', done => {
+              browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+              browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+              browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+              // 2021-5-7
+              // Clicking works in tests, but not in real life.
+              // Focus works in real life, but not in tests.
+              browser.click('#track-name-field', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
                 browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
                 done();
               });
@@ -172,22 +182,86 @@ describe('trackEditSpec', () => {
 //                //browser.assert.hasFocus('.post .track figure figcaption h2 span#track-name-field');
 //              });
 //            });
-
           });
 
           describe('successfully', () => {
 
-            it('lands in the correct spot', done => {
-              done.fail();
+            it('lands in the correct spot and displays a friendly message', done => {
+              browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+              browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+              browser.click('i#save-track-name', err => {
+                if (err) return done.fail(err);
+
+                // Let the Javascript execute
+                setTimeout(function(){
+                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                  browser.assert.text('.alert.alert-success', 'Track updated');
+                  done();
+                }, 300);
+              });
             });
 
             it('updates the interface', done => {
-              done.fail();
+              browser.click('i#edit-track-name', err => {
+                if (err) return done.fail(err);
+
+                browser.assert.text('#track-name-field', '');
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                browser.click('i#save-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  setTimeout(function(){
+                    browser.assert.text('#track-name-field', 'Austin Powers');
+                    browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                    browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                    browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+                    done();
+                  }, 300);
+                });
+              });
             });
 
-            it('updates the database', done => {
-              done.fail();
-            });
+            /**
+             * 2021-5-7
+             *
+             * Weird problem. There is an empty body when sending a PATCH request
+             * with fetch in zombie. It works fine with PUT, but then the verb
+             * semantics is completely destroyed.
+             *
+             * Perhaps another puppeteer test.
+             */
+            //it('updates the database', done => {
+            //  const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+            //  models.Track.findOne({ path: filePath }).then(track => {
+            //    expect(track.name).toEqual('');
+
+            //    browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+            //    browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+            //    browser.click('i#save-track-name', err => {
+            //      if (err) return done.fail(err);
+
+            //      setTimeout(function(){
+            //        models.Track.findOne({ path: filePath }).then(track => {
+            //          expect(track.name).toEqual('Austin Powers');
+            //          done();
+            //        }).catch(err => {
+            //          done.fail(err);
+            //        });
+            //      }, 300);
+            //    });
+            //  }).catch(err => {
+            //    done.fail(err);
+            //  });
+            //});
 
             it('submits on Enter keypress', done => {
               done.fail();
