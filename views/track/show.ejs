@@ -72,34 +72,77 @@
       wave.fromElement('audio-source','visualizer', { type: 'wave' });
     }
 
-    let _originalTrackName;
-
-    const nameField = document.getElementById('track-name-field');
 
     /**
      * Edit track name buttons
      */
+    const nameField = document.getElementById('track-name-field');
     const editButton = document.getElementById('edit-track-name');
     const cancelButton = document.getElementById('cancel-edit-track-name');
     const saveButton = document.getElementById('save-track-name');
-    editButton.addEventListener('click', e => {
-      _originalTrackName = nameField.innerHTML;
 
+    let _originalTrackName;
+
+    function setTrackNameEditMode(e) {
+      _originalTrackName = nameField.innerHTML;
       nameField.focus();
       editButton.style.display = 'none';
       cancelButton.style.display = '';
       saveButton.style.display = '';
-    });
+    }
 
-    cancelButton.addEventListener('click', e => {
-      nameField.innerHTML = _originalTrackName;
+    function setTrackNameTextMode(e) {
       nameField.blur();
       editButton.style.display = '';
       cancelButton.style.display = 'none';
       saveButton.style.display = 'none';
+    }
+
+    function resetTrackNameField(e) {
+      nameField.innerHTML = _originalTrackName;
+      setTrackNameTextMode(e);
+    }
+
+    editButton.addEventListener('click', setTrackNameEditMode);
+    cancelButton.addEventListener('click', resetTrackNameField);
+    // The double-up is more to get the tests to pass...
+    // Clicking works in tests, but not in real life.
+    // Focus works in real life, but not in tests.
+    nameField.addEventListener('focus', setTrackNameEditMode);
+    nameField.addEventListener('click', setTrackNameEditMode);
+
+    saveButton.addEventListener('click', e => {
+      const messages = document.querySelector('.messages');
+      const messageContainer = document.createElement('div');
+      messageContainer.classList.add('alert');
+
+      fetch("<%= `/${track.path.replace('uploads', 'track')}` %>", {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: nameField.innerHTML
+        })
+      })
+      .then(res => {
+        if (res.status === 201) {
+          setTrackNameTextMode();
+          messageContainer.classList.add('alert-success');
+        }
+        else {
+          messageContainer.classList.add('alert-danger');
+        }
+        messages.appendChild(messageContainer);
+
+        return res.json();
+      })
+      .then(data => {
+        const message = document.createTextNode(data.message);
+        messageContainer.appendChild(message);
+      });
     });
-
-
   </script>
 
 <% include ../_partials/footer %>
