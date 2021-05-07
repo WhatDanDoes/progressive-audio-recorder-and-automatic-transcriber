@@ -204,7 +204,49 @@ router.post('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
  * PATCH /track/:domain/:agentId/:trackId
  */
 router.patch('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
-  return res.redirect(`/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`);
+
+//  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
+//  if (!canWrite){
+//    const message = 'You are not authorized to edit that resource';
+//
+//    if (req.headers['accept'] === 'application/json') {
+//      return res.status(401).json({ message: message });
+//    }
+//
+//    req.flash('error', message);
+//    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
+//  }
+
+  const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
+  models.Track.findOne({ path: filePath }).then(track => {
+
+    if (req.body.name) {
+      track.name = req.body.name;
+    }
+
+    track.save().then(track => {
+      if (req.headers['accept'] === 'application/json') {
+        return res.status(201).json({ message: 'Track updated' });
+      }
+
+      req.flash('success', 'Track updated');
+      return res.redirect(`/track/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`);
+    }).catch(err => {
+      if (req.headers['accept'] === 'application/json') {
+        return res.status(500).json({ message: err.message });
+      }
+
+      req.flash('error', err.message);
+      return res.redirect(returnTo);
+    });
+  }).catch(err => {
+    if (req.headers['accept'] === 'application/json') {
+      return res.status(500).json({ message: err.message });
+    }
+
+    req.flash('error', err.message);
+    return res.redirect(returnTo);
+  });
 });
 
 
