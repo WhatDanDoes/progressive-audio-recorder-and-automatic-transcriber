@@ -90,7 +90,7 @@ describe('Track', () => {
       expect(track.flaggers).toEqual([]);
       expect(track.published).toEqual(null);
       expect(track.likes).toEqual([]);
-      expect(track.transcription).toEqual('');
+      expect(track.transcript).toEqual('');
       expect(track.name).toEqual('');
       track.save().then(obj => {
         expect(track.flagged).toBe(false);
@@ -98,7 +98,7 @@ describe('Track', () => {
         expect(track.published).toEqual(null);
         expect(track.likes).toEqual([]);
         expect(track.notes).toEqual([]);
-        expect(track.transcription).toEqual('');
+        expect(track.transcript).toEqual('');
         expect(track.name).toEqual('');
         done();
       }).catch(error => {

@@ -56,7 +56,7 @@ module.exports = function(mongoose) {
         maxlength: [500, 'That note is too long (max 500 characters)'],
       }
     }],
-    transcription: {
+    transcript: {
       type: Schema.Types.String,
       default: '',
       trim: true,
