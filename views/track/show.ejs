@@ -7,7 +7,7 @@
         <figure>
           <figcaption>
             <h2>
-              Name: <span id="track-name-field" contenteditable="<%= canWrite %>"></span>
+              Name: <span id="track-name-field" contenteditable="<%= canWrite %>"><%= track.name %></span>
               <span class="editable-field-control">
                 <i id="edit-track-name" class="far fa-edit"></i>
                 <i id="cancel-edit-track-name" class="fas fa-trash" style="display:none;"></i>
@@ -18,7 +18,17 @@
               <%= `/${track.path.replace('uploads', 'track')}` %>
             </a>
           </figcaption>
-          <p id="track-transcription-field" contenteditable="<%= canWrite %>"></p>
+          <h3>
+            Transcript:
+            <span class="editable-field-control">
+              <i id="edit-track-transcript" class="far fa-edit"></i>
+              <i id="cancel-edit-track-transcript" class="fas fa-trash" style="display:none;"></i>
+              <i id="save-track-transcript" class="fas fa-paper-plane" style="display:none;"></i>
+            </span>
+          </h3>
+          <p id="track-transcript-field" contenteditable="<%= canWrite %>">
+            <%= track.transcript %>
+          </p>
           <canvas id="visualizer"></canvas>
           <audio
             id="audio-source"
@@ -72,30 +82,31 @@
       wave.fromElement('audio-source','visualizer', { type: 'wave' });
     }
 
-
     /**
      * Edit track name buttons
      */
     const nameField = document.getElementById('track-name-field');
-    const editButton = document.getElementById('edit-track-name');
-    const cancelButton = document.getElementById('cancel-edit-track-name');
-    const saveButton = document.getElementById('save-track-name');
+    const editNameButton = document.getElementById('edit-track-name');
+    const cancelNameEditButton = document.getElementById('cancel-edit-track-name');
+    const saveNameButton = document.getElementById('save-track-name');
 
-    let _originalTrackName;
+    let _originalTrackName = null;
 
     function setTrackNameEditMode(e) {
-      _originalTrackName = nameField.innerHTML;
+      if (_originalTrackName !=='' && !_originalTrackName) {
+        _originalTrackName = nameField.innerHTML;
+      }
       nameField.focus();
-      editButton.style.display = 'none';
-      cancelButton.style.display = '';
-      saveButton.style.display = '';
+      editNameButton.style.display = 'none';
+      cancelNameEditButton.style.display = '';
+      saveNameButton.style.display = '';
     }
 
     function setTrackNameTextMode(e) {
       nameField.blur();
-      editButton.style.display = '';
-      cancelButton.style.display = 'none';
-      saveButton.style.display = 'none';
+      editNameButton.style.display = '';
+      cancelNameEditButton.style.display = 'none';
+      saveNameButton.style.display = 'none';
     }
 
     function resetTrackNameField(e) {
@@ -103,15 +114,64 @@
       setTrackNameTextMode(e);
     }
 
-    editButton.addEventListener('click', setTrackNameEditMode);
-    cancelButton.addEventListener('click', resetTrackNameField);
+    editNameButton.addEventListener('click', setTrackNameEditMode);
+    cancelNameEditButton.addEventListener('click', resetTrackNameField);
     // The double-up is more to get the tests to pass...
     // Clicking works in tests, but not in real life.
     // Focus works in real life, but not in tests.
     nameField.addEventListener('focus', setTrackNameEditMode);
     nameField.addEventListener('click', setTrackNameEditMode);
 
-    saveButton.addEventListener('click', e => {
+    /**
+     * Edit track transcript buttons
+     */
+    const transcriptField = document.getElementById('track-transcript-field');
+    const editTranscriptButton = document.getElementById('edit-track-transcript');
+    const cancelTranscriptEditButton = document.getElementById('cancel-edit-track-transcript');
+    const saveTranscriptButton = document.getElementById('save-track-transcript');
+
+    let _originalTrackTranscript = null;
+
+    function setTrackTranscriptEditMode(e) {
+      if (_originalTrackTranscript !== '' && !_originalTrackTranscript) {
+        _originalTrackTranscript = transcriptField.innerHTML;
+      }
+      transcriptField.focus();
+
+      editTranscriptButton.style.display = 'none';
+      cancelTranscriptEditButton.style.display = '';
+      saveTranscriptButton.style.display = '';
+    }
+
+    function setTrackTranscriptTextMode(e) {
+      transcriptField.blur();
+      editTranscriptButton.style.display = '';
+      cancelTranscriptEditButton.style.display = 'none';
+      saveTranscriptButton.style.display = 'none';
+    }
+
+    function resetTrackTranscriptField(e) {
+      transcriptField.innerHTML = _originalTrackTranscript;
+      _originalTrackTranscript = null;
+      setTrackTranscriptTextMode(e);
+    }
+
+    cancelTranscriptEditButton.addEventListener('click', resetTrackTranscriptField);
+
+    editTranscriptButton.addEventListener('click', setTrackTranscriptEditMode);
+    transcriptField.addEventListener('focus', setTrackTranscriptEditMode);
+    transcriptField.addEventListener('click', setTrackTranscriptEditMode);
+
+    saveTranscriptButton.addEventListener('click', () => sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track'));
+
+    /**
+     * PATCH
+     *
+     * @param function - reset interface
+     * @param object - request body
+     * @param string - the original value that needs to be reset [name|track]
+     */
+    function sendUpdate(resetInterface, body, orig) {
       const messages = document.querySelector('.messages');
       const messageContainer = document.createElement('div');
       messageContainer.classList.add('alert');
@@ -122,12 +182,11 @@
           'Content-Type': 'application/json; charset=UTF-8',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          name: nameField.innerHTML
-        })
+        body: JSON.stringify(body),
       })
       .then(res => {
         if (res.status === 201) {
+          resetInterface();
           setTrackNameTextMode();
           messageContainer.classList.add('alert-success');
         }
@@ -136,13 +195,34 @@
         }
         messages.appendChild(messageContainer);
 
+        if (orig === 'name') {
+          _originalTrackName = null;
+        }
+        else if (orig === 'track') {
+          _originalTrackTranscript = null;
+        }
+
         return res.json();
       })
       .then(data => {
         const message = document.createTextNode(data.message);
         messageContainer.appendChild(message);
       });
+    };
+
+
+
+    nameField.addEventListener('keydown', function(event) {
+      if (event.keyCode === 13) {
+        sendUpdate(setTrackNameTextMode, {name: nameField.innerHTML.trim()}, 'name');
+      }
     });
+
+    saveNameButton.addEventListener('click', e => {
+      sendUpdate(setTrackNameTextMode, {name: nameField.innerHTML.trim()}, 'name');
+    });
+
+
   </script>
 
 <% include ../_partials/footer %>

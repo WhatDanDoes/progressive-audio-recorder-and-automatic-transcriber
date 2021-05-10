@@ -228,18 +228,16 @@ describe('trackEditSpec', () => {
                     if (err) return done.fail(err);
 
                     setTimeout(function(){
-                      browser.assert.text('#track-name-field', 'Austin Powers');
                       browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
                       browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
                       browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                      browser.assert.text('#track-name-field', 'Austin Powers');
 
                       done();
                     }, 300);
                   });
                 });
               });
-
-
             });
 
             describe('cancelled', () => {
@@ -279,23 +277,78 @@ describe('trackEditSpec', () => {
                   done();
                 });
               });
+
+              it('resets the field value when focus is lost and then regained', done => {
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                browser.focus('body');
+                browser.click('#track-name-field', err => {
+                  browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                  browser.focus('body');
+                  browser.click('#track-name-field', err => {
+                    browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                    browser.click('i#cancel-edit-track-name', err => {
+                      if (err) return done.fail(err);
+
+                      browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                      done();
+                    });
+                  });
+                });
+              });
             });
           });
 
-          describe('edit transcription field', () => {
+          describe('edit transcript field', () => {
 
             describe('interface', () => {
 
-              it('has an edit button', done => {
-                done.fail();
+              it('has an edit button', () => {
+                browser.assert.element('.post .track figure h3 i#edit-track-transcript');
               });
 
-              it('reveals a cancel button when editing', done => {
-                done.fail();
+              it('reveals cancel and save buttons when editing', done => {
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                  done();
+                });
               });
 
-              it('reveals a save button when editing', done => {
-                done.fail();
+              it('hides the edit button when editing', done => {
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                  done();
+                });
+              });
+
+              it('reveals cancel and save buttons when field is given focus via direct click', done => {
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+
+                // 2021-5-7
+                // Clicking works in tests, but not in real life.
+                // Focus works in real life, but not in tests.
+                browser.click('#track-transcript-field', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                  done();
+                });
               });
 
               it('does not submit on Enter keypress', done => {
@@ -305,39 +358,113 @@ describe('trackEditSpec', () => {
               it('submits on ctrl-s keypress', done => {
                 done.fail();
               });
-
-              it('reveals cancel and save buttons when field is given focus via direct click', done => {
-                done.fail();
-              });
             });
 
             describe('successfully', () => {
 
-              it('lands in the correct spot', done => {
-                done.fail();
+              it('lands in the correct spot and displays a friendly message', done => {
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.click('i#save-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  // Let the Javascript execute
+                  setTimeout(function(){
+                    browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                    browser.assert.text('.alert.alert-success', 'Track updated');
+                    done();
+                  }, 300);
+                });
               });
 
               it('updates the interface', done => {
-                done.fail();
-              });
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
 
-              it('updates the database', done => {
-                done.fail();
+                  browser.assert.text('#track-transcript-field', '');
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+
+                  browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                  browser.click('i#save-track-transcript', err => {
+                    if (err) return done.fail(err);
+
+                    setTimeout(function(){
+                      browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                      browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                      browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                      browser.assert.text('#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                      done();
+                    }, 300);
+                  });
+                });
               });
             });
 
             describe('cancelled', () => {
 
-              it('lands in the correct spot', done => {
-                done.fail();
+              beforeEach(done => {
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+                  done();
+                });
               });
 
               it('resets the value', done => {
-                done.fail();
+                browser.assert.text('.post .track figure p#track-transcript-field', '');
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.click('i#cancel-edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('.post .track figure p#track-transcript-field', '');
+                  done();
+                });
               });
 
-              it('does not touch the database', done => {
-                done.fail();
+              it('resets the field value when focus is lost and then regained', done => {
+                browser.assert.text('.post .track figure p#track-transcript-field', '');
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.focus('body');
+                browser.click('#track-transcript-field', err => {
+                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                  browser.focus('body');
+                  browser.click('#track-transcript-field', err => {
+                    browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                    browser.click('i#cancel-edit-track-transcript', err => {
+                      if (err) return done.fail(err);
+
+                      browser.assert.text('.post .track figure p#track-transcript-field', '');
+                      done();
+                    });
+                  });
+                });
+              });
+
+              it('resets the interface', done => {
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+
+                browser.click('i#cancel-edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+
+                  done();
+                });
               });
             });
           });
@@ -352,7 +479,12 @@ describe('trackEditSpec', () => {
             agent.save().then(obj => {
               agent = obj;
               expect(agent.canRead.length).toEqual(0);
-              done();
+
+              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+                if (err) done.fail(err);
+                browser.assert.success();
+                done();
+              });
             }).catch(err => {
               done.fail(err);
             });
@@ -362,51 +494,136 @@ describe('trackEditSpec', () => {
 
             describe('interface', () => {
 
-              it('has an edit button', done => {
-                done.fail();
+              it('has an edit button', () => {
+                browser.assert.element('.post .track figure figcaption h2 i#edit-track-name');
               });
 
-              it('reveals a cancel button when editing', done => {
-                done.fail();
+              it('reveals cancel and save buttons when editing', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                  done();
+                });
               });
 
-              it('reveals a save button when editing', done => {
-                done.fail();
+              it('hides the edit button when editing', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                  done();
+                });
+              });
+
+              it('reveals cancel and save buttons when field is given focus via direct click', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+                // 2021-5-7
+                // Clicking works in tests, but not in real life.
+                // Focus works in real life, but not in tests.
+                browser.click('#track-name-field', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                  done();
+                });
               });
             });
 
             describe('successfully', () => {
+              it('lands in the correct spot and displays a friendly message', done => {
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
 
-              it('lands in the correct spot', done => {
-                done.fail();
+                browser.click('i#save-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  // Let the Javascript execute
+                  setTimeout(function(){
+                    browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
+                    browser.assert.text('.alert.alert-success', 'Track updated');
+                    done();
+                  }, 300);
+                });
               });
 
               it('updates the interface', done => {
-                done.fail();
-              });
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
 
-              it('updates the database', done => {
-                done.fail();
+                  browser.assert.text('#track-name-field', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+
+                  browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                  browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                  browser.click('i#save-track-name', err => {
+                    if (err) return done.fail(err);
+
+                    setTimeout(function(){
+                      browser.assert.text('#track-name-field', 'Austin Powers');
+                      browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                      browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                      browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+                      done();
+                    }, 300);
+                  });
+                });
               });
             });
 
             describe('cancelled', () => {
+              beforeEach(done => {
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+                  done();
+                });
+              });
 
-              it('lands in the correct spot', done => {
-                done.fail();
+              it('resets the interface', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+
+                browser.click('i#cancel-edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+
+                  done();
+                });
               });
 
               it('resets the value', done => {
-                done.fail();
-              });
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
 
-              it('does not touch the database', done => {
-                done.fail();
+                browser.click('i#cancel-edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                  done();
+                });
               });
             });
           });
 
-          describe('edit transcription field', () => {
+          describe('edit transcript field', () => {
 
             describe('interface', () => {
 
@@ -490,7 +707,7 @@ describe('trackEditSpec', () => {
             });
           });
 
-          describe('edit transcription field', () => {
+          describe('edit transcript field', () => {
 
             it('responds with forbidden', done => {
               request(app)
@@ -498,7 +715,7 @@ describe('trackEditSpec', () => {
                 .set('Cookie', browser.cookies)
                 .set('Accept', 'application/json')
                 .send({
-                  transcription: 'Groovy, baby! Yeah...'
+                  transcript: 'Groovy, baby! Yeah...'
                 })
                 .expect(403)
                 .end((err, res) => {
@@ -537,7 +754,7 @@ describe('trackEditSpec', () => {
 
         try {
           puppetBrowser = await puppeteer.launch({
-            headless: false,
+            headless: true,
             executablePath: puppeteer.executablePath(),
           });
           page = await puppetBrowser.newPage();
@@ -569,47 +786,118 @@ describe('trackEditSpec', () => {
         await puppetBrowser.close();
       });
 
-      it('updates the database', done => {
-        const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
-        models.Track.findOne({ path: filePath }).then(async track => {
-          expect(track.name).toEqual('');
+      describe('edit name field', () => {
 
-          page.type('#track-name-field', 'Austin Powers');
-          await page.waitForTimeout(100);
+        it('updates the database', done => {
+          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          models.Track.findOne({ path: filePath }).then(async track => {
+            expect(track.name).toEqual('');
 
-          page.click('i#save-track-name').then(async () => {
+            page.type('#track-name-field', 'Austin Powers');
+            await page.waitForTimeout(100);
 
-            await page.waitForTimeout(200);
+            page.click('i#save-track-name').then(async () => {
 
-            models.Track.findOne({ path: filePath }).then(track => {
-              expect(track.name).toEqual('Austin Powers');
-              done();
+              await page.waitForTimeout(200);
+
+              models.Track.findOne({ path: filePath }).then(track => {
+                expect(track.name).toEqual('Austin Powers');
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
             }).catch(err => {
               done.fail(err);
             });
           }).catch(err => {
             done.fail(err);
           });
-        }).catch(err => {
-          done.fail(err);
         });
-      });
 
-      /**
-       * 2021-5-7
-       *
-       * Another weirdly difficult problem with my current test tools...
-       *
-       * This is purely behaviourly tested. I have found no simple way
-       * to match the `document.activeElement` with a queried element.
-       *
-       * This test breaks if focus isn't set in the track show view js.
-       */
-      it('gives focus to name field when editing', async done => {
-        const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
-        models.Track.findOne({ path: filePath }).then(async track => {
-          expect(track.name).toEqual('');
+        /**
+         * 2021-5-7
+         *
+         * Another weirdly difficult problem with my current test tools...
+         *
+         * This is purely behaviourly tested. I have found no simple way
+         * to match the `document.activeElement` with a queried element.
+         *
+         * This test breaks if focus isn't set in the track show view js.
+         */
+        it('gives focus to name field when editing', async done => {
+          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          models.Track.findOne({ path: filePath }).then(async track => {
+            expect(track.name).toEqual('');
 
+            await page.click('i#edit-track-name');
+            await page.waitForTimeout(200);
+
+            // If it's not focussed on the correct `contenteditable` field, this test fails
+            let focussed = await page.evaluateHandle(() => document.activeElement);
+            focussed.type('Austin Powers');
+
+            await page.waitForTimeout(100);
+
+            page.click('i#save-track-name').then(async () => {
+
+              await page.waitForTimeout(200);
+
+              models.Track.findOne({ path: filePath }).then(track => {
+                // If this is an '' string, it's because focus was not given to the element
+                expect(track.name).toEqual('Austin Powers');
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('submits on Enter keypress', done => {
+          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          models.Track.findOne({ path: filePath }).then(async track => {
+            expect(track.name).toEqual('');
+
+            await page.click('i#edit-track-name');
+            await page.waitForTimeout(200);
+
+            // If it's not focussed on the correct `contenteditable` field, this test fails
+            let focussed = await page.evaluateHandle(() => document.activeElement);
+            focussed.type('Austin Powers');
+
+            await page.waitForTimeout(100);
+
+            //page.click('i#save-track-name').then(async () => {
+            page.keyboard.press('Enter').then(async () => {
+
+              await page.waitForTimeout(200);
+
+              models.Track.findOne({ path: filePath }).then(track => {
+                // If this is an '' string, it's because focus was not given to the element
+                expect(track.name).toEqual('Austin Powers');
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        /**
+         * 2021-5-10
+         *
+         * Remember! Zombie fetch PATCH doesn't have anything in the body of the
+         * request. That's why I'm using puppeteer here
+         */
+        it('displays change on subsequent visit', async () => {
           await page.click('i#edit-track-name');
           await page.waitForTimeout(200);
 
@@ -619,29 +907,196 @@ describe('trackEditSpec', () => {
 
           await page.waitForTimeout(100);
 
-          page.click('i#save-track-name').then(async () => {
+          await page.click('i#save-track-name');
 
-            await page.waitForTimeout(200);
+          await page.waitForTimeout(200);
 
-            models.Track.findOne({ path: filePath }).then(track => {
-              // If this is an '' string, it's because focus was not given to the element
-              expect(track.name).toEqual('Austin Powers');
-              done();
+          let element = await page.$("#track-name-field");
+          let text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Austin Powers');
+
+          // Reload
+          await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+
+          element = await page.$("#track-name-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Austin Powers');
+        });
+
+        it('resets internal cancel change values', async () => {
+          //
+          // Write and save the transcript
+          //
+          await page.click('i#edit-track-name');
+          await page.waitForTimeout(200);
+
+          let focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Austin Powers');
+          await page.waitForTimeout(100);
+          await page.click('i#save-track-name');
+          await page.waitForTimeout(200);
+
+          let element = await page.$("#track-name-field");
+          let text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Austin Powers');
+
+          //
+          // Update and save the transcript
+          //
+          await page.click('i#edit-track-name');
+          await page.waitForTimeout(200);
+
+          focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('That guy from Shrek is ');
+          await page.waitForTimeout(100);
+          await page.click('i#save-track-name');
+          await page.waitForTimeout(200);
+
+          element = await page.$("#track-name-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('That guy from Shrek is Austin Powers');
+
+          //
+          // Update and cancel the changes to the transcript
+          //
+          await page.click('i#edit-track-name');
+          await page.waitForTimeout(200);
+
+          focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Yo!');
+
+          await page.click('i#cancel-edit-track-name');
+
+          element = await page.$("#track-name-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('That guy from Shrek is Austin Powers');
+        });
+      });
+
+      describe('edit transcript field', () => {
+        it('updates the database', done => {
+          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          models.Track.findOne({ path: filePath }).then(async track => {
+            expect(track.transcript).toEqual('');
+
+            page.type('#track-transcript-field', 'Groovy, baby! Yeah!');
+            await page.waitForTimeout(100);
+
+            page.click('i#save-track-transcript').then(async () => {
+
+              await page.waitForTimeout(200);
+
+              models.Track.findOne({ path: filePath }).then(track => {
+                expect(track.transcript).toEqual('Groovy, baby! Yeah!');
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
             }).catch(err => {
               done.fail(err);
             });
           }).catch(err => {
             done.fail(err);
           });
-        }).catch(err => {
-          done.fail(err);
         });
 
-      });
+        it('displays change on subsequent visit', async () => {
+          await page.click('i#edit-track-transcript');
+          await page.waitForTimeout(200);
+
+          // If it's not focussed on the correct `contenteditable` field, this test fails
+          let focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Groovy, baby! Yeah!');
+
+          await page.waitForTimeout(100);
+
+          await page.click('i#save-track-transcript');
+
+          await page.waitForTimeout(200);
+
+          const element = await page.$("#track-transcript-field");
+          const text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Groovy, baby! Yeah!');
+        });
+
+        it('resets internal cancel change values', async () => {
+          //
+          // Write and save the transcript
+          //
+          await page.click('i#edit-track-transcript');
+          await page.waitForTimeout(200);
+
+          let focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Groovy, baby! Yeah!');
+          await page.waitForTimeout(100);
+          await page.click('i#save-track-transcript');
+          await page.waitForTimeout(200);
+
+          let element = await page.$("#track-transcript-field");
+          let text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Groovy, baby! Yeah!');
+
+          //
+          // Update and save the transcript
+          //
+          await page.click('i#edit-track-transcript');
+          await page.waitForTimeout(200);
+
+          focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Shagadelic! ');
+          await page.waitForTimeout(100);
+          await page.click('i#save-track-transcript');
+          await page.waitForTimeout(200);
+
+          element = await page.$("#track-transcript-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Shagadelic! Groovy, baby! Yeah!');
+
+          //
+          // Update and cancel the changes to the transcript
+          //
+          await page.click('i#edit-track-transcript');
+          await page.waitForTimeout(200);
+
+          focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('One million dollars!');
+
+          await page.click('i#cancel-edit-track-transcript');
+
+          element = await page.$("#track-transcript-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Shagadelic! Groovy, baby! Yeah!');
+
+          await page.waitForTimeout(100);
+        });
+
+        it('displays change on subsequent visit', async () => {
+          await page.click('i#edit-track-transcript');
+          await page.waitForTimeout(200);
+
+          // If it's not focussed on the correct `contenteditable` field, this test fails
+          let focussed = await page.evaluateHandle(() => document.activeElement);
+          focussed.type('Groovy, baby! Yeah!');
+
+          await page.waitForTimeout(100);
+
+          await page.click('i#save-track-transcript');
+
+          await page.waitForTimeout(200);
+
+          let element = await page.$("#track-transcript-field");
+          let text = await page.evaluate(element => element.textContent, element);
+          expect(text).toEqual('Groovy, baby! Yeah!');
+
+          // Reload
+          await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+
+          element = await page.$("#track-transcript-field");
+          text = await page.evaluate(element => element.textContent, element);
+          expect(text).toMatch('Groovy, baby! Yeah!');
+        });
 
 
-      it('submits on Enter keypress', done => {
-        done.fail();
       });
     });
   });
@@ -653,7 +1108,7 @@ describe('trackEditSpec', () => {
         .set('Accept', 'application/json')
         .send({
           name: 'Austin Powers',
-          transcription: 'Groovy, baby! Yeah...'
+          transcript: 'Groovy, baby! Yeah...'
         })
         .expect(401)
         .end((err, res) => {
