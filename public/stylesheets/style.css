@@ -161,6 +161,10 @@ nav ul li {
   display: inline;
 }
 
+p {
+  text-align: left;
+}
+
 #page a {
   color: #d7d7d7;
 }
@@ -339,6 +343,10 @@ h2 {
   font-weight: normal;
   margin-bottom: 0.5em;
   padding: 0.25em;
+}
+
+h3 {
+  text-align: left;
 }
 
 .pending {
@@ -854,7 +862,7 @@ canvas#visualizer {
 }
 
 /**
- * Track name editing
+ * Track editing
  */
 .editable-field-control {
   margin-left: 1em;
