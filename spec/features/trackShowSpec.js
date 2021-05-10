@@ -156,12 +156,12 @@ describe('trackShowSpec', () => {
           });
         });
 
-        it('receives an editable track transcription field', done => {
+        it('receives an editable track transcript field', done => {
           browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="true"]');
             done();
           });
         });
@@ -217,12 +217,12 @@ describe('trackShowSpec', () => {
           });
         });
 
-        it('receives an editable transcription field', done => {
+        it('receives an editable transcript field', done => {
           browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="true"]');
             done();
           });
         });
@@ -252,12 +252,12 @@ describe('trackShowSpec', () => {
           });
         });
 
-        it('receives a non-editable transcription field', done => {
+        it('receives a non-editable transcript field', done => {
           browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.element('article.post section.track figure p#track-transcription-field[contenteditable="false"]');
+            browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="false"]');
             done();
           });
         });
