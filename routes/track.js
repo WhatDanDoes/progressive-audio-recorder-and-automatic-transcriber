@@ -224,6 +224,10 @@ router.patch('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
       track.name = req.body.name;
     }
 
+    if (req.body.transcript) {
+      track.transcript = req.body.transcript;
+    }
+
     track.save().then(track => {
       if (req.headers['accept'] === 'application/json') {
         return res.status(201).json({ message: 'Track updated' });
