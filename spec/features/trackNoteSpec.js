@@ -135,7 +135,7 @@ describe('Writing note on a track', () => {
         browser.assert.element('article.post');
         browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
         browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note"]`);
-        browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion textarea#track-note-field[name="text"][maxlength="500"]`);
         browser.assert.element(`article.post section.feedback-controls span.accordion form button.post-note[type="submit"][aria-label="Post"]`);
 
         done();
@@ -143,7 +143,7 @@ describe('Writing note on a track', () => {
 
       it('does not add a note if the text is empty', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
-        browser.fill('textarea', '  ');
+        browser.fill('#track-note-field', '  ');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
@@ -155,7 +155,7 @@ describe('Writing note on a track', () => {
       });
 
       it('lands in the right place', done => {
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -169,7 +169,7 @@ describe('Writing note on a track', () => {
 
       it('preserves newline characters in the database', done => {
         let newlines = 'Why\n\nThe\n\nFace\n\n?';
-        browser.fill('textarea', newlines);
+        browser.fill('#track-note-field', newlines);
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -188,7 +188,7 @@ describe('Writing note on a track', () => {
 
       it('preserves newline characters on the display', done => {
         let newlines = 'Why\n\nThe\n\nFace\n\n?';
-        browser.fill('textarea', newlines);
+        browser.fill('#track-note-field', newlines);
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -205,7 +205,7 @@ describe('Writing note on a track', () => {
 
       it('applies markdown to the note content', done => {
         let newlines = '# Why\n\n_The_\n\n ## Face\n\n?';
-        browser.fill('textarea', newlines);
+        browser.fill('#track-note-field', newlines);
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -224,13 +224,13 @@ describe('Writing note on a track', () => {
       it('adds the note to total likes and pluralizes note count', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
           browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
-          browser.fill('textarea', 'Greetings');
+          browser.fill('#track-note-field', 'Greetings');
           browser.pressButton('.post-note[aria-label="Post"]', err => {
             if (err) return done.fail(err);
 
@@ -243,7 +243,7 @@ describe('Writing note on a track', () => {
       it('displays note content on track show', done => {
         browser.assert.elements('article.post section.notes', 0);
 
-        browser.fill('textarea', 'Greetings');
+        browser.fill('#track-note-field', 'Greetings');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
@@ -271,7 +271,7 @@ describe('Writing note on a track', () => {
         browser.assert.element('article.post');
         browser.assert.element('article.post section.feedback-controls span.accordion i.far.fa-comment');
         browser.assert.element(`article.post section.feedback-controls span.accordion form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note"]`);
-        browser.assert.element(`article.post section.feedback-controls span.accordion textarea[name="text"][maxlength="500"]`);
+        browser.assert.element(`article.post section.feedback-controls span.accordion textarea#track-note-field[name="text"][maxlength="500"]`);
         browser.assert.element(`article.post section.feedback-controls span.accordion form button.post-note[type="submit"][aria-label="Post"]`);
 
         done();
@@ -279,7 +279,7 @@ describe('Writing note on a track', () => {
 
       it('does not add a note if the text is empty', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
-        browser.fill('textarea', '  ');
+        browser.fill('#track-note-field', '  ');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
@@ -291,7 +291,7 @@ describe('Writing note on a track', () => {
       });
 
       it('lands in the right place', done => {
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
           browser.assert.success();
@@ -304,13 +304,13 @@ describe('Writing note on a track', () => {
       it('adds the note to total likes and pluralizes note count', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
           browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
-          browser.fill('textarea', 'Greetings');
+          browser.fill('#track-note-field', 'Greetings');
           browser.pressButton('.post-note[aria-label="Post"]', err => {
             if (err) return done.fail(err);
 
@@ -323,7 +323,7 @@ describe('Writing note on a track', () => {
       it('displays the new note in a list', done => {
         browser.assert.elements('article.notes section.note', 0);
 
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
@@ -331,7 +331,7 @@ describe('Writing note on a track', () => {
           browser.assert.elements('section.notes article.note header img.avatar', 1);
           browser.assert.elements('section.notes article.note header aside', 1);
 
-          browser.fill('textarea', 'Greetings');
+          browser.fill('#track-note-field', 'Greetings');
           browser.pressButton('.post-note[aria-label="Post"]', err => {
             if (err) return done.fail(err);
 
@@ -346,13 +346,13 @@ describe('Writing note on a track', () => {
       it('maintains note count when like is toggled', done => {
         browser.assert.text('article.post section.feedback-controls i.like-button', '');
 
-        browser.fill('textarea', 'Groovy, baby! Yeah!');
+        browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
         browser.pressButton('.post-note[aria-label="Post"]', err => {
           if (err) return done.fail(err);
 
           browser.assert.text('article.post section.feedback-controls i.like-button', '1 note');
 
-          browser.fill('textarea', 'Greetings');
+          browser.fill('#track-note-field', 'Greetings');
           browser.pressButton('.post-note[aria-label="Post"]', err => {
             if (err) return done.fail(err);
 
