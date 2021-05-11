@@ -173,7 +173,7 @@ describe('landing page', () => {
 
       describe('no name set', () => {
         beforeEach(done => {
-          browser.visit('/track', err => {
+          browser.visit('/', err => {
             if (err) return done.fail(err);
             browser.assert.success();
             done();
@@ -439,6 +439,73 @@ describe('landing page', () => {
         browser.assert.elements('#previous-page', 0);
 
         done();
+      });
+    });
+
+    describe('track post layout', () => {
+
+      let track;
+      beforeEach(done => {
+
+        /**
+         * It's just easier to work with one post...
+         */
+        models.Track.deleteMany({}, res => {
+
+          models.Track.create({
+            path: `uploads/${agent.getAgentDirectory()}/track1.ogg`,
+            recordist: agent._id,
+            published: new Date()
+          }).then(results => {
+
+            track = results;
+            done();
+          }).catch(err => {
+            done.fail(err);
+          });
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+      describe('no name set', () => {
+        beforeEach(done => {
+          browser.visit('/', err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+            done();
+          });
+        });
+
+        it('display track path but no track name', () => {
+          expect(track.name).toEqual('');
+          browser.assert.element('article.post section.track figure figcaption');
+          browser.assert.element(`article.post section.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          browser.assert.text('article.post section.track figure figcaption', `/track/${agent.getAgentDirectory()}/track1.ogg`);
+        });
+      });
+
+      describe('name set', () => {
+        beforeEach(done => {
+          track.name = 'Austin Powers';
+          track.save().then(results => {
+            browser.visit('/', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('sets assigned name as name', () => {
+          expect(track.name).toEqual('Austin Powers');
+          browser.assert.element('article.post section.track figure figcaption');
+          browser.assert.text('article.post section.track figure figcaption h2', 'Austin Powers');
+          browser.assert.element(`article.post section.track figure figcaption a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          browser.assert.text('article.post section.track figure figcaption a', `/track/${agent.getAgentDirectory()}/track1.ogg`);
+        });
       });
     });
 

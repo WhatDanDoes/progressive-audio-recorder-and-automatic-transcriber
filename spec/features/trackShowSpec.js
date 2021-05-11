@@ -152,6 +152,8 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control');
+
             done();
           });
         });
@@ -162,6 +164,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure h3 .editable-field-control');
             done();
           });
         });
@@ -213,6 +216,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control');
             done();
           });
         });
@@ -223,6 +227,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="true"]');
+            browser.assert.element('article.post section.track figure h3 .editable-field-control');
             done();
           });
         });
@@ -248,6 +253,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="false"]');
+            browser.assert.elements('article.post section.track figure figcaption h2 .editable-field-control', 0);
             done();
           });
         });
@@ -258,6 +264,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="false"]');
+            browser.assert.elements('article.post section.track figure h3 .editable-field-control', 0);
             done();
           });
         });
@@ -303,6 +310,23 @@ describe('trackShowSpec', () => {
             browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny2.ogg` });
             done();
           });
+        });
+      });
+
+      it('does not show track editor controls', done => {
+        // Published in setup above
+        browser.visit(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`, err => {
+          if (err) return done.fail(err);
+
+          // Name edit
+          browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="false"]');
+          browser.assert.elements('article.post section.track figure figcaption h2 .editable-field-control', 0);
+
+          // Transcript edit
+          browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="false"]');
+          browser.assert.elements('article.post section.track figure h3 .editable-field-control', 0);
+
+          done();
         });
       });
     });

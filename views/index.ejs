@@ -14,6 +14,11 @@
           <% if (agent) { %>
             <figure>
               <figcaption>
+                <% if (track.name) { %>
+                  <h2>
+                    <%= track.name %>
+                  </h2>
+                <% } %>
                 <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
                   <%= `/${track.path.replace('uploads', 'track')}` %>
                 </a>
