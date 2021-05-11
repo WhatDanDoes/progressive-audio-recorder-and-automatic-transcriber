@@ -351,13 +351,6 @@ describe('trackEditSpec', () => {
                 });
               });
 
-              it('does not submit on Enter keypress', done => {
-                done.fail();
-              });
-
-              it('submits on ctrl-s keypress', done => {
-                done.fail();
-              });
             });
 
             describe('successfully', () => {
@@ -1096,7 +1089,40 @@ describe('trackEditSpec', () => {
           expect(text).toMatch('Groovy, baby! Yeah!');
         });
 
+        it('does not submit on Enter keypress', done => {
+          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          models.Track.findOne({ path: filePath }).then(async track => {
+            expect(track.name).toEqual('');
 
+            await page.click('i#edit-track-transcript');
+            await page.waitForTimeout(200);
+
+            // If it's not focussed on the correct `contenteditable` field, this test fails
+            let focussed = await page.evaluateHandle(() => document.activeElement);
+            focussed.type('Groovy, baby! Yeah!');
+
+            await page.waitForTimeout(100);
+
+            await page.keyboard.press('Enter');
+            await page.keyboard.press('Enter');
+            await page.keyboard.press('Enter');
+            await page.keyboard.press('Enter');
+            await page.waitForTimeout(200);
+
+            models.Track.findOne({ path: filePath }).then(track => {
+              expect(track.name).toEqual('');
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('submits on ctrl-s keypress', done => {
+          done.fail();
+        });
       });
     });
   });
