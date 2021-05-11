@@ -28,7 +28,8 @@
           <% } else { %>
             <figure>
               <figcaption>
-                <%= `/${track.path.replace('uploads', 'track')}` %>
+                <% let parts = track.path.split('/'); %>
+                <%= track.name ? track.name : parts[parts.length - 1] %>
               </figcaption>
               <audio
                 controls
