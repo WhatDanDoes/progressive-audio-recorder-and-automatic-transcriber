@@ -100,19 +100,19 @@
       editNameButton.style.display = 'none';
       cancelNameEditButton.style.display = '';
       saveNameButton.style.display = '';
-    }
+    };
 
     function setTrackNameTextMode(e) {
       nameField.blur();
       editNameButton.style.display = '';
       cancelNameEditButton.style.display = 'none';
       saveNameButton.style.display = 'none';
-    }
+    };
 
     function resetTrackNameField(e) {
       nameField.innerHTML = _originalTrackName;
       setTrackNameTextMode(e);
-    }
+    };
 
     editNameButton.addEventListener('click', setTrackNameEditMode);
     cancelNameEditButton.addEventListener('click', resetTrackNameField);
@@ -141,28 +141,26 @@
       editTranscriptButton.style.display = 'none';
       cancelTranscriptEditButton.style.display = '';
       saveTranscriptButton.style.display = '';
-    }
+    };
 
     function setTrackTranscriptTextMode(e) {
       transcriptField.blur();
       editTranscriptButton.style.display = '';
       cancelTranscriptEditButton.style.display = 'none';
       saveTranscriptButton.style.display = 'none';
-    }
+    };
 
     function resetTrackTranscriptField(e) {
       transcriptField.innerHTML = _originalTrackTranscript;
       _originalTrackTranscript = null;
       setTrackTranscriptTextMode(e);
-    }
+    };
 
     cancelTranscriptEditButton.addEventListener('click', resetTrackTranscriptField);
 
     editTranscriptButton.addEventListener('click', setTrackTranscriptEditMode);
     transcriptField.addEventListener('focus', setTrackTranscriptEditMode);
     transcriptField.addEventListener('click', setTrackTranscriptEditMode);
-
-    saveTranscriptButton.addEventListener('click', () => sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track'));
 
     /**
      * PATCH
@@ -210,8 +208,9 @@
       });
     };
 
-
-
+    /**
+     * Name/transcript updates
+     */
     nameField.addEventListener('keydown', function(event) {
       if (event.keyCode === 13) {
         sendUpdate(setTrackNameTextMode, {name: nameField.innerHTML.trim()}, 'name');
@@ -222,7 +221,16 @@
       sendUpdate(setTrackNameTextMode, {name: nameField.innerHTML.trim()}, 'name');
     });
 
+    saveTranscriptButton.addEventListener('click', () => sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track'));
 
+    // 2021-5-11 https://michilehr.de/overwrite-cmds-and-ctrls-in-javascript
+    // Save transcript on Ctrl-S
+    transcriptField.addEventListener('keydown', e => {
+      if ((window.navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
+        e.preventDefault();
+        sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track');
+      }
+    }, false);
   </script>
 
 <% include ../_partials/footer %>
