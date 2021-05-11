@@ -358,7 +358,7 @@ describe('trackEditSpec', () => {
 
               it('lands in the correct spot and displays a friendly message', done => {
                 browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.click('i#save-track-transcript', err => {
                   if (err) return done.fail(err);
@@ -382,7 +382,7 @@ describe('trackEditSpec', () => {
                   browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
 
                   browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                  browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                   browser.click('i#save-track-transcript', err => {
                     if (err) return done.fail(err);
@@ -410,35 +410,35 @@ describe('trackEditSpec', () => {
               });
 
               it('resets the value', done => {
-                browser.assert.text('.post .track figure p#track-transcript-field', '');
-                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.input('.post .track figure #track-transcript-field', '');
+                browser.document.getElementById('track-transcript-field').value = 'Groovy, baby! Yeah!';
+                browser.assert.input('#track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.click('i#cancel-edit-track-transcript', err => {
                   if (err) return done.fail(err);
 
-                  browser.assert.text('.post .track figure p#track-transcript-field', '');
+                  browser.assert.text('.post .track figure #track-transcript-field', '');
                   done();
                 });
               });
 
               it('resets the field value when focus is lost and then regained', done => {
-                browser.assert.text('.post .track figure p#track-transcript-field', '');
+                browser.assert.text('.post .track figure #track-transcript-field', '');
                 browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.focus('body');
                 browser.click('#track-transcript-field', err => {
-                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                  browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                   browser.focus('body');
                   browser.click('#track-transcript-field', err => {
-                    browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                    browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                     browser.click('i#cancel-edit-track-transcript', err => {
                       if (err) return done.fail(err);
 
-                      browser.assert.text('.post .track figure p#track-transcript-field', '');
+                      browser.assert.input('.post .track figure #track-transcript-field', '');
                       done();
                     });
                   });
@@ -672,7 +672,7 @@ describe('trackEditSpec', () => {
 
               it('lands in the correct spot and displays a friendly message', done => {
                 browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.click('i#save-track-transcript', err => {
                   if (err) return done.fail(err);
@@ -696,7 +696,7 @@ describe('trackEditSpec', () => {
                   browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
 
                   browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                  browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                   browser.click('i#save-track-transcript', err => {
                     if (err) return done.fail(err);
@@ -724,35 +724,35 @@ describe('trackEditSpec', () => {
               });
 
               it('resets the value', done => {
-                browser.assert.text('.post .track figure p#track-transcript-field', '');
+                browser.assert.input('.post .track figure #track-transcript-field', '');
                 browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.click('i#cancel-edit-track-transcript', err => {
                   if (err) return done.fail(err);
 
-                  browser.assert.text('.post .track figure p#track-transcript-field', '');
+                  browser.assert.input('.post .track figure #track-transcript-field', '');
                   done();
                 });
               });
 
               it('resets the field value when focus is lost and then regained', done => {
-                browser.assert.text('.post .track figure p#track-transcript-field', '');
+                browser.assert.input('.post .track figure #track-transcript-field', '');
                 browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
-                browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                 browser.focus('body');
                 browser.click('#track-transcript-field', err => {
-                  browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                  browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                   browser.focus('body');
                   browser.click('#track-transcript-field', err => {
-                    browser.assert.text('.post .track figure p#track-transcript-field', 'Groovy, baby! Yeah!');
+                    browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
 
                     browser.click('i#cancel-edit-track-transcript', err => {
                       if (err) return done.fail(err);
 
-                      browser.assert.text('.post .track figure p#track-transcript-field', '');
+                      browser.assert.input('.post .track figure #track-transcript-field', '');
                       done();
                     });
                   });
@@ -977,7 +977,6 @@ describe('trackEditSpec', () => {
 
             await page.waitForTimeout(100);
 
-            //page.click('i#save-track-name').then(async () => {
             page.keyboard.press('Enter').then(async () => {
 
               await page.waitForTimeout(200);
@@ -1121,14 +1120,16 @@ describe('trackEditSpec', () => {
           await page.waitForTimeout(200);
 
           let element = await page.$("#track-transcript-field");
-          let text = await page.evaluate(element => element.textContent, element);
+          //let text = await page.evaluate(element => element.textContent, element);
+          let text = await page.evaluate(element => element.value, element);
           expect(text).toEqual('Groovy, baby! Yeah!');
 
           // Reload
           await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
 
           element = await page.$("#track-transcript-field");
-          text = await page.evaluate(element => element.textContent, element);
+          //text = await page.evaluate(element => element.textContent, element);
+          text = await page.evaluate(element => element.value, element);
           expect(text.trim()).toEqual('Groovy, baby! Yeah!');
         });
 
@@ -1146,7 +1147,7 @@ describe('trackEditSpec', () => {
           await page.waitForTimeout(200);
 
           let element = await page.$("#track-transcript-field");
-          let text = await page.evaluate(element => element.textContent, element);
+          let text = await page.evaluate(element => element.value, element);
           expect(text).toEqual('Groovy, baby! Yeah!');
 
           //
@@ -1156,14 +1157,14 @@ describe('trackEditSpec', () => {
           await page.waitForTimeout(200);
 
           focussed = await page.evaluateHandle(() => document.activeElement);
-          focussed.type('Shagadelic! ');
+          focussed.type(' Shagadelic!');
           await page.waitForTimeout(100);
           await page.click('i#save-track-transcript');
           await page.waitForTimeout(200);
 
           element = await page.$("#track-transcript-field");
-          text = await page.evaluate(element => element.textContent, element);
-          expect(text).toEqual('Shagadelic! Groovy, baby! Yeah!');
+          text = await page.evaluate(element => element.value, element);
+          expect(text).toEqual('Groovy, baby! Yeah! Shagadelic!');
 
           //
           // Update and cancel the changes to the transcript
@@ -1177,8 +1178,8 @@ describe('trackEditSpec', () => {
           await page.click('i#cancel-edit-track-transcript');
 
           element = await page.$("#track-transcript-field");
-          text = await page.evaluate(element => element.textContent, element);
-          expect(text).toEqual('Shagadelic! Groovy, baby! Yeah!');
+          text = await page.evaluate(element => element.value, element);
+          expect(text).toEqual('Groovy, baby! Yeah! Shagadelic!');
 
           await page.waitForTimeout(100);
         });
@@ -1198,14 +1199,14 @@ describe('trackEditSpec', () => {
           await page.waitForTimeout(200);
 
           let element = await page.$("#track-transcript-field");
-          let text = await page.evaluate(element => element.textContent, element);
+          let text = await page.evaluate(element => element.value, element);
           expect(text).toEqual('Groovy, baby! Yeah!');
 
           // Reload
           await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
 
           element = await page.$("#track-transcript-field");
-          text = await page.evaluate(element => element.textContent, element);
+          text = await page.evaluate(element => element.value, element);
           expect(text).toMatch('Groovy, baby! Yeah!');
         });
 

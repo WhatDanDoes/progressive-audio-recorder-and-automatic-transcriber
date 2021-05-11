@@ -26,9 +26,7 @@
               <i id="save-track-transcript" class="fas fa-paper-plane" style="display:none;"></i>
             </span>
           </h3>
-          <p id="track-transcript-field" contenteditable="<%= canWrite %>">
-            <%= track.transcript %>
-          </p>
+          <textarea id="track-transcript-field" value="<%- track.transcript %>"><%- track.transcript %></textarea>
           <canvas id="visualizer"></canvas>
           <audio
             id="audio-source"
@@ -134,7 +132,7 @@
 
     function setTrackTranscriptEditMode(e) {
       if (_originalTrackTranscript !== '' && !_originalTrackTranscript) {
-        _originalTrackTranscript = transcriptField.innerHTML;
+        _originalTrackTranscript = transcriptField.value;
       }
       transcriptField.focus();
 
@@ -151,7 +149,7 @@
     };
 
     function resetTrackTranscriptField(e) {
-      transcriptField.innerHTML = _originalTrackTranscript;
+      transcriptField.value = _originalTrackTranscript;
       _originalTrackTranscript = null;
       setTrackTranscriptTextMode(e);
     };
@@ -221,14 +219,14 @@
       sendUpdate(setTrackNameTextMode, {name: nameField.innerHTML.trim()}, 'name');
     });
 
-    saveTranscriptButton.addEventListener('click', () => sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track'));
+    saveTranscriptButton.addEventListener('click', () => sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.value.trim()}, 'track'));
 
     // 2021-5-11 https://michilehr.de/overwrite-cmds-and-ctrls-in-javascript
     // Save transcript on Ctrl-S
     transcriptField.addEventListener('keydown', e => {
       if ((window.navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey)  && e.keyCode == 83) {
         e.preventDefault();
-        sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.innerHTML.trim()}, 'track');
+        sendUpdate(setTrackTranscriptTextMode, {transcript: transcriptField.value.trim()}, 'track');
       }
     }, false);
   </script>
