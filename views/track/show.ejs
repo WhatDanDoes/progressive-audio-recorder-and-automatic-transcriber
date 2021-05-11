@@ -26,7 +26,7 @@
               <i id="save-track-transcript" class="fas fa-paper-plane" style="display:none;"></i>
             </span>
           </h3>
-          <textarea id="track-transcript-field" value="<%- track.transcript %>"><%- track.transcript %></textarea>
+          <textarea id="track-transcript-field" value="<%- track.transcript %>" disabled="<%= !canWrite %>"><%- track.transcript %></textarea>
           <canvas id="visualizer"></canvas>
           <audio
             id="audio-source"
