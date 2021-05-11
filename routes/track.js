@@ -205,18 +205,6 @@ router.post('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
  */
 router.patch('/:domain/:agentId/:trackId', ensureAuthorized, (req, res) => {
 
-//  const canWrite = RegExp(req.user.getAgentDirectory()).test(req.path) || req.user.email === process.env.SUDO;
-//  if (!canWrite){
-//    const message = 'You are not authorized to edit that resource';
-//
-//    if (req.headers['accept'] === 'application/json') {
-//      return res.status(401).json({ message: message });
-//    }
-//
-//    req.flash('error', message);
-//    return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
-//  }
-
   const filePath = `uploads/${req.params.domain}/${req.params.agentId}/${req.params.trackId}`;
   models.Track.findOne({ path: filePath }).then(track => {
 
