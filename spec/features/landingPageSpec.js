@@ -155,7 +155,11 @@ describe('landing page', () => {
          */
         models.Track.deleteMany({}, res => {
 
-          models.Track.create({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() }).then(results => {
+          models.Track.create({
+            path: `uploads/${agent.getAgentDirectory()}/track1.ogg`,
+            recordist: agent._id,
+            published: new Date()
+          }).then(results => {
 
             track = results;
             browser.visit('/', err => {
@@ -183,7 +187,11 @@ describe('landing page', () => {
         beforeEach(done => {
           track.name = 'Austin Powers';
           track.save().then(results => {
-            done();
+            browser.visit('/', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
           }).catch(err => {
             done.fail(err);
           });

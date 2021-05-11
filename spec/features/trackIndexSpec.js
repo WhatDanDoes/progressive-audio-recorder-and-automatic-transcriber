@@ -156,7 +156,10 @@ describe('trackIndexSpec', () => {
            */
           models.Track.deleteMany({}, res => {
 
-            models.Track.create({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id }).then(results => {
+            models.Track.create({
+              path: `uploads/${agent.getAgentDirectory()}/track1.ogg`,
+              recordist: agent._id
+            }).then(results => {
 
               track = results;
               browser.visit('/track', err => {
