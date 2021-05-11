@@ -247,13 +247,13 @@ describe('trackShowSpec', () => {
           });
         });
 
-        it('receives a non-editable track name field', done => {
+        it('receives a non-editable track name field and does not display controls', done => {
           browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="false"]');
-            browser.assert.elements('article.post section.track figure figcaption h2 .editable-field-control', 0);
+          browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control[style="display:none;"]');
             done();
           });
         });
@@ -264,7 +264,7 @@ describe('trackShowSpec', () => {
             browser.assert.success();
 
             browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="false"]');
-            browser.assert.elements('article.post section.track figure h3 .editable-field-control', 0);
+            browser.assert.element('article.post section.track figure h3 .editable-field-control[style="display:none;"]');
             done();
           });
         });
@@ -313,18 +313,18 @@ describe('trackShowSpec', () => {
         });
       });
 
-      it('does not show track editor controls', done => {
+      it('does not display track editor controls', done => {
         // Published in setup above
         browser.visit(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`, err => {
           if (err) return done.fail(err);
 
           // Name edit
           browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="false"]');
-          browser.assert.elements('article.post section.track figure figcaption h2 .editable-field-control', 0);
+          browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control[style="display:none;"]');
 
           // Transcript edit
           browser.assert.element('article.post section.track figure p#track-transcript-field[contenteditable="false"]');
-          browser.assert.elements('article.post section.track figure h3 .editable-field-control', 0);
+          browser.assert.element('article.post section.track figure h3 .editable-field-control[style="display:none;"]');
 
           done();
         });

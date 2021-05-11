@@ -8,7 +8,7 @@
           <figcaption>
             <h2>
               Name: <span id="track-name-field" contenteditable="<%= canWrite %>"><%= track.name %></span>
-              <span class="editable-field-control">
+              <span class="editable-field-control" <%- !canWrite ? 'style="display:none;"' : '' %>>
                 <i id="edit-track-name" class="far fa-edit"></i>
                 <i id="cancel-edit-track-name" class="fas fa-trash" style="display:none;"></i>
                 <i id="save-track-name" class="fas fa-paper-plane" style="display:none;"></i>
@@ -20,7 +20,7 @@
           </figcaption>
           <h3>
             Transcript:
-            <span class="editable-field-control">
+            <span class="editable-field-control" <%- !canWrite ? 'style="display:none;"' : '' %>>
               <i id="edit-track-transcript" class="far fa-edit"></i>
               <i id="cancel-edit-track-transcript" class="fas fa-trash" style="display:none;"></i>
               <i id="save-track-transcript" class="fas fa-paper-plane" style="display:none;"></i>
