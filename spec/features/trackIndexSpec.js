@@ -162,11 +162,7 @@ describe('trackIndexSpec', () => {
             }).then(results => {
 
               track = results;
-              browser.visit('/track', err => {
-                if (err) return done.fail(err);
-                browser.assert.success();
-                done();
-              });
+              done();
             }).catch(err => {
               done.fail(err);
             });
@@ -176,6 +172,15 @@ describe('trackIndexSpec', () => {
         });
 
         describe('no name set', () => {
+
+          beforeEach(done => {
+            browser.visit('/track', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          });
+
           it('sets filename as name', () => {
             expect(track.name).toEqual('');
             browser.assert.element('article.post section.track figure figcaption a');
@@ -187,7 +192,11 @@ describe('trackIndexSpec', () => {
           beforeEach(done => {
             track.name = 'Austin Powers';
             track.save().then(results => {
-              done();
+              browser.visit('/track', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                done();
+              });
             }).catch(err => {
               done.fail(err);
             });

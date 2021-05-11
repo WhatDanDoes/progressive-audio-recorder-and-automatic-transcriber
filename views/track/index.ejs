@@ -21,7 +21,8 @@
             <figure>
               <figcaption>
                 <a href="<%= `/${track.path.replace('uploads', 'track')}` %>">
-                  <%= `/${track.path.replace('uploads', 'track')}` %>
+                  <% let parts = track.path.split('/'); %>
+                  <%= track.name ? track.name : parts[parts.length - 1] %>
                 </a>
               </figcaption>
               <audio
