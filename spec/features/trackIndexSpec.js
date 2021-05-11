@@ -145,6 +145,58 @@ describe('trackIndexSpec', () => {
           done();
         });
       });
+
+      describe('track post layout', () => {
+
+        let track;
+        beforeEach(done => {
+
+          /**
+           * It's just easier to work with one post...
+           */
+          models.Track.deleteMany({}, res => {
+
+            models.Track.create({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id }).then(results => {
+
+              track = results;
+              browser.visit('/track', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                done();
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        describe('no name set', () => {
+          it('sets filename as name', () => {
+            expect(track.name).toEqual('');
+            browser.assert.element('article.post section.track figure figcaption a');
+            browser.assert.text('article.post section.track figure figcaption a', 'track1.ogg');
+          });
+        });
+
+        describe('name set', () => {
+          beforeEach(done => {
+            track.name = 'Austin Powers';
+            track.save().then(results => {
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+
+          it('sets assigned name as name', () => {
+            expect(track.name).toEqual('Austin Powers');
+            browser.assert.element('article.post section.track figure figcaption a');
+            browser.assert.text('article.post section.track figure figcaption a', 'Austin Powers');
+          });
+        });
+      });
     });
 
     describe('unauthorized', () => {

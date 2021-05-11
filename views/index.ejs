@@ -27,6 +27,9 @@
             </figure>
           <% } else { %>
             <figure>
+              <figcaption>
+                <%= `/${track.path.replace('uploads', 'track')}` %>
+              </figcaption>
               <audio
                 controls
                 src="<%= `/${track.path}` %>">
