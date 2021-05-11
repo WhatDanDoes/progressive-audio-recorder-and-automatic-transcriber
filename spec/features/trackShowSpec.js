@@ -162,7 +162,8 @@ describe('trackShowSpec', () => {
           browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
             if (err) return done.fail(err);
             browser.assert.success();
-            browser.assert.element('article.post section.track figure #track-transcript-field[disabled="false"]');
+            browser.assert.element('article.post section.track figure #track-transcript-field');
+            browser.assert.attribute('article.post section.track figure #track-transcript-field', 'disabled', null);
             browser.assert.element('article.post section.track figure h3 .editable-field-control');
             done();
           });
@@ -225,7 +226,8 @@ describe('trackShowSpec', () => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.element('article.post section.track figure #track-transcript-field[disabled="false"]');
+            browser.assert.element('article.post section.track figure #track-transcript-field');
+            browser.assert.attribute('article.post section.track figure #track-transcript-field', 'disabled', null);
             browser.assert.element('article.post section.track figure h3 .editable-field-control');
             done();
           });
@@ -262,7 +264,8 @@ describe('trackShowSpec', () => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.element('article.post section.track figure #track-transcript-field[disabled="true"]');
+            browser.assert.element('article.post section.track figure #track-transcript-field');
+            browser.assert.attribute('article.post section.track figure #track-transcript-field', 'disabled', '');
             browser.assert.element('article.post section.track figure h3 .editable-field-control[style="display:none;"]');
             done();
           });
@@ -322,7 +325,8 @@ describe('trackShowSpec', () => {
           browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control[style="display:none;"]');
 
           // Transcript edit
-          browser.assert.element('article.post section.track figure #track-transcript-field[disabled="true"]');
+          browser.assert.element('article.post section.track figure #track-transcript-field');
+          browser.assert.attribute('article.post section.track figure #track-transcript-field', 'disabled', '');
           browser.assert.element('article.post section.track figure h3 .editable-field-control[style="display:none;"]');
 
           done();

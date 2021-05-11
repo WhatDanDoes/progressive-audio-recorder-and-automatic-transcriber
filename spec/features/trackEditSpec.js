@@ -1084,8 +1084,11 @@ describe('trackEditSpec', () => {
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.transcript).toEqual('');
 
+            await page.click('i#edit-track-name');
+            await page.waitForTimeout(200);
+
             page.type('#track-transcript-field', 'Groovy, baby! Yeah!');
-            await page.waitForTimeout(100);
+            await page.waitForTimeout(200);
 
             page.click('i#save-track-transcript').then(async () => {
 
