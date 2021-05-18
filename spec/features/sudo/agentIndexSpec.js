@@ -9,7 +9,6 @@ const fs = require('fs');
 const app = require('../../../app');
 const fixtures = require('pow-mongoose-fixtures');
 const models = require('../../../models');
-const jwt = require('jsonwebtoken');
 const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
 /**
