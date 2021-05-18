@@ -40,6 +40,7 @@
   "devDependencies": {
     "jasmine": "^3.7.0",
     "mock-fs": "^4.13.0",
+    "msw": "^0.28.2",
     "nock": "^13.0.11",
     "nock-puppeteer": "^1.0.6",
     "node-jose": "^2.0.0",
