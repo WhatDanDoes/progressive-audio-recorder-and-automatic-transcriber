@@ -9,6 +9,8 @@ const url = require('url');
 const apiScope = require('../config/apiPermissions');
 const roles = require('../config/roles');
 
+const fetch = require('node-fetch');
+
 router.get('/login', (req, res, next) => {
   const authenticator = passport.authenticate('auth0', {
     scope: 'openid email profile',
@@ -45,9 +47,21 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
         res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
       });
     });
-  }
-
-  login();
+  };
+ 
+//  fetch(`${process.env.IDENTITY_API}/agent`, {
+//      method: 'get',
+//      headers: {
+//        'Content-Type': 'application/json',
+//        'Authorization': `Bearer ${req.user._doc.access_token}`
+//      },
+//    })
+//    .then(res => res.json())
+//    .then(json => {
+//console.log("AAALLL DONE");
+//console.log(json);
+      login();
+//    });
 });
 
 /**

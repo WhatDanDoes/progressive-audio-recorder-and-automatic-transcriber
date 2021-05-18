@@ -2,7 +2,13 @@ const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
 
 const app = require('../../app');
 const request = require('supertest-session');
+
 const nock = require('nock');
+const msw = require('msw');
+const mswNode = require('msw/node');
+// Nock can't catch fetch requests
+//const fetchMock = require('fetch-mock').sandbox();
+
 const querystring = require('querystring');
 const jwt = require('jsonwebtoken');
 const models = require('../../models');
@@ -62,7 +68,6 @@ describe('authSpec', () => {
     });
   });
 
-
   describe('/login', () => {
     it('redirects to Auth0 login endpoint', done => {
       request(app)
@@ -119,6 +124,7 @@ describe('authSpec', () => {
    * `/userinfo` is hit
    */
   describe('/callback', () => {
+    let _identityCalls, identityApi;
 
     let session, oauthTokenScope, userInfoScope, auth0UserAssignRolesScope, auth0GetRolesScope;
     // Added for when agent info is requested immediately after authentication
@@ -148,6 +154,9 @@ describe('authSpec', () => {
            *
            * This is called when first authenticating
            */
+          const accessToken = jwt.sign({..._access,
+                                        permissions: [scope.read.agents]},
+                                        prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
           oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
             .post(/oauth\/token/, {
                                     'grant_type': 'authorization_code',
@@ -157,9 +166,7 @@ describe('authSpec', () => {
                                     'code': 'AUTHORIZATION_CODE'
                                   })
             .reply(200, {
-              'access_token': jwt.sign({..._access,
-                                        permissions: [scope.read.agents]},
-                                       prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } }),
+              'access_token': accessToken,
               'refresh_token': 'SOME_MADE_UP_REFRESH_TOKEN',
               'id_token': jwt.sign({..._identity,
                                       aud: process.env.AUTH0_CLIENT_ID,
@@ -172,7 +179,7 @@ describe('authSpec', () => {
            * This is called when the agent has authenticated and silid
            * needs to retreive the non-OIDC-compliant metadata, etc.
            */
-          const accessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
+          const anotherAccessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
                                         prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
           anotherOauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
             .post(/oauth\/token/, {
@@ -183,7 +190,7 @@ describe('authSpec', () => {
                                     'scope': apiScope.read.users
                                   })
             .reply(200, {
-              'access_token': accessToken,
+              'access_token': anotherAccessToken,
               'token_type': 'Bearer',
             });
 
@@ -191,13 +198,46 @@ describe('authSpec', () => {
            * The token retrieved above is used to get the
            * non-OIDC-compliant metadata, etc.
            */
-          userReadScope = nock(`https://${process.env.AUTH0_DOMAIN}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+          userReadScope = nock(`https://${process.env.AUTH0_DOMAIN}`, { reqheaders: { authorization: `Bearer ${anotherAccessToken}`} })
             .get(/api\/v2\/users\/.+/)
             .query({})
             .reply(200, _profile);
 
+          /**
+           * Identity provides access to Auth0 metadata
+           */
+          _identityCalls = [];
+          identityApi = mswNode.setupServer(
+            msw.rest.get(`${process.env.IDENTITY_API}/agent`, (req, res, ctx) => {
+
+console.log("IDENTITY API HIT");
+              _identityCalls.push(req);
+              if (req.headers.get('authorization') === `Bearer ${accessToken}`) {
+                return res(
+                  ctx.json({..._profile, user_metadata: { favourite_fish: 'Cod' } }),
+                );
+              }
+              else {
+                console.error('msw expected a different token: ');
+                console.error('EXPECTED:', req.headers.get('authorization'));
+                console.error('ACTUAL:  ', `Bearer ${anotherAccessToken}`);
+              }
+
+              return res(
+                ctx.status(403),
+                ctx.json({ message: 'Unauthorized by MSW' }),
+              );
+            }),
+          );
+    
+          identityApi.listen();
+
           done();
         });
+    });
+
+    afterEach(() => {
+      identityApi.close();
     });
 
     it('calls the `/oauth/token` endpoint', done => {
@@ -229,6 +269,19 @@ describe('authSpec', () => {
         .end(function(err, res) {
           if (err) return done.fail(err);
           expect(res.headers.location).toEqual('/track/example.com/someguy');
+          done();
+        });
+    });
+
+    it('calls the Identity API\'s /agent endpoint to retrieve full Auth0 profile', done => {
+      session
+        .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+        .redirects()
+        .end(function(err, res) {
+          if (err) return done.fail(err);
+          expect(_identityCalls.length).toEqual(1);
+          expect(_identityCalls[0].url.href).toEqual(`${process.env.IDENTITY_API}/agent`);
+
           done();
         });
     });
@@ -311,6 +364,8 @@ describe('authSpec', () => {
   });
 
   describe('Browser', () => {
+    let _identityCalls, identityApi;
+
     // Setup and configure zombie browser
     const Browser = require('zombie');
     Browser.localhost('example.com', PORT);
@@ -372,6 +427,9 @@ describe('authSpec', () => {
             /**
              * `/oauth/token` mock
              */
+            const accessToken = jwt.sign({..._access,
+                                          permissions: [scope.read.agents]},
+                                          prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } });
             oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
               .post(/oauth\/token/, {
                                       'grant_type': 'authorization_code',
@@ -381,9 +439,7 @@ describe('authSpec', () => {
                                       'code': 'AUTHORIZATION_CODE'
                                     })
               .reply(200, {
-                'access_token': jwt.sign({..._access,
-                                          permissions: [scope.read.agents]},
-                                         prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } }),
+                'access_token': accessToken,
                 'refresh_token': 'SOME_MADE_UP_REFRESH_TOKEN',
                 'id_token': identityToken
               });
@@ -392,7 +448,7 @@ describe('authSpec', () => {
              * This is called when the agent has authenticated and silid
              * needs to retreive the non-OIDC-compliant metadata, etc.
              */
-            const accessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
+            const anotherAccessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
                                           prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
             const anotherOauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
               .post(/oauth\/token/, {
@@ -403,7 +459,7 @@ describe('authSpec', () => {
                                       'scope': apiScope.read.users
                                     })
               .reply(200, {
-                'access_token': accessToken,
+                'access_token': anotherAccessToken,
                 'token_type': 'Bearer',
               });
 
@@ -411,11 +467,38 @@ describe('authSpec', () => {
              * The token retrieved above is used to get the
              * non-OIDC-compliant metadata, etc.
              */
-            const userReadScope = nock(`https://${process.env.AUTH0_DOMAIN}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            const userReadScope = nock(`https://${process.env.AUTH0_DOMAIN}`, { reqheaders: { authorization: `Bearer ${anotherAccessToken}`} })
               .get(/api\/v2\/users\/.+/)
               .query({})
               .reply(200, _profile);
 
+            /**
+             * Identity provides access to Auth0 metadata
+             */
+//            _identityCalls = [];
+//            identityApi = mswNode.setupServer(
+//              msw.rest.get(`${process.env.IDENTITY_API}/agent`, (req, res, ctx) => {
+//  
+//                _identityCalls.push(req);
+//                if (req.headers.get('authorization') === `Bearer ${accessToken}`) {
+//                  return res(
+//                    ctx.json({..._profile, user_metadata: { favourite_fish: 'Cod' } }),
+//                  );
+//                }
+//                else {
+//                  console.error('msw expected a different token: ');
+//                  console.error('EXPECTED:', req.headers.get('authorization'));
+//                  console.error('ACTUAL:  ', `Bearer ${anotherAccessToken}`);
+//                }
+//  
+//                return res(
+//                  ctx.status(403),
+//                  ctx.json({ message: 'Unauthorized by MSW' }),
+//                );
+//              }),
+//            );
+//      
+//            identityApi.listen();
 
             next(null, [302, {}, { 'Location': `https://${process.env.AUTH0_DOMAIN}/login` }]);
           });

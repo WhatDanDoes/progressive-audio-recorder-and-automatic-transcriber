@@ -72,12 +72,15 @@ const strategy = new Auth0Strategy(
         let newAgent = new models.Agent(profile._json);
 
         newAgent.save().then(result => {
+//          result._doc.access_token = accessToken;
           done(null, result);
         }).catch(err => {
           done(err);
         });
       } else {
         models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
+          // NOTE TO SELF: make sure this is testsed
+          //result._doc.access_token = accessToken;
           return done(null, result);
         }).catch(err => {
           res.json(err);
