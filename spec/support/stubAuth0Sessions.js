@@ -37,6 +37,13 @@ module.exports = function(email, zombieDomain, done) {
     let { pub, prv, keystore } = singleton.keyStuff;
 
     /**
+     * This is called when the agent has authenticated and silid
+     * needs to retreive the non-OIDC-compliant metadata, etc.
+     */
+    const accessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
+                                  prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
+
+    /**
      * This is called when `/login` is hit.
      */
     let identity, identityToken;
@@ -74,19 +81,11 @@ module.exports = function(email, zombieDomain, done) {
                                   'code': 'AUTHORIZATION_CODE'
                                 })
           .reply(200, {
-            'access_token': jwt.sign({..._access,
-                                      permissions: [scope.read.agents]},
-                                     prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } }),
+            'access_token': accessToken,
             'refresh_token': 'SOME_MADE_UP_REFRESH_TOKEN',
             'id_token': identityToken
           });
 
-        /**
-         * This is called when the agent has authenticated and silid
-         * needs to retreive the non-OIDC-compliant metadata, etc.
-         */
-        const accessToken = jwt.sign({..._access, scope: [apiScope.read.users]},
-                                      prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
         const anotherOauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .post(/oauth\/token/, {
                                   'grant_type': 'client_credentials',
@@ -134,7 +133,7 @@ module.exports = function(email, zombieDomain, done) {
 
 
     // Mocks initialized
-    done(null, {pub, prv, keystore});
+    done(null, {pub, prv, keystore, accessToken});
 
   }).catch(err => {
     console.error(err);
