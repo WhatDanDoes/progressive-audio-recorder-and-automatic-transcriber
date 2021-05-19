@@ -78,7 +78,6 @@ const strategy = new Auth0Strategy(
         });
       } else {
         models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
-          // NOTE TO SELF: make sure this is testsed
           result._doc.access_token = accessToken;
           return done(null, result);
         }).catch(err => {
