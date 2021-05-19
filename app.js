@@ -72,7 +72,7 @@ const strategy = new Auth0Strategy(
         let newAgent = new models.Agent(profile._json);
 
         newAgent.save().then(result => {
-//          result._doc.access_token = accessToken;
+          result._doc.access_token = accessToken;
           done(null, result);
         }).catch(err => {
           done(err);
