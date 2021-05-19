@@ -4,10 +4,6 @@ const app = require('../../app');
 const request = require('supertest-session');
 
 const nock = require('nock');
-const msw = require('msw');
-const mswNode = require('msw/node');
-// Nock can't catch fetch requests
-//const fetchMock = require('fetch-mock').sandbox();
 
 const querystring = require('querystring');
 const jwt = require('jsonwebtoken');
@@ -124,7 +120,7 @@ describe('authSpec', () => {
    * `/userinfo` is hit
    */
   describe('/callback', () => {
-    let _identityCalls, identityApi;
+    let identityAgentScope, accessToken;
 
     let session, oauthTokenScope, userInfoScope, auth0UserAssignRolesScope, auth0GetRolesScope;
     // Added for when agent info is requested immediately after authentication
@@ -154,9 +150,9 @@ describe('authSpec', () => {
            *
            * This is called when first authenticating
            */
-          const accessToken = jwt.sign({..._access,
-                                        permissions: [scope.read.agents]},
-                                        prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
+          accessToken = jwt.sign({..._access,
+                                  permissions: [scope.read.agents]},
+                                  prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } })
           oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
             .post(/oauth\/token/, {
                                     'grant_type': 'authorization_code',
@@ -203,94 +199,118 @@ describe('authSpec', () => {
             .query({})
             .reply(200, _profile);
 
-          /**
-           * Identity provides access to Auth0 metadata
-           */
-          _identityCalls = [];
-          identityApi = mswNode.setupServer(
-            msw.rest.get(`${process.env.IDENTITY_API}/agent`, (req, res, ctx) => {
-
-console.log("IDENTITY API HIT");
-              _identityCalls.push(req);
-              if (req.headers.get('authorization') === `Bearer ${accessToken}`) {
-                return res(
-                  ctx.json({..._profile, user_metadata: { favourite_fish: 'Cod' } }),
-                );
-              }
-              else {
-                console.error('msw expected a different token: ');
-                console.error('EXPECTED:', req.headers.get('authorization'));
-                console.error('ACTUAL:  ', `Bearer ${anotherAccessToken}`);
-              }
-
-              return res(
-                ctx.status(403),
-                ctx.json({ message: 'Unauthorized by MSW' }),
-              );
-            }),
-          );
-    
-          identityApi.listen();
-
           done();
         });
     });
 
-    afterEach(() => {
-      identityApi.close();
-    });
+    describe('with Identity API access', () => {
 
-    it('calls the `/oauth/token` endpoint', done => {
-      session
-        .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
-        .expect(302)
-        .end(function(err, res) {
-          if (err) return done.fail(err);
-          expect(oauthTokenScope.isDone()).toBe(true);
-          done();
+      beforeEach(() => {
+        /**
+         * Identity provides access to Auth0 metadata
+         */
+        identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+          .get('/agent')
+          .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+      });
+
+      it('calls the `/oauth/token` endpoint', done => {
+        session
+          .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+          .expect(302)
+          .end(function(err, res) {
+            if (err) return done.fail(err);
+            expect(oauthTokenScope.isDone()).toBe(true);
+            done();
+          });
+      });
+
+      it('calls the `/userinfo` endpoint', done => {
+        session
+          .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+          .expect(302)
+          .end(function(err, res) {
+            if (err) return done.fail(err);
+            expect(userInfoScope.isDone()).toBe(true);
+            done();
+          });
+      });
+
+      it('redirects home', done => {
+        session
+          .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+          .expect(302)
+          .end(function(err, res) {
+            if (err) return done.fail(err);
+            expect(res.headers.location).toEqual('/track/example.com/someguy');
+            done();
+          });
+      });
+
+      it('calls the Identity API\'s /agent endpoint to retrieve full Auth0 profile', done => {
+        session
+          .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+          .redirects()
+          .end(function(err, res) {
+            if (err) return done.fail(err);
+
+            expect(identityAgentScope.isDone()).toBe(true);
+            done();
+          });
+      });
+
+      describe('database', () => {
+        it('adds a new agent record if none exists', done => {
+          models.Agent.find().then(results => {
+            expect(results.length).toEqual(0);
+
+            session
+              .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+              .expect(302)
+              .end(function(err, res) {
+                if (err) return done.fail(err);
+
+                models.Agent.find().then(results => {
+                  expect(results.length).toEqual(1);
+                  expect(results[0].email).toEqual(_profile.email);
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
+          });
         });
-    });
 
-    it('calls the `/userinfo` endpoint', done => {
-      session
-        .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
-        .expect(302)
-        .end(function(err, res) {
-          if (err) return done.fail(err);
-          userInfoScope.done();
-          done();
+        it('updates existing agent record', done => {
+          models.Agent.create({ email: _profile.email }).then(result => {
+            expect(result.email).toEqual(_profile.email);
+            expect(result.user_metadata).not.toBeDefined();
+
+            session
+              .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+              .expect(302)
+              .end(function(err, res) {
+                if (err) return done.fail(err);
+
+                models.Agent.find().then(results => {
+                  expect(results.length).toEqual(1);
+                  expect(results[0].email).toEqual(_profile.email);
+                  expect(results[0].user_metadata).toBeDefined();
+                  expect(results[0].user_metadata.favourite_fish).toEqual('Cod');
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
+          });
         });
-    });
 
-    it('redirects home', done => {
-      session
-        .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
-        .expect(302)
-        .end(function(err, res) {
-          if (err) return done.fail(err);
-          expect(res.headers.location).toEqual('/track/example.com/someguy');
-          done();
-        });
-    });
-
-    it('calls the Identity API\'s /agent endpoint to retrieve full Auth0 profile', done => {
-      session
-        .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
-        .redirects()
-        .end(function(err, res) {
-          if (err) return done.fail(err);
-          expect(_identityCalls.length).toEqual(1);
-          expect(_identityCalls[0].url.href).toEqual(`${process.env.IDENTITY_API}/agent`);
-
-          done();
-        });
-    });
-
-    describe('database', () => {
-      it('adds a new agent record if none exists', done => {
-        models.Agent.find().then(results => {
-          expect(results.length).toEqual(0);
-
+        it('doesn\'t save the access token', done => {
           session
             .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
             .expect(302)
@@ -299,73 +319,143 @@ console.log("IDENTITY API HIT");
 
               models.Agent.find().then(results => {
                 expect(results.length).toEqual(1);
-                expect(results[0].email).toEqual(_profile.email);
+                expect(results[0].access_token).not.toBeDefined();
+
+                expect(identityAgentScope.isDone()).toBe(true);
+
                 done();
               }).catch(err => {
                 done.fail(err);
               });
             });
-        }).catch(err => {
-          done.fail(err);
+        });
+      });
+
+      describe('/logout', () => {
+
+        let ssoScope;
+        beforeEach(done => {
+          /**
+           * Redirect client to Auth0 `/logout` after silid session is cleared
+           */
+          ssoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
+            .get('/v2/logout')
+            .query({
+              returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
+            })
+            .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
+          done();
+        });
+
+        it('redirects home and clears the session', done => {
+          expect(session.cookies.length).toEqual(1);
+          session
+            .get('/logout')
+            .expect(302)
+            .end(function(err, res) {
+              if (err) return done.fail(err);
+              expect(session.cookies.length).toEqual(0);
+              done();
+            });
+        });
+
+        it('redirects to the Auth0 SSO /logout endpoint and sets redirect query string', done => {
+          session
+            .get('/logout')
+            .expect(302)
+            .end(function(err, res) {
+              if (err) return done.fail(err);
+              const loc = new URL(res.header.location);
+              expect(loc.origin).toMatch(`https://${process.env.AUTH0_DOMAIN}`);
+              expect(loc.hostname).toMatch(process.env.AUTH0_DOMAIN);
+              expect(loc.pathname).toMatch('/v2/logout');
+              //
+              // If `client_id` is not set the Auth0 server returns the
+              // agent to the first Allowed Logout URLs set in the Dashboard
+              //
+              // https://auth0.com/docs/api/authentication#logout
+              //
+              expect(loc.searchParams.get('client_id')).toBe(null);
+              expect(loc.searchParams.get('returnTo')).toEqual(`${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`);
+              done();
+            });
         });
       });
     });
 
-    describe('/logout', () => {
-
-      let ssoScope;
-      beforeEach(done => {
-        /**
-         * Redirect client to Auth0 `/logout` after silid session is cleared
-         */
-        ssoScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
-          .get('/v2/logout')
-          .query({
-            returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
-          })
-          .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
-        done();
+    // See Browser tests for behaviourals below
+    describe('without Identity API access', () => {
+      beforeEach(() => {
+        delete process.env.IDENTITY_API;
       });
 
-      it('redirects home and clears the session', done => {
-        expect(session.cookies.length).toEqual(1);
+      it('does not call Identity if URL endpoint is not configured', done => {
         session
-          .get('/logout')
+          .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
           .expect(302)
           .end(function(err, res) {
             if (err) return done.fail(err);
-            expect(session.cookies.length).toEqual(0);
+
+            expect(identityAgentScope.isDone()).toBe(false);
             done();
           });
       });
 
-      it('redirects to the Auth0 SSO /logout endpoint and sets redirect query string', done => {
-        session
-          .get('/logout')
-          .expect(302)
-          .end(function(err, res) {
-            if (err) return done.fail(err);
-            const loc = new URL(res.header.location);
-            expect(loc.origin).toMatch(`https://${process.env.AUTH0_DOMAIN}`);
-            expect(loc.hostname).toMatch(process.env.AUTH0_DOMAIN);
-            expect(loc.pathname).toMatch('/v2/logout');
-            //
-            // If `client_id` is not set the Auth0 server returns the
-            // agent to the first Allowed Logout URLs set in the Dashboard
-            //
-            // https://auth0.com/docs/api/authentication#logout
-            //
-            expect(loc.searchParams.get('client_id')).toBe(null);
-            expect(loc.searchParams.get('returnTo')).toEqual(`${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`);
-            done();
+      describe('database', () => {
+        it('doesn\'t clobber existing user_metadata', done => {
+          models.Agent.create({ email: _profile.email, user_metadata: { favourite_fish: 'Cod' } }).then(result => {
+            expect(result.email).toEqual(_profile.email);
+            expect(result.user_metadata.favourite_fish).toEqual('Cod');
+
+            session
+              .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+              .expect(302)
+              .end(function(err, res) {
+                if (err) return done.fail(err);
+
+                models.Agent.find().then(results => {
+                  expect(results.length).toEqual(1);
+                  expect(results[0].email).toEqual(_profile.email);
+                  expect(results[0].user_metadata).toBeDefined();
+                  expect(results[0].user_metadata.favourite_fish).toEqual('Cod');
+
+                  expect(identityAgentScope.isDone()).toBe(false);
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+          }).catch(err => {
+            done.fail(err);
           });
+        });
+
+        it('doesn\'t save the access token', done => {
+          session
+            .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
+            .expect(302)
+            .end(function(err, res) {
+              if (err) return done.fail(err);
+
+              models.Agent.find().then(results => {
+                expect(results.length).toEqual(1);
+                expect(results[0].access_token).not.toBeDefined();
+
+                expect(identityAgentScope.isDone()).toBe(false);
+
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
+        });
+
       });
     });
   });
 
   describe('Browser', () => {
-    let _identityCalls, identityApi;
-
     // Setup and configure zombie browser
     const Browser = require('zombie');
     Browser.localhost('example.com', PORT);
@@ -396,6 +486,7 @@ console.log("IDENTITY API HIT");
     describe('Login', () => {
 
       let loginScope, oauthTokenScope, userInfoScope;
+      let identityAgentScope;
       beforeEach(done => {
         nock.cleanAll();
 
@@ -475,30 +566,9 @@ console.log("IDENTITY API HIT");
             /**
              * Identity provides access to Auth0 metadata
              */
-//            _identityCalls = [];
-//            identityApi = mswNode.setupServer(
-//              msw.rest.get(`${process.env.IDENTITY_API}/agent`, (req, res, ctx) => {
-//  
-//                _identityCalls.push(req);
-//                if (req.headers.get('authorization') === `Bearer ${accessToken}`) {
-//                  return res(
-//                    ctx.json({..._profile, user_metadata: { favourite_fish: 'Cod' } }),
-//                  );
-//                }
-//                else {
-//                  console.error('msw expected a different token: ');
-//                  console.error('EXPECTED:', req.headers.get('authorization'));
-//                  console.error('ACTUAL:  ', `Bearer ${anotherAccessToken}`);
-//                }
-//  
-//                return res(
-//                  ctx.status(403),
-//                  ctx.json({ message: 'Unauthorized by MSW' }),
-//                );
-//              }),
-//            );
-//      
-//            identityApi.listen();
+            identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+              .get('/agent')
+              .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
 
             next(null, [302, {}, { 'Location': `https://${process.env.AUTH0_DOMAIN}/login` }]);
           });
@@ -518,37 +588,78 @@ console.log("IDENTITY API HIT");
         });
       });
 
-      it('serves up the page', done => {
-        browser.clickLink('Login', (err) => {
-          if (err) return done.fail(err);
-          browser.assert.element('a[href="/logout"]');
-          done();
-        });
-      });
-
-      // This is not testing the client side app
-      describe('Logout', () => {
-        beforeEach(done => {
-          // Clear Auth0 SSO session cookies
-          nock(`https://${process.env.AUTH0_DOMAIN}`)
-            .get('/v2/logout')
-            .query({
-              returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
-            })
-            .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
-
+      describe('with Identity API access', () => {
+        it('serves up the page', done => {
           browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
-            browser.assert.success();
+            browser.assert.element('a[href="/logout"]');
             done();
           });
         });
 
-        it('displays the correct interface', done => {
-          browser.clickLink('Logout', (err) => {
+        // This is not testing the client side app
+        describe('Logout', () => {
+          beforeEach(done => {
+            // Clear Auth0 SSO session cookies
+            nock(`https://${process.env.AUTH0_DOMAIN}`)
+              .get('/v2/logout')
+              .query({
+                returnTo: `${process.env.SINGLE_SIGN_OUT_DOMAIN}?returnTo=${process.env.SERVER_DOMAIN}`
+              })
+              .reply(302, {}, { 'Location': process.env.SERVER_DOMAIN });
+
+            browser.clickLink('Login', (err) => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          });
+
+          it('displays the correct interface', done => {
+            browser.clickLink('Logout', (err) => {
+              if (err) return done.fail(err);
+              browser.assert.elements('a[href="/login"]');
+              browser.assert.elements('a[href="/logout"]', 0);
+              done();
+            });
+          });
+        });
+      });
+
+      describe('without Identity API access', () => {
+        it('gives a friendly warning if Identity URL endpoint is not configured', done => {
+          delete process.env.IDENTITY_API;
+          browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
-            browser.assert.elements('a[href="/login"]');
-            browser.assert.elements('a[href="/logout"]', 0);
+            browser.assert.success();
+
+            browser.assert.text('.alert.alert-warning', 'Identity API not configured');
+            expect(identityAgentScope.isDone()).toBe(false);
+
+            done();
+          });
+        });
+
+        it('gives a friendly warning if Identity endpoint rejects token provided', done => {
+          browser.clickLink('Login', (err) => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.text('.alert.alert-warning', 'Identity API authorization failed');
+            expect(identityAgentScope.isDone()).toBe(true);
+
+            done();
+          });
+        });
+
+        it('gives a friendly warning if Identity API server is down', done => {
+          browser.clickLink('Login', (err) => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            browser.assert.text('.alert.alert-warning', 'Identity API authorization failed');
+            expect(identityAgentScope.isDone()).toBe(true);
+
             done();
           });
         });
