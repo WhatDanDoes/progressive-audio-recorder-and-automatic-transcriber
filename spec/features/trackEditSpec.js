@@ -856,7 +856,7 @@ describe('trackEditSpec', () => {
       const path = require('path');
 
       let puppetBrowser, page;
-      beforeEach(async done => {
+      beforeEach(async () => {
 
         try {
           puppetBrowser = await puppeteer.launch({
@@ -866,23 +866,29 @@ describe('trackEditSpec', () => {
           page = await puppetBrowser.newPage();
           page.on('console', msg => console.log('PAGE LOG:', msg.text().toString()));
 
+
+          let stubSessions = new Promise((resolve, reject) => {
+            stubAuth0Sessions(agent.email,`localhost:${PORT}`, err => {
+              if (err) return reject(err);
+              resolve();
+            });
+          });
+          await stubSessions.then();
+
+          /**
+           * Auth0 mock
+           */
           useNock(page, [`https://${process.env.AUTH0_DOMAIN}`]);
 
-          stubAuth0Sessions(agent.email,`localhost:${PORT}` , async err => {
-            if (err) return done.fail(err);
+          await page.goto(APP_URL);
 
-            await page.goto(APP_URL);
+          await page.waitForSelector('#login-link');
+          await page.click('#login-link');
+          await page.waitForTimeout(200);
 
-            await page.waitForSelector('#login-link');
-            await page.click('#login-link');
-            await page.waitForTimeout(200);
-
-            await page.waitForSelector(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
-            await page.click(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
-            await page.waitForTimeout(200);
-
-            done();
-          });
+          await page.waitForSelector(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          await page.click(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          await page.waitForTimeout(200);
         } catch (e) {
           console.log(e);
         }
@@ -894,30 +900,20 @@ describe('trackEditSpec', () => {
 
       describe('edit name field', () => {
 
-        it('updates the database', done => {
+        it('updates the database', async ()=> {
           const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
-          models.Track.findOne({ path: filePath }).then(async track => {
-            expect(track.name).toEqual('');
+          //await models.Track.findOne({ path: filePath }).then(async track => {
+          let track = await models.Track.findOne({ path: filePath });
+          expect(track.name).toEqual('');
 
-            page.type('#track-name-field', 'Austin Powers');
-            await page.waitForTimeout(100);
+          page.type('#track-name-field', 'Austin Powers');
+          await page.waitForTimeout(100);
 
-            page.click('i#save-track-name').then(async () => {
+          await page.click('i#save-track-name');
+          await page.waitForTimeout(200);
 
-              await page.waitForTimeout(200);
-
-              models.Track.findOne({ path: filePath }).then(track => {
-                expect(track.name).toEqual('Austin Powers');
-                done();
-              }).catch(err => {
-                done.fail(err);
-              });
-            }).catch(err => {
-              done.fail(err);
-            });
-          }).catch(err => {
-            done.fail(err);
-          });
+          track = await models.Track.findOne({ path: filePath });
+          expect(track.name).toEqual('Austin Powers');
         });
 
         /**
