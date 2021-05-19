@@ -486,7 +486,7 @@ describe('authSpec', () => {
     describe('Login', () => {
 
       let loginScope, oauthTokenScope, userInfoScope;
-      let identityAgentScope;
+      let identityAgentScope, accessToken;
       beforeEach(done => {
         nock.cleanAll();
 
@@ -494,6 +494,14 @@ describe('authSpec', () => {
          * This is called when `/login` is hit.
          */
         let identity, identityToken;
+
+        /**
+         * `/oauth/token` mock
+         */
+        accessToken = jwt.sign({..._access,
+                                permissions: [scope.read.agents]},
+                                prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } });
+
         auth0Scope = nock(`https://${process.env.AUTH0_DOMAIN}`)
           .get(/authorize*/)
           .reply((uri, body, next) => {
@@ -515,12 +523,6 @@ describe('authSpec', () => {
               .get(/userinfo/)
               .reply(200, identity);
 
-            /**
-             * `/oauth/token` mock
-             */
-            const accessToken = jwt.sign({..._access,
-                                          permissions: [scope.read.agents]},
-                                          prv, { algorithm: 'RS256', header: { kid: keystore.all()[0].kid } });
             oauthTokenScope = nock(`https://${process.env.AUTH0_DOMAIN}`)
               .post(/oauth\/token/, {
                                       'grant_type': 'authorization_code',
@@ -563,13 +565,6 @@ describe('authSpec', () => {
               .query({})
               .reply(200, _profile);
 
-            /**
-             * Identity provides access to Auth0 metadata
-             */
-            identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
-              .get('/agent')
-              .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
-
             next(null, [302, {}, { 'Location': `https://${process.env.AUTH0_DOMAIN}/login` }]);
           });
 
@@ -589,6 +584,17 @@ describe('authSpec', () => {
       });
 
       describe('with Identity API access', () => {
+
+        beforeEach(() => {
+          /**
+           * Identity provides access to Auth0 metadata
+           */
+          expect(accessToken).toBeDefined();
+          identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            .get('/agent')
+            .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+        });
+
         it('serves up the page', done => {
           browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
@@ -627,37 +633,59 @@ describe('authSpec', () => {
       });
 
       describe('without Identity API access', () => {
+        beforeEach(() => {
+          expect(accessToken).toBeDefined();
+        });
+
         it('gives a friendly warning if Identity URL endpoint is not configured', done => {
+          const _api = process.env.IDENTITY_API;
           delete process.env.IDENTITY_API;
+
+          identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            .get('/agent')
+            .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+
+
           browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.text('.alert.alert-warning', 'Identity API not configured');
+            browser.assert.text('.alert.alert-danger', 'Identity API not configured');
             expect(identityAgentScope.isDone()).toBe(false);
+
+            // Reset
+            process.env.IDENTITY_API = _api;
 
             done();
           });
         });
 
         it('gives a friendly warning if Identity endpoint rejects token provided', done => {
+          identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            .get('/agent')
+            .reply(401, { message: 'Get lost' });
+
           browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.text('.alert.alert-warning', 'Identity API authorization failed');
             expect(identityAgentScope.isDone()).toBe(true);
+            browser.assert.text('.alert.alert-danger', 'Identity API authorization failed');
 
             done();
           });
         });
 
         it('gives a friendly warning if Identity API server is down', done => {
+          identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            .get('/agent')
+            .reply(500, { message: 'Oh no!' });
+
           browser.clickLink('Login', (err) => {
             if (err) return done.fail(err);
             browser.assert.success();
 
-            browser.assert.text('.alert.alert-warning', 'Identity API authorization failed');
+            browser.assert.text('.alert.alert-danger', 'Identity API is down');
             expect(identityAgentScope.isDone()).toBe(true);
 
             done();

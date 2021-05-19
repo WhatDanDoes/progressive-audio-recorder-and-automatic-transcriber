@@ -9,7 +9,7 @@ const url = require('url');
 const apiScope = require('../config/apiPermissions');
 const roles = require('../config/roles');
 
-const fetch = require('node-fetch');
+const https = require('https');
 
 router.get('/login', (req, res, next) => {
   const authenticator = passport.authenticate('auth0', {
@@ -48,20 +48,46 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
       });
     });
   };
- 
-//  fetch(`${process.env.IDENTITY_API}/agent`, {
-//      method: 'get',
-//      headers: {
-//        'Content-Type': 'application/json',
-//        'Authorization': `Bearer ${req.user._doc.access_token}`
-//      },
-//    })
-//    .then(res => res.json())
-//    .then(json => {
-//console.log("AAALLL DONE");
-//console.log(json);
+
+  const options = {
+    host: process.env.IDENTITY_API,
+    port: 443,
+    path: '/agent',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${req.user._doc.access_token}`
+    }
+  };
+
+  let data = '';
+  let apiRequest = https.request(options, resp => {
+
+    if (resp.statusCode >= 500) {
+      req.flash('error', 'Identity API is down');
+    }
+    else if (resp.statusCode >= 400) {
+      req.flash('error', 'Identity API authorization failed');
+    }
+
+    resp.setEncoding('utf8');
+    resp.on('data', chunk => {
+      data += chunk;
+    });
+
+    resp.on('end', () => {
+      //console.log(JSON.parse(data));
+      console.log('DOES THIS END?');
+      console.log(data);
       login();
-//    });
+    });
+  }).on('error', err => {
+      console.log(err);
+    req.flash('error', 'Identity API not configured');
+    login();
+  });
+
+  apiRequest.end();
 });
 
 /**
