@@ -297,8 +297,10 @@ describe('authSpec', () => {
                 models.Agent.find().then(results => {
                   expect(results.length).toEqual(1);
                   expect(results[0].email).toEqual(_profile.email);
-                  expect(results[0].user_metadata).toBeDefined();
-                  expect(results[0].user_metadata.favourite_fish).toEqual('Cod');
+
+                  // Note the `._doc`. Agent is a non _strict_ model
+                  expect(results[0]._doc.user_metadata).toBeDefined();
+                  expect(results[0]._doc.user_metadata.favourite_fish).toEqual('Cod');
 
                   done();
                 }).catch(err => {
@@ -320,6 +322,7 @@ describe('authSpec', () => {
               models.Agent.find().then(results => {
                 expect(results.length).toEqual(1);
                 expect(results[0].access_token).not.toBeDefined();
+                expect(results[0]._doc.access_token).not.toBeDefined();
 
                 expect(identityAgentScope.isDone()).toBe(true);
 
@@ -386,10 +389,16 @@ describe('authSpec', () => {
     // See Browser tests for behaviourals below
     describe('without Identity API access', () => {
       beforeEach(() => {
-        delete process.env.IDENTITY_API;
       });
 
       it('does not call Identity if URL endpoint is not configured', done => {
+        const _api = process.env.IDENTITY_API;
+        delete process.env.IDENTITY_API;
+
+        identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+          .get('/agent')
+          .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+
         session
           .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
           .expect(302)
@@ -397,15 +406,22 @@ describe('authSpec', () => {
             if (err) return done.fail(err);
 
             expect(identityAgentScope.isDone()).toBe(false);
+
+            process.env.IDENTITY_API = _api;
+
             done();
           });
       });
 
       describe('database', () => {
-        it('doesn\'t clobber existing user_metadata', done => {
+        it('doesn\'t clobber existing user_metadata if Identity returns error', done => {
           models.Agent.create({ email: _profile.email, user_metadata: { favourite_fish: 'Cod' } }).then(result => {
             expect(result.email).toEqual(_profile.email);
             expect(result.user_metadata.favourite_fish).toEqual('Cod');
+
+            identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+              .get('/agent')
+              .reply(400, {..._profile, user_metadata: { favourite_fish: 'Salmon' } });
 
             session
               .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
@@ -416,10 +432,10 @@ describe('authSpec', () => {
                 models.Agent.find().then(results => {
                   expect(results.length).toEqual(1);
                   expect(results[0].email).toEqual(_profile.email);
-                  expect(results[0].user_metadata).toBeDefined();
-                  expect(results[0].user_metadata.favourite_fish).toEqual('Cod');
+                  expect(results[0]._doc.user_metadata).toBeDefined();
+                  expect(results[0]._doc.user_metadata.favourite_fish).toEqual('Cod');
 
-                  expect(identityAgentScope.isDone()).toBe(false);
+                  expect(identityAgentScope.isDone()).toBe(true);
 
                   done();
                 }).catch(err => {
@@ -432,6 +448,10 @@ describe('authSpec', () => {
         });
 
         it('doesn\'t save the access token', done => {
+          identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
+            .get('/agent')
+            .reply(400, {..._profile, user_metadata: { favourite_fish: 'Salmon' } });
+
           session
             .get(`/callback?code=AUTHORIZATION_CODE&state=${state}`)
             .expect(302)
@@ -441,8 +461,9 @@ describe('authSpec', () => {
               models.Agent.find().then(results => {
                 expect(results.length).toEqual(1);
                 expect(results[0].access_token).not.toBeDefined();
+                expect(results[0]._doc.access_token).not.toBeDefined();
 
-                expect(identityAgentScope.isDone()).toBe(false);
+                expect(identityAgentScope.isDone()).toBe(true);
 
                 done();
               }).catch(err => {
@@ -450,7 +471,6 @@ describe('authSpec', () => {
               });
             });
         });
-
       });
     });
   });
@@ -459,7 +479,6 @@ describe('authSpec', () => {
     // Setup and configure zombie browser
     const Browser = require('zombie');
     Browser.localhost('example.com', PORT);
-
 
     let browser;
     beforeEach(() => {

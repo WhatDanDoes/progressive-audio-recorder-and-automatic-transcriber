@@ -73,7 +73,7 @@ describe('authentication', function() {
           expect(keys.accessToken).toBeDefined();
           let identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${keys.accessToken}`} })
             .get('/agent')
-            .reply(200);
+            .reply(200, {});
 
           done();
         });
