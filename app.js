@@ -70,7 +70,6 @@ const strategy = new Auth0Strategy(
     models.Agent.findOne({ email: profile._json.email }).then(result => {
       if (!result) {
         let newAgent = new models.Agent(profile._json);
-
         newAgent.save().then(result => {
           result._doc.access_token = accessToken;
           done(null, result);
@@ -80,7 +79,7 @@ const strategy = new Auth0Strategy(
       } else {
         models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
           // NOTE TO SELF: make sure this is testsed
-          //result._doc.access_token = accessToken;
+          result._doc.access_token = accessToken;
           return done(null, result);
         }).catch(err => {
           res.json(err);
