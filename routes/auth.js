@@ -44,7 +44,7 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
         }
 
         req.flash('info', 'Hello, ' + req.user.email + '!');
-        res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
+        return res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
       });
     });
   };
@@ -59,6 +59,11 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
       'Authorization': `Bearer ${req.user._doc.access_token}`
     }
   };
+
+  if (!process.env.IDENTITY_API) {
+    req.flash('error', 'Identity API not configured');
+    return login();
+  }
 
   let data = '';
   let apiRequest = https.request(options, resp => {
@@ -76,13 +81,26 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
     });
 
     resp.on('end', () => {
-      //console.log(JSON.parse(data));
       console.log('DOES THIS END?');
       console.log(data);
-      login();
+
+      if (resp.statusCode >= 400) {
+        login();
+      }
+      else {
+        models.Agent.findOneAndUpdate({ email: req.user.email }, JSON.parse(data), { new: true }).then(result => {
+//        result._doc.access_token = accessToken;
+
+          login();
+        }).catch(err => {
+          res.json(err);
+          console.error('NOT GORD');
+          console.error(err);
+        });
+      }
     });
   }).on('error', err => {
-      console.log(err);
+    console.log(err);
     req.flash('error', 'Identity API not configured');
     login();
   });
