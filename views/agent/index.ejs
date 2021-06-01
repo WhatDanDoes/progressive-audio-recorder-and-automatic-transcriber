@@ -12,10 +12,16 @@
       </form>
     </section>
     <% include ../_partials/appLink %>
+    <h3>Recent activity:</h3>
+      <% for (let a of activeAgents) { %>
+        <section class="agent">
+          <a href="<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a>
+        </section>
+      <% } %>
     <% if (readables.length) { %>
       <h3>Viewable albums:</h3>
       <% for (let readable of readables) { %>
-        <section class="agent">
+        <section class="album-link">
           <a href="/track/<%= readable %>"><%= readable %></a>
         </section>
       <% } %>

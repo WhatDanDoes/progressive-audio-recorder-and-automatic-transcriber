@@ -57,6 +57,7 @@ describe('sudo agentIndexSpec', () => {
   describe('authenticated', () => {
 
     beforeEach(done => {
+      expect(process.env.SUDO).not.toEqual(agent.email);
       stubAuth0Sessions(agent.email, DOMAIN, err => {
         if (err) return done.fail(err);
         done();
@@ -83,17 +84,50 @@ describe('sudo agentIndexSpec', () => {
           'public/tracks/uploads': {}
         });
 
+        // Login first agent
         browser.clickLink('Login', err => {
           if (err) done.fail(err);
           browser.assert.success();
 
-          models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
-            agent = results;
+          browser.clickLink('Logout', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
 
-            browser.clickLink('Profile', function(err) {
+            expect(process.env.SUDO).not.toEqual(lanny.email);
+            stubAuth0Sessions(lanny.email, DOMAIN, err => {
               if (err) return done.fail(err);
-              browser.assert.success();
-              done();
+
+console.log(browser.html());
+              // Login another agent
+              browser.clickLink('Login', err => {
+console.log(browser.html());
+                if (err) done.fail(err);
+                browser.assert.success();
+
+  //              browser.clickLink('Logout', err => {
+  //                if (err) done.fail(err);
+  //                browser.assert.success();
+  //
+  //                expect(process.env.SUDO).toBeDefined();
+  //                stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
+  //                  if (err) return done.fail(err);
+  //                  done();
+  //                });
+  //
+  //                // Login sudo agent agent
+  //                browser.clickLink('Login', err => {
+  //                  if (err) done.fail(err);
+  //                  browser.assert.success();
+  //
+  //                  browser.clickLink('Profile', function(err) {
+  //                    if (err) return done.fail(err);
+  //                    browser.assert.success();
+                      done();
+  //                  });
+  //                });
+  //              });
+
+              });
             });
           });
         });
@@ -103,8 +137,18 @@ describe('sudo agentIndexSpec', () => {
         mock.restore();
       });
 
-      it('shows a list of agents sorted by latest login', done => {
-        done.fail();
+      fit('shows a list of agents sorted by latest login', done => {
+        browser.assert.elements('.agent a', 3);
+        browser.assert.text(`.agent a[href="track/${agent.getAgentDirectory()}"]`, agent.getAgentDirectory());
+        browser.assert.text(`.agent a[href="track/${lanny.getAgentDirectory()}"]`, lanny.getAgentDirectory());
+
+        models.Agent.findOne({ email: process.env.SUDO }).then(function(sudo) {
+          browser.assert.text(`.agent a[href="track/${sudo.getAgentDirectory()}"]`, sudo.getAgentDirectory());
+
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
       });
     });
   });
