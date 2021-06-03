@@ -27,6 +27,8 @@ const pem2jwk = require('pem-jwk').pem2jwk
 const NodeRSA = require('node-rsa');
 const querystring = require('querystring');
 
+const stubIdentityApi = require('./stubIdentityApi');
+
 module.exports = function(email, zombieDomain, done) {
 
   // Note to future self: this will probably muck things up if I
@@ -132,8 +134,15 @@ module.exports = function(email, zombieDomain, done) {
       });
 
 
-    // Mocks initialized
-    done(null, {pub, prv, keystore, accessToken});
+    /**
+     * This may be a temporary home. More refined control over the Identity API
+     * will likely be required.
+     */
+    stubIdentityApi(email, accessToken, (err, scopes) => {
+      if (err) return done(err);
+      // Mocks initialized
+      done(null, {pub, prv, keystore, accessToken});
+    });
 
   }).catch(err => {
     console.error(err);
