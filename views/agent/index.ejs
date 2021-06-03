@@ -15,7 +15,7 @@
     <h3>Recent activity:</h3>
       <% for (let a of activeAgents) { %>
         <section class="agent">
-          <a href="<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a>
+          <a href="/track/<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a>
         </section>
       <% } %>
     <% if (readables.length) { %>

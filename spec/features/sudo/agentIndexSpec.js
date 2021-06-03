@@ -10,6 +10,7 @@ const app = require('../../../app');
 const fixtures = require('pow-mongoose-fixtures');
 const models = require('../../../models');
 const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
+const nock = require('nock');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
@@ -97,36 +98,42 @@ describe('sudo agentIndexSpec', () => {
             stubAuth0Sessions(lanny.email, DOMAIN, err => {
               if (err) return done.fail(err);
 
-console.log(browser.html());
-              // Login another agent
-              browser.clickLink('Login', err => {
-console.log(browser.html());
-                if (err) done.fail(err);
-                browser.assert.success();
+              // Need a new session
+              browser.visit('/', function(err) {
+                if (err) return done.fail(err);
 
-  //              browser.clickLink('Logout', err => {
-  //                if (err) done.fail(err);
-  //                browser.assert.success();
-  //
-  //                expect(process.env.SUDO).toBeDefined();
-  //                stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
-  //                  if (err) return done.fail(err);
-  //                  done();
-  //                });
-  //
-  //                // Login sudo agent agent
-  //                browser.clickLink('Login', err => {
-  //                  if (err) done.fail(err);
-  //                  browser.assert.success();
-  //
-  //                  browser.clickLink('Profile', function(err) {
-  //                    if (err) return done.fail(err);
-  //                    browser.assert.success();
-                      done();
-  //                  });
-  //                });
-  //              });
+                // Login another agent
+                browser.clickLink('Login', err => {
+                  if (err) done.fail(err);
+                  browser.assert.success();
 
+                  browser.clickLink('Logout', err => {
+                    if (err) done.fail(err);
+                    browser.assert.success();
+
+                    expect(process.env.SUDO).toBeDefined();
+                    stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
+                      if (err) return done.fail(err);
+
+                      // Need a new session
+                      browser.visit('/', function(err) {
+                        if (err) return done.fail(err);
+
+                        // Login sudo agent agent
+                        browser.clickLink('Login', err => {
+                          if (err) done.fail(err);
+                          browser.assert.success();
+
+                          browser.clickLink('Profile', function(err) {
+                            if (err) return done.fail(err);
+                            browser.assert.success();
+                            done();
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
               });
             });
           });
@@ -137,13 +144,17 @@ console.log(browser.html());
         mock.restore();
       });
 
-      fit('shows a list of agents sorted by latest login', done => {
-        browser.assert.elements('.agent a', 3);
-        browser.assert.text(`.agent a[href="track/${agent.getAgentDirectory()}"]`, agent.getAgentDirectory());
-        browser.assert.text(`.agent a[href="track/${lanny.getAgentDirectory()}"]`, lanny.getAgentDirectory());
+      it('shows a list of agents sorted by latest login', done => {
+        models.Agent.find({}).sort({ updatedAt: 'desc'}).then(agents => {
+          // Subject agent not listed
+          expect(agents.length).toEqual(4);
+          expect(agents[0].email).toEqual(process.env.SUDO);
+          browser.assert.elements(`.agent a[href="/track/${agents[0].getAgentDirectory()}"]`, 0);
 
-        models.Agent.findOne({ email: process.env.SUDO }).then(function(sudo) {
-          browser.assert.text(`.agent a[href="track/${sudo.getAgentDirectory()}"]`, sudo.getAgentDirectory());
+          browser.assert.elements('.agent a', 3);
+          browser.assert.text(`.agent a[href="/track/${agents[1].getAgentDirectory()}"]`, agents[1].getAgentDirectory());
+          browser.assert.text(`.agent a[href="/track/${agents[2].getAgentDirectory()}"]`, agents[2].getAgentDirectory());
+          browser.assert.text(`.agent a[href="/track/${agents[3].getAgentDirectory()}"]`, agents[3].getAgentDirectory());
 
           done();
         }).catch(err => {

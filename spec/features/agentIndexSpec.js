@@ -124,8 +124,8 @@ describe('agentIndexSpec', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
         browser.assert.elements('.agent a', 2);
-        browser.assert.link('.agent a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
-        browser.assert.link('.agent a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
+        browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
+        browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
       });
 
       it('lets the agent click and view a link he can read', done => {
