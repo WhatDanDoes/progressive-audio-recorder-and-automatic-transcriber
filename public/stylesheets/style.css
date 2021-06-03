@@ -136,6 +136,7 @@ section.center {
   background-color: #151515;
   padding: 0.25em;
   color: #d7d7d7;
+  height: 3em;
 }
 
 #page h1 {
@@ -145,7 +146,7 @@ section.center {
 
 #page nav {
   margin: 0;
-  top: 1em;
+  top: 3em;
   right: 1em;
   position: absolute;
   color: #d7d7d7;
@@ -169,13 +170,14 @@ p {
   color: #d7d7d7;
 }
 
-@media (min-width: 750px) {
+@media (min-width: 850px) {
   #page h1 {
     margin: .5em;
     font-size: 1.5em;
   }
 
   #page nav {
+    top: 1em;
     font-size: 1.4em;
   }
 
