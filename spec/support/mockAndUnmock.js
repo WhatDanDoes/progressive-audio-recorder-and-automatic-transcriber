@@ -38,6 +38,7 @@ module.exports = function(mock) {
       'views/_partials/login.ejs': fs.readFileSync('views/_partials/login.ejs'),
       'views/_partials/footer.ejs': fs.readFileSync('views/_partials/footer.ejs'),
       'views/_partials/pager.ejs': fs.readFileSync('views/_partials/pager.ejs'),
+      'views/agent/admin.ejs': fs.readFileSync('views/agent/admin.ejs'),
       'views/agent/index.ejs': fs.readFileSync('views/agent/index.ejs'),
       'views/track/_controls.ejs': fs.readFileSync('views/track/_controls.ejs'),
       'views/track/flagged.ejs': fs.readFileSync('views/track/flagged.ejs'),

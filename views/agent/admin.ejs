@@ -1,0 +1,12 @@
+<% include ../_partials/head %>
+  <% include ../_partials/messages %>
+  <main>
+    <h3>Recent activity:</h3>
+    <% for (let a of activeAgents) { %>
+      <section class="agent">
+        <a href="/track/<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a>
+      </section>
+    <% } %>
+  </main>
+<% include ../_partials/footer %>
+
