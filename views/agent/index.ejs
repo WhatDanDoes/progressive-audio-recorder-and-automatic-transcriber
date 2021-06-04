@@ -2,16 +2,7 @@
   <% include ../_partials/messages %>
   <main>
     <h2>Hello, <%= agent.email %></h2>
-    <section class="deep-link">
-      <form action="/track" method="post" id="tracks-form" enctype="multipart/form-data">
-        <input id="tracks-input" type="file" accept="audio/*" name="docs" multiple>
-        <label for="tracks-input">
-          <img src="/images/file-upload.png"><br>
-          Upload audio file
-        </label>
-      </form>
-    </section>
-    <% include ../_partials/appLink %>
+
     <% if (readables.length) { %>
       <h3>Viewable albums:</h3>
       <% for (let readable of readables) { %>

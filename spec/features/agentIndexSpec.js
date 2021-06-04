@@ -112,14 +112,6 @@ describe('agentIndexSpec', () => {
         browser.assert.text('h2', `Hello, ${agent.email}`);
       });
 
-      it('displays an add-track form', () => {
-        browser.assert.elements('.deep-link', 2);
-        browser.assert.element('form[action="/track"][method="post"]');
-        browser.assert.element('input[id="tracks-input"][type="file"][accept="audio/*"]');
-        browser.assert.text('label[for="tracks-input"]', 'Upload audio file');
-        browser.assert.element('label[for="tracks-input"] img[src="/images/file-upload.png"]');
-      });
-
       it('shows a list of albums the agent can read', () => {
         expect(agent.canRead.length).toEqual(1);
         expect(agent.canRead[0]).toEqual(lanny._id);
