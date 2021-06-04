@@ -27,6 +27,10 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
     return res.redirect('/');
   }
 
+  // Save access token for Identity in session
+  req.session.identity_token = req.user._doc.identity_token;
+  delete req.user._doc.identity_token;
+
   function login() {
     req.login(req.user, function (err) {
       if (err) {
@@ -56,7 +60,7 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${req.user._doc.access_token}`
+      'Authorization': `Bearer ${req.session.identity_token}`
     }
   };
 
@@ -81,16 +85,11 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
     });
 
     resp.on('end', () => {
-      console.log('DOES THIS END?');
-      console.log(data);
-
       if (resp.statusCode >= 400) {
         login();
       }
       else {
         models.Agent.findOneAndUpdate({ email: req.user.email }, JSON.parse(data), { new: true }).then(result => {
-//        result._doc.access_token = accessToken;
-
           login();
         }).catch(err => {
           res.json(err);

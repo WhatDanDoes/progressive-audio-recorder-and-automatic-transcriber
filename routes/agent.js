@@ -1,5 +1,6 @@
 'use strict';
 
+const https = require('https');
 const express = require('express');
 const router = express.Router();
 const models = require('../models');
@@ -14,12 +15,72 @@ router.get('/', function(req, res) {
   }
   req.user.getReadables(function(err, readables) {
 
-    res.render('agent/index', {
-      messages: req.flash(),
-      agent: req.user,
-      readables: readables,
-    });
+    if (process.env.IDENTITY_API) {
+      const options = {
+        host: process.env.IDENTITY_API,
+        port: 443,
+        path: '/agent',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${req.session.identity_token}`
+        }
+      };
+
+      let data = '';
+      let apiRequest = https.request(options, resp => {
+
+        resp.setEncoding('utf8');
+        resp.on('data', chunk => {
+          data += chunk;
+        });
+
+        resp.on('end', () => {
+
+          if (resp.statusCode >= 400) {
+            req.flash('error', 'Could not sync with Identity. Cached data shown.');
+            res.render('agent/index', {
+              messages: req.flash(),
+              agent: req.user,
+              readables: readables,
+            });
+          }
+          else {
+            models.Agent.findOneAndUpdate({ email: req.user.email }, JSON.parse(data), { new: true }).then(result => {
+              res.render('agent/index', {
+                messages: req.flash(),
+                agent: req.user,
+                readables: readables,
+              });
+            }).catch(err => {
+              res.json(err);
+              console.error('NOT GORD');
+              console.error(err);
+            });
+          }
+        });
+      }).on('error', err => {
+        req.flash('error', 'Could not sync with Identity. Cached data shown.');
+        res.render('agent/index', {
+          messages: req.flash(),
+          agent: req.user,
+          readables: readables,
+        });
+      });
+
+      apiRequest.end();
+    }
+    else {
+      res.render('agent/index', {
+        messages: req.flash(),
+        agent: req.user,
+        readables: readables,
+      });
+    }
   });
+
+
+
 });
 
 /**

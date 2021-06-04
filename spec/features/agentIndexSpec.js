@@ -106,7 +106,7 @@ describe('agentIndexSpec', () => {
         beforeEach(() => {
           identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
             .get('/agent')
-            .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+            .reply(200, {..._profile, email: agent.email, user_metadata: { favourite_fish: 'Cod' } });
         });
 
         describe('interface', () => {
@@ -153,14 +153,14 @@ describe('agentIndexSpec', () => {
 
           it('updates the database', done => {
             models.Agent.findOne({ email: agent.email }).then(agent => {
-              expect(agent._doc.user_metadata.favourite_fish).toBeUndefined();
+              expect(agent._doc.user_metadata).toBeUndefined();
 
               browser.clickLink('Profile', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
 
                 models.Agent.findOne({ email: agent.email }).then(agent => {
-                  expect(results[0]._doc.user_metadata.favourite_fish).toEqual('Cod');
+                  expect(agent._doc.user_metadata.favourite_fish).toEqual('Cod');
 
                   done();
                 }).catch(err => {
@@ -194,7 +194,7 @@ describe('agentIndexSpec', () => {
 
             identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
               .get('/agent')
-              .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+              .reply(200, {..._profile, email: agent.email, user_metadata: { favourite_fish: 'Cod' } });
           });
 
           describe('interface', () => {
@@ -283,6 +283,10 @@ describe('agentIndexSpec', () => {
             it('allows an agent to view his own profile', () => {
               browser.assert.url({ pathname: '/agent'});
               browser.assert.text('h2', `Hello, ${agent.email}`);
+            });
+
+            it('shows a friendly warning', () => {
+              browser.assert.text('.alert.alert-danger', 'Could not sync with Identity. Cached data shown.');
             });
 
             it('shows a list of albums the agent can read', () => {
