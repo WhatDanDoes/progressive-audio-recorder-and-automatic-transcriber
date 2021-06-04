@@ -56,35 +56,70 @@ describe('sudo/landing page', () => {
 
   describe('authenticated', () => {
 
-    beforeEach(done => {
-      // This and the login/logout cycle writes the agent's Auth0 profile to the database
-      stubAuth0Sessions(lanny.email, DOMAIN, err => {
-        if (err) done.fail(err);
-
-        browser.clickLink('Login', err => {
+    describe('unauthorized (non-sudo)', () => {
+      beforeEach(done => {
+        // This and the login/logout cycle writes the agent's Auth0 profile to the database
+        stubAuth0Sessions(lanny.email, DOMAIN, err => {
           if (err) done.fail(err);
-          browser.assert.success();
 
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+
+            done();
+          });
+        });
+      });
+
+      afterEach(done => {
+        mock.restore();
+        models.mongoose.connection.db.dropDatabase().then((err, result) => {
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+      it('displays an Admin link in the menu bar', done => {
+        browser.assert.elements('a[href="/agent/admin"]', 0);
+        browser.visit('/', (err) => {
+          if (err) return done.fail(err);
+          browser.assert.elements('a[href="/agent/admin"]', 0);
           done();
         });
       });
     });
 
-    afterEach(done => {
-      mock.restore();
-      models.mongoose.connection.db.dropDatabase().then((err, result) => {
-        done();
-      }).catch(err => {
-        done.fail(err);
-      });
-    });
+    describe('authorized (sudo)', () => {
+      beforeEach(done => {
+        stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
+          if (err) done.fail(err);
 
-    it('displays an Admin link in the menu bar', done => {
-      browser.assert.text('a[href="/agent/admin"]', 'Admin');
-      browser.visit('/', (err) => {
-        if (err) return done.fail(err);
+          browser.clickLink('Login', err => {
+            if (err) done.fail(err);
+            browser.assert.success();
+
+            done();
+          });
+        });
+      });
+
+      afterEach(done => {
+        mock.restore();
+        models.mongoose.connection.db.dropDatabase().then((err, result) => {
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
+
+      it('displays an Admin link in the menu bar', done => {
         browser.assert.text('a[href="/agent/admin"]', 'Admin');
-        done();
+        browser.visit('/', (err) => {
+          if (err) return done.fail(err);
+          browser.assert.text('a[href="/agent/admin"]', 'Admin');
+          done();
+        });
       });
     });
   });

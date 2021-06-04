@@ -124,7 +124,7 @@ describe('sudo agentIndexSpec', () => {
                           if (err) done.fail(err);
                           browser.assert.success();
 
-                          browser.clickLink('Profile', function(err) {
+                          browser.clickLink('Admin', function(err) {
                             if (err) return done.fail(err);
                             browser.assert.success();
                             done();
