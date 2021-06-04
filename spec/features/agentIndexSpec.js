@@ -81,9 +81,9 @@ describe('agentIndexSpec', () => {
       beforeEach(done => {
         mockAndUnmock({
           [`uploads/${agent.getAgentDirectory()}`]: {
-//            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
-//            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
-//            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
           'public/tracks/uploads': {}
         });
@@ -92,11 +92,7 @@ describe('agentIndexSpec', () => {
           if (err) done.fail(err);
           browser.assert.success();
 
-//          browser.clickLink('Profile', function(err) {
-//            if (err) return done.fail(err);
-//            browser.assert.success();
-            done();
-//          });
+          done();
         });
       });
 
@@ -107,47 +103,74 @@ describe('agentIndexSpec', () => {
       describe('with Identity API access', () => {
 
         let identityAgentScope;
-        beforeEach(done => {
+        beforeEach(() => {
           identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
             .get('/agent')
             .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+        });
 
-          browser.clickLink('Profile', function(err) {
-            if (err) return done.fail(err);
-            browser.assert.success();
-            done();
+        describe('interface', () => {
+          beforeEach(done => {
+            browser.clickLink('Profile', function(err) {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              done();
+            });
+          });
+
+          it('allows an agent to view his own profile', () => {
+            browser.assert.url({ pathname: '/agent'});
+            browser.assert.text('h2', `Hello, ${agent.email}`);
+          });
+
+          it('shows a list of albums the agent can read', () => {
+            expect(agent.canRead.length).toEqual(1);
+            expect(agent.canRead[0]).toEqual(lanny._id);
+            browser.assert.elements('.album-link a', 2);
+            browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
+            browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
+          });
+
+          it('lets the agent click and view a link he can read', done => {
+            browser.clickLink(lanny.getAgentDirectory(), function(err) {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
+              done();
+            });
           });
         });
 
-
-        it('allows an agent to view his own profile', () => {
-          browser.assert.url({ pathname: '/agent'});
-          browser.assert.text('h2', `Hello, ${agent.email}`);
-        });
-
-        it('shows a list of albums the agent can read', () => {
-          expect(agent.canRead.length).toEqual(1);
-          expect(agent.canRead[0]).toEqual(lanny._id);
-          browser.assert.elements('.album-link a', 2);
-          browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
-          browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
-        });
-
-        it('lets the agent click and view a link he can read', done => {
-          browser.clickLink(lanny.getAgentDirectory(), function(err) {
-            if (err) return done.fail(err);
-            browser.assert.success();
-            browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
-            done();
+        describe('server', () => {
+          it('calls the Identity endpoint', done => {
+            browser.clickLink('Profile', function(err) {
+              if (err) return done.fail(err);
+              browser.assert.success();
+              expect(identityAgentScope.isDone()).toBe(true);
+              done();
+            });
           });
-        });
 
-        it('calls the Identity endpoint', () => {
-          expect(identityAgentScope.isDone()).toBe(false);
-        });
+          it('updates the database', done => {
+            models.Agent.findOne({ email: agent.email }).then(agent => {
+              expect(agent._doc.user_metadata.favourite_fish).toBeUndefined();
 
-        it('updates the database', done => {
-          done.fail();
+              browser.clickLink('Profile', function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+
+                models.Agent.findOne({ email: agent.email }).then(agent => {
+                  expect(results[0]._doc.user_metadata.favourite_fish).toEqual('Cod');
+
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
         });
       });
 
@@ -158,7 +181,7 @@ describe('agentIndexSpec', () => {
           let apiUrl;
           beforeAll(() => {
             apiUrl = process.env.IDENTITY_API;
-            process.env.IDENTITY_API = undefined;
+            delete process.env.IDENTITY_API;
           });
 
           afterAll(() => {
@@ -166,97 +189,149 @@ describe('agentIndexSpec', () => {
           });
 
           let identityAgentScope;
-          beforeEach(done => {
+          beforeEach(() => {
             expect(process.env.IDENTITY_API).toBeUndefined();
 
             identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
               .get('/agent')
               .reply(200, {..._profile, user_metadata: { favourite_fish: 'Cod' } });
+          });
 
-            browser.clickLink('Profile', function(err) {
-              if (err) return done.fail(err);
-              browser.assert.success();
-              done();
+          describe('interface', () => {
+            beforeEach(done => {
+              browser.clickLink('Profile', function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                done();
+              });
+            });
+
+            it('allows an agent to view his own profile', () => {
+              browser.assert.url({ pathname: '/agent'});
+              browser.assert.text('h2', `Hello, ${agent.email}`);
+            });
+
+            it('shows a list of albums the agent can read', () => {
+              expect(agent.canRead.length).toEqual(1);
+              expect(agent.canRead[0]).toEqual(lanny._id);
+              browser.assert.elements('.album-link a', 2);
+              browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
+              browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
+            });
+
+            it('lets the agent click and view a link he can read', done => {
+              browser.clickLink(lanny.getAgentDirectory(), function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
+                done();
+              });
             });
           });
 
-          it('allows an agent to view his own profile', () => {
-            browser.assert.url({ pathname: '/agent'});
-            browser.assert.text('h2', `Hello, ${agent.email}`);
-          });
-
-          it('shows a list of albums the agent can read', () => {
-            expect(agent.canRead.length).toEqual(1);
-            expect(agent.canRead[0]).toEqual(lanny._id);
-            browser.assert.elements('.album-link a', 2);
-            browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
-            browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
-          });
-
-          it('lets the agent click and view a link he can read', done => {
-            browser.clickLink(lanny.getAgentDirectory(), function(err) {
-              if (err) return done.fail(err);
-              browser.assert.success();
-              browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
-              done();
+          describe('server', () => {
+            it('does not call the Identity endpoint', done => {
+              browser.clickLink('Profile', function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                expect(identityAgentScope.isDone()).toBe(false);
+                done();
+              });
             });
-          });
 
-          it('does not call the Identity endpoint', () => {
-            expect(identityAgentScope.isDone()).toBe(false);
-          });
+            it('does not update the database', done => {
+              models.Agent.findOne({ email: agent.email }).then(agent => {
+                expect(agent._doc.user_metadata).toBeUndefined();
 
-          it('does not update the database', done => {
-            done.fail();
+                browser.clickLink('Profile', function(err) {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  models.Agent.findOne({ email: agent.email }).then(agent => {
+                    expect(agent._doc.user_metadata).toBeUndefined();
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
           });
         });
 
         describe('API returns error', () => {
           let identityAgentScope;
-          beforeEach(done => {
+          beforeEach(() => {
             expect(process.env.IDENTITY_API).toBeDefined();
 
             identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${accessToken}`} })
               .get('/agent')
               .reply(404, { message: 'That dinnae exist' });
+          });
 
-            expect(process.env.IDENTITY_API).toBeUndefined();
+          describe('interface', () => {
+            beforeEach(done => {
+              browser.clickLink('Profile', function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                done();
+              });
+            });
 
-            browser.clickLink('Profile', function(err) {
-              if (err) return done.fail(err);
-              browser.assert.success();
-              done();
+            it('allows an agent to view his own profile', () => {
+              browser.assert.url({ pathname: '/agent'});
+              browser.assert.text('h2', `Hello, ${agent.email}`);
+            });
+
+            it('shows a list of albums the agent can read', () => {
+              expect(agent.canRead.length).toEqual(1);
+              expect(agent.canRead[0]).toEqual(lanny._id);
+              browser.assert.elements('.album-link a', 2);
+              browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
+              browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
+            });
+
+            it('lets the agent click and view a link he can read', done => {
+              browser.clickLink(lanny.getAgentDirectory(), function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
+                done();
+              });
             });
           });
 
-          it('allows an agent to view his own profile', () => {
-            browser.assert.url({ pathname: '/agent'});
-            browser.assert.text('h2', `Hello, ${agent.email}`);
-          });
-
-          it('shows a list of albums the agent can read', () => {
-            expect(agent.canRead.length).toEqual(1);
-            expect(agent.canRead[0]).toEqual(lanny._id);
-            browser.assert.elements('.album-link a', 2);
-            browser.assert.link('.album-link a', lanny.getAgentDirectory(), `/track/${lanny.getAgentDirectory()}`);
-            browser.assert.link('.album-link a', agent.getAgentDirectory(), `/track/${agent.getAgentDirectory()}`);
-          });
-
-          it('lets the agent click and view a link he can read', done => {
-            browser.clickLink(lanny.getAgentDirectory(), function(err) {
-              if (err) return done.fail(err);
-              browser.assert.success();
-              browser.assert.url({ path: `/track/${lanny.getAgentDirectory()}` });
-              done();
+          describe('server', () => {
+            it('calls the Identity endpoint', done => {
+              browser.clickLink('Profile', function(err) {
+                if (err) return done.fail(err);
+                browser.assert.success();
+                expect(identityAgentScope.isDone()).toBe(true);
+                done();
+              });
             });
-          });
 
-          it('calls the Identity endpoint', () => {
-            expect(identityAgentScope.isDone()).toBe(true);
-          });
+            it('does not update the database', done => {
+              models.Agent.findOne({ email: agent.email }).then(agent => {
+                expect(agent._doc.user_metadata).toBeUndefined();
 
-          it('does not update the database', done => {
-            done.fail();
+                browser.clickLink('Profile', function(err) {
+                  if (err) return done.fail(err);
+                  browser.assert.success();
+
+                  models.Agent.findOne({ email: agent.email }).then(agent => {
+                    expect(agent._doc.user_metadata).toBeUndefined();
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
           });
         });
       });
