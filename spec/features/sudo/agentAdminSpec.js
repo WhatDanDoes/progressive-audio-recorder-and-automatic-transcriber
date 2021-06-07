@@ -151,28 +151,26 @@ describe('sudo agentIndexSpec', () => {
           expect(agents[0].email).toEqual(process.env.SUDO);
           browser.assert.elements(`.agent a[href="/track/${agents[0].getAgentDirectory()}"]`, 0);
 
-          browser.assert.elements('.agent a', 3);
-          browser.assert.text(`.agent a[href="/track/${agents[1].getAgentDirectory()}"]`, agents[1].getAgentDirectory());
-          browser.assert.text(`.agent a[href="/track/${agents[2].getAgentDirectory()}"]`, agents[2].getAgentDirectory());
-          browser.assert.text(`.agent a[href="/track/${agents[3].getAgentDirectory()}"]`, agents[3].getAgentDirectory());
+          browser.assert.elements('article.post a', 3);
+          // 2021-6-7 The two logged-in test agent's use the same photo and I'm loathe to over complicate
+          browser.assert.elements(`article.post header img.avatar[src="${agents[1].get('picture')}"]`, 2);
+          // 2021-6-7 Similarly, I can't pick with sufficient specificity with zombie.
+          browser.assert.elements(`article.post header aside time`, 3);
 
-          done();
-        }).catch(err => {
-          done.fail(err);
-        });
-      });
+          // lanny
+          browser.assert.text(`article.post header aside div a[href="/track/${agents[1].getAgentDirectory()}"]`, agents[1].getAgentDirectory());
+          browser.assert.text(`main article.post:first-of-type time`, `Last active: ${agents[1].updatedAt}`);
 
-      it('personalizes the list of agents sorted by latest login', done => {
-        models.Agent.find({}).sort({ updatedAt: 'desc'}).then(agents => {
-          // Subject agent not listed
-          expect(agents.length).toEqual(4);
-          expect(agents[0].email).toEqual(process.env.SUDO);
-          browser.assert.elements(`.agent a[href="/track/${agents[0].getAgentDirectory()}"]`, 0);
+          // daniel
+          browser.assert.text(`article.post header aside div a[href="/track/${agents[2].getAgentDirectory()}"]`, agents[2].getAgentDirectory());
+          browser.assert.text(`main article.post:nth-of-type(2) time`, `Last active: ${agents[2].updatedAt}`);
 
-          browser.assert.elements('.agent a', 3);
-          browser.assert.text(`.agent a[href="/track/${agents[1].getAgentDirectory()}"]`, agents[1].getAgentDirectory());
-          browser.assert.text(`.agent a[href="/track/${agents[2].getAgentDirectory()}"]`, agents[2].getAgentDirectory());
-          browser.assert.text(`.agent a[href="/track/${agents[3].getAgentDirectory()}"]`, agents[3].getAgentDirectory());
+          // troy
+          browser.assert.text(`article.post header aside div a[href="/track/${agents[3].getAgentDirectory()}"]`, agents[3].getAgentDirectory());
+          // 2021-6-7 Related problem... third test agent (_troy_) never logs in, so this data isn't set.
+          // I just don't feel like having troy login.
+          browser.assert.element(`article.post header img.avatar[src=""]`); // `${agents[3].get('picture')}` is `undefined`
+          browser.assert.text(`main article.post:last-of-type time`, `Last active: ${agents[3].updatedAt}`);
 
           done();
         }).catch(err => {

@@ -3,9 +3,16 @@
   <main>
     <h3>Recent activity:</h3>
     <% for (let a of activeAgents) { %>
-      <section class="agent">
-        <a href="/track/<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a>
-      </section>
+      <article class="post">
+        <header>
+          <img class="avatar" src="<%= a.get('picture') %>" />
+          <aside>
+            <div><a href="/track/<%= a.getAgentDirectory() %>"><%= a.getAgentDirectory() %></a></div>
+            <time>Last active: <%= a.updatedAt %></time>
+          </aside>
+        </header>
+      </article>
+
     <% } %>
   </main>
 <% include ../_partials/footer %>
