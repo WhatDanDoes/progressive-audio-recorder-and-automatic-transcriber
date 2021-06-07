@@ -161,16 +161,34 @@ describe('sudo agentIndexSpec', () => {
           done.fail(err);
         });
       });
+
+      it('personalizes the list of agents sorted by latest login', done => {
+        models.Agent.find({}).sort({ updatedAt: 'desc'}).then(agents => {
+          // Subject agent not listed
+          expect(agents.length).toEqual(4);
+          expect(agents[0].email).toEqual(process.env.SUDO);
+          browser.assert.elements(`.agent a[href="/track/${agents[0].getAgentDirectory()}"]`, 0);
+
+          browser.assert.elements('.agent a', 3);
+          browser.assert.text(`.agent a[href="/track/${agents[1].getAgentDirectory()}"]`, agents[1].getAgentDirectory());
+          browser.assert.text(`.agent a[href="/track/${agents[2].getAgentDirectory()}"]`, agents[2].getAgentDirectory());
+          browser.assert.text(`.agent a[href="/track/${agents[3].getAgentDirectory()}"]`, agents[3].getAgentDirectory());
+
+          done();
+        }).catch(err => {
+          done.fail(err);
+        });
+      });
     });
   });
 
   describe('unauthenticated', () => {
     it('redirects home (which is where the login form is located)', done => {
-      browser.visit('/agent', function(err) {
+      browser.visit('/agent/admin', function(err) {
         if (err) return done.fail(err);
         browser.assert.redirected();
         browser.assert.url({ pathname: '/'});
-        browser.assert.text('.alert.alert-danger', 'You need to login first');
+        browser.assert.text('.alert.alert-danger', 'Unauthorized');
         done();
       });
     });
