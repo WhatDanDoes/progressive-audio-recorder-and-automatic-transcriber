@@ -114,13 +114,22 @@ describe('agentIndexSpec', () => {
             browser.clickLink('Profile', function(err) {
               if (err) return done.fail(err);
               browser.assert.success();
-              done();
+
+              models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
+                agent = results;
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
             });
           });
 
           it('allows an agent to view his own profile', () => {
             browser.assert.url({ pathname: '/agent'});
-            browser.assert.text('h2', `Hello, ${agent.email}`);
+            browser.assert.text('h2', `Hello, ${agent.get('nickname')}!`);
+            browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+            browser.assert.text(`article.post header aside div`, agent.email);
+            browser.assert.text(`article.post header aside time`, `Last active: ${agent.updatedAt}`);
           });
 
           it('shows a list of albums the agent can read', () => {
@@ -202,13 +211,21 @@ describe('agentIndexSpec', () => {
               browser.clickLink('Profile', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
-                done();
+                models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
+                  agent = results;
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
 
             it('allows an agent to view his own profile', () => {
               browser.assert.url({ pathname: '/agent'});
-              browser.assert.text('h2', `Hello, ${agent.email}`);
+              browser.assert.text('h2', `Hello, ${agent.get('nickname')}!`);
+              browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+              browser.assert.text(`article.post header aside div`, agent.email);
+              browser.assert.text(`article.post header aside time`, `Last active: ${agent.updatedAt}`);
             });
 
             it('shows a list of albums the agent can read', () => {
@@ -276,13 +293,21 @@ describe('agentIndexSpec', () => {
               browser.clickLink('Profile', function(err) {
                 if (err) return done.fail(err);
                 browser.assert.success();
-                done();
+                models.Agent.findOne({ email: 'daniel@example.com' }).then(function(results) {
+                  agent = results;
+                  done();
+                }).catch(err => {
+                  done.fail(err);
+                });
               });
             });
 
             it('allows an agent to view his own profile', () => {
               browser.assert.url({ pathname: '/agent'});
-              browser.assert.text('h2', `Hello, ${agent.email}`);
+              browser.assert.text('h2', `Hello, ${agent.get('nickname')}!`);
+              browser.assert.element(`article.post header img.avatar[src="${agent.get('picture')}"]`);
+              browser.assert.text(`article.post header aside div`, agent.email);
+              browser.assert.text(`article.post header aside time`, `Last active: ${agent.updatedAt}`);
             });
 
             it('shows a friendly warning', () => {

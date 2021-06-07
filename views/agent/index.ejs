@@ -1,8 +1,16 @@
 <% include ../_partials/head %>
   <% include ../_partials/messages %>
   <main>
-    <h2>Hello, <%= agent.email %></h2>
-
+    <h2>Hello, <%= agent.get('nickname') %>!</h2>
+    <article class="post">
+      <header>
+        <img class="avatar" src="<%= agent.get('picture') %>" />
+        <aside>
+          <div><%= agent.email %></div>
+          <time>Last active: <%= agent.updatedAt %></time>
+        </aside>
+      </header>
+    </article>
     <% if (readables.length) { %>
       <h3>Viewable albums:</h3>
       <% for (let readable of readables) { %>
