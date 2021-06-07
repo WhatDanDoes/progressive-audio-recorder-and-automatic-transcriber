@@ -80,7 +80,7 @@ describe('sudo/landing page', () => {
         });
       });
 
-      it('displays an Admin link in the menu bar', done => {
+      it('does not display an Admin link in the menu bar', done => {
         browser.assert.elements('a[href="/agent/admin"]', 0);
         browser.visit('/', (err) => {
           if (err) return done.fail(err);
