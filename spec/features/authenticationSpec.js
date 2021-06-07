@@ -67,8 +67,14 @@ describe('authentication', function() {
     describe('login process', function() {
 
       beforeEach(done => {
-        stubAuth0Sessions(agent.email, DOMAIN, err => {
+        stubAuth0Sessions(agent.email, DOMAIN, (err, keys) => {
           if (err) return done.fail(err);
+
+          expect(keys.accessToken).toBeDefined();
+          let identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${keys.accessToken}`} })
+            .get('/agent')
+            .reply(200, {});
+
           done();
         });
       });

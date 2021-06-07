@@ -80,7 +80,6 @@ function getAgentAlbum(page, req, res) {
       req.flash('error', err.message);
       return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);
     });
-
   }).catch(err => {
     req.flash('error', err.message);
     return res.redirect(`/track/${req.params.domain}/${req.params.agentId}`);

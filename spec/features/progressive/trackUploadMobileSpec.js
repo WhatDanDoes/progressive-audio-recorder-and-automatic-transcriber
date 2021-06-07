@@ -4,6 +4,7 @@ const fixtures = require('pow-mongoose-fixtures');
 const app = require('../../../app');
 const models = require('../../../models');
 
+const nock = require('nock');
 const mock = require('mock-fs');
 const mockAndUnmock = require('../../support/mockAndUnmock')(mock);
 
@@ -74,12 +75,17 @@ describe('track mobile upload', () => {
         agent = results;
 
         // Stubbing way up here because required files get mocked out otherwise
-        stubAuth0Sessions(agent.email, DOMAIN, err => {
+        stubAuth0Sessions(agent.email, DOMAIN, (err, keys) => {
           if (err) done.fail(err);
 
           mockAndUnmock({
             'uploads': mock.directory({})
           });
+
+          expect(keys.accessToken).toBeDefined();
+          let identityAgentScope = nock(`https://${process.env.IDENTITY_API}`, { reqheaders: { authorization: `Bearer ${keys.accessToken}`} })
+            .get('/agent')
+            .reply(200, {});
 
           done();
         });

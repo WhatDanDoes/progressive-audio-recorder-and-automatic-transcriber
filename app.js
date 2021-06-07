@@ -39,6 +39,7 @@ const sessionConfig = {
     maxAge: 1000 * 60 * 60,
   },
   store: new MongoStore({ mongooseConnection: models }),
+  identity_token: null
 };
 
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
@@ -70,14 +71,15 @@ const strategy = new Auth0Strategy(
     models.Agent.findOne({ email: profile._json.email }).then(result => {
       if (!result) {
         let newAgent = new models.Agent(profile._json);
-
         newAgent.save().then(result => {
+          result._doc.identity_token = accessToken;
           done(null, result);
         }).catch(err => {
           done(err);
         });
       } else {
         models.Agent.findOneAndUpdate({ email: result.email }, profile._json, { new: true }).then(result => {
+          result._doc.identity_token = accessToken;
           return done(null, result);
         }).catch(err => {
           res.json(err);

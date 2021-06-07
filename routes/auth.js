@@ -9,6 +9,8 @@ const url = require('url');
 const apiScope = require('../config/apiPermissions');
 const roles = require('../config/roles');
 
+const https = require('https');
+
 router.get('/login', (req, res, next) => {
   const authenticator = passport.authenticate('auth0', {
     scope: 'openid email profile',
@@ -24,6 +26,10 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
   if (!req.user) {
     return res.redirect('/');
   }
+
+  // Save access token for Identity in session
+  req.session.identity_token = req.user._doc.identity_token;
+  delete req.user._doc.identity_token;
 
   function login() {
     req.login(req.user, function (err) {
@@ -42,12 +48,63 @@ router.get('/callback', passport.authenticate('auth0'), (req, res) => {
         }
 
         req.flash('info', 'Hello, ' + req.user.email + '!');
-        res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
+        return res.redirect(returnTo || `/track/${req.user.getAgentDirectory()}`);
       });
     });
+  };
+
+  const options = {
+    host: process.env.IDENTITY_API,
+    port: 443,
+    path: '/agent',
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${req.session.identity_token}`
+    }
+  };
+
+  if (!process.env.IDENTITY_API) {
+    req.flash('error', 'Identity API not configured');
+    return login();
   }
 
-  login();
+  let data = '';
+  let apiRequest = https.request(options, resp => {
+
+    if (resp.statusCode >= 500) {
+      req.flash('error', 'Identity API is down');
+    }
+    else if (resp.statusCode >= 400) {
+      req.flash('error', 'Identity API authorization failed');
+    }
+
+    resp.setEncoding('utf8');
+    resp.on('data', chunk => {
+      data += chunk;
+    });
+
+    resp.on('end', () => {
+      if (resp.statusCode >= 400) {
+        login();
+      }
+      else {
+        models.Agent.findOneAndUpdate({ email: req.user.email }, JSON.parse(data), { new: true }).then(result => {
+          login();
+        }).catch(err => {
+          res.json(err);
+          console.error('NOT GORD');
+          console.error(err);
+        });
+      }
+    });
+  }).on('error', err => {
+    console.log(err);
+    req.flash('error', 'Identity API not configured');
+    login();
+  });
+
+  apiRequest.end();
 });
 
 /**
