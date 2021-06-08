@@ -30,7 +30,7 @@ const mockAndUnmock = require('../support/mockAndUnmock')(mock);
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Deleting an track', () => {
+describe('Deleting a track', () => {
 
   let browser, agent, lanny;
 
@@ -67,6 +67,7 @@ describe('Deleting an track', () => {
   describe('from show view', function() {
 
     describe('unauthenticated', function() {
+
       it('does not allow deleting an track', function(done) {
         request(app)
           .delete(`/track/${agent.getAgentDirectory()}/track2.ogg`)
@@ -345,90 +346,6 @@ describe('Deleting an track', () => {
             });
           });
         });
-
-        describe('sudo mode', () => {
-
-          afterEach(() => {
-            delete process.env.SUDO;
-          });
-
-          describe('set', () => {
-            describe('non sudo agent', () => {
-
-              beforeEach(() => {
-                process.env.SUDO = 'lanny@example.com';
-                expect(process.env.SUDO).not.toEqual(agent.email);
-              });
-
-              it('renders the Delete buttons for the agent\'s own track', done => {
-                browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, (err) => {
-                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
-                  browser.assert.elements('.delete-track-form', 1);
-                  done();
-                });
-              });
-
-              it('does not render the Delete buttons for the another agent\'s track', done => {
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, (err) => {
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                  browser.assert.elements('.delete-track-form', 0);
-                  done();
-                });
-              });
-            });
-
-            describe('sudo agent', () => {
-
-              beforeEach(done => {
-                process.env.SUDO = agent.email;
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                  done();
-                });
-              });
-
-              it('renders the Delete button', () => {
-                browser.assert.success();
-                browser.assert.elements('.delete-track-form', 1);
-              });
-
-              it('deletes the database record associated with the track', done => {
-                models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                  expect(tracks.length).toEqual(0);
-
-                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-
-                    browser.pressButton('button[aria-label="Delete"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                          expect(tracks.length).toEqual(0);
-
-                          done();
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-            });
-          });
-        });
       });
     });
   });
@@ -570,90 +487,6 @@ describe('Deleting an track', () => {
             browser.assert.redirected();
             browser.assert.url({ pathname: '/'});
             browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-          });
-        });
-
-        describe('sudo mode', () => {
-
-          afterEach(() => {
-            delete process.env.SUDO;
-          });
-
-          describe('set', () => {
-            describe('non sudo agent', () => {
-
-              beforeEach(() => {
-                process.env.SUDO = 'lanny@example.com';
-                expect(process.env.SUDO).not.toEqual(agent.email);
-              });
-
-              it('renders the Delete buttons for the agent\'s own tracks', done => {
-                browser.visit(`/track/${agent.getAgentDirectory()}`, (err) => {
-                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
-                  browser.assert.elements('.delete-track-form', 3);
-                  done();
-                });
-              });
-
-              it('does not render the Delete buttons for the another agent\'s tracks', done => {
-                browser.visit(`/track/${lanny.getAgentDirectory()}`, (err) => {
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  browser.assert.elements('.delete-track-form', 0);
-                  done();
-                });
-              });
-            });
-
-            describe('sudo agent', () => {
-
-              beforeEach(done => {
-                process.env.SUDO = agent.email;
-                browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  done();
-                });
-              });
-
-              it('renders the Publish button', () => {
-                browser.assert.success();
-                browser.assert.elements('.delete-track-form', 3);
-              });
-
-              it('points the database path to the public/tracks/uploads directory', done => {
-                models.Track.find({ recordist: lanny._id, published: { '$ne': null }}).then(tracks => {
-                  expect(tracks.length).toEqual(0);
-
-                  models.Track.find({ recordist: lanny._id, published: null }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-                    expect(mostRecentTrack.length).toEqual(1);
-
-                    browser.pressButton('button[aria-label="Delete"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      models.Track.find({ path: mostRecentTrack[0].path }).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        models.Track.find({ recordist: lanny._id, published: { '$ne': null }}).then(tracks => {
-                          expect(tracks.length).toEqual(0);
-
-                          done();
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-            });
           });
         });
       });
