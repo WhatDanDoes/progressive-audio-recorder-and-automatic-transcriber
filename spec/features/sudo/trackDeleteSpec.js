@@ -443,7 +443,6 @@ describe('sudo Deleting a track', () => {
 
           it('deletes the track from the file system', done => {
             models.Track.find({ recordist: lanny._id, published: null }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-            //models.Track.find({ recordist: lanny._id, published: { '$ne': null } }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
               expect(mostRecentTrack.length).toEqual(1);
 
               let filename = mostRecentTrack[0].path.split('/');
