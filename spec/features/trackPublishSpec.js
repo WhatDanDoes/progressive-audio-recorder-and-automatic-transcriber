@@ -123,18 +123,10 @@ describe('Publishing a track', () => {
         mock.restore();
       });
 
-      it('renders a form to allow an agent to publish a track', done => {
-        browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
-          browser.assert.element('.publish-track-form');
-          browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"]`);
-          done();
-        });
-      });
-
       describe('publishing', () => {
+
         describe('owner resource', () => {
+
           beforeEach(done => {
             browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
               if (err) return done.fail(err);
@@ -143,128 +135,21 @@ describe('Publishing a track', () => {
             });
           });
 
-          it('redirects to referring page if the publish is successful', done => {
-            browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-              if (err) return done.fail(err);
-
-              browser.assert.success();
-              browser.assert.text('.alert.alert-success', 'Track published');
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
-              done();
-            });
+          it('does not allow an ordinary agent to publish a track', () => {
+            browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('does not delete the track from the agent\'s directory', done => {
-            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(3);
-              expect(files.includes('track1.ogg')).toBe(true);
+          it('does not set the database record to published', done => {
+            models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].published).toEqual(null);
 
-              browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
-                if (err) return done.fail(err);
-                browser.assert.success();
-
-                fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
+              request(app)
+                .post(`/track/${agent.getAgentDirectory()}/track1.ogg`)
+                .set('Cookie', browser.cookies)
+                .expect(302)
+                .end((err, res) => {
                   if (err) return done.fail(err);
-                  expect(files.length).toEqual(3);
-                  expect(files.includes('track1.ogg')).toBe(true);
-
-                  done();
-                });
-              });
-            });
-          });
-
-          it('does not add the track to the public/tracks/uploads directory', function(done) {
-            fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(3);
-              expect(files.includes('track1.ogg')).toBe(true);
-
-              browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
-                if (err) return done.fail(err);
-                browser.assert.success();
-
-                fs.readdir(`public/tracks/uploads`, (err, files) => {
-                  if (err) return done.fail(err);
-                  expect(files.length).toEqual(0);
-                  expect(files.includes('track1.ogg')).toBe(false);
-
-                  done();
-                });
-              });
-            });
-          });
-
-          it('does not point the database path to the public/tracks/uploads directory', done => {
-            models.Track.find({ path: `public/tracks/uploads/track1.ogg`}).then(tracks => {
-              expect(tracks.length).toEqual(0);
-
-              models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].published).toEqual(null);
-
-                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].published instanceof Date).toBe(true);
-
-                    models.Track.find({ path: `public/tracks/uploads/track1.ogg`}).then(tracks => {
-                      expect(tracks.length).toEqual(0);
-
-                      done();
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                });
-              }).catch(err => {
-                done.fail(err);
-              });
-            }).catch(err => {
-              done.fail(err);
-            });
-          });
-
-          describe('unpublishing', () => {
-            beforeEach(done => {
-              browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                if (err) return done.fail(err);
-                browser.assert.success();
-                done();
-              });
-            });
-
-            it('shows an unpublish button on the agent\'s audio roll', done => {
-              browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}"]`, err => {
-                if (err) return done.fail(err);
-                browser.assert.success();
-
-                browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"] button.publish-track[aria-label="Unpublish"]`);
-                done();
-              });
-            });
-
-            it('shows an unpublish button on the track\'s show view', () => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
-              browser.assert.element('.publish-track-form button.publish-track[aria-label="Unpublish"]');
-            });
-
-            it('sets the track\'s published property to null in the database', done => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
-
-              models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].published).not.toEqual(null);
-
-                browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
 
                   models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
                     expect(tracks.length).toEqual(1);
@@ -274,25 +159,9 @@ describe('Publishing a track', () => {
                   }).catch(err => {
                     done.fail(err);
                   });
-                });
-              }).catch(err => {
-                done.fail(err);
               });
-            });
-
-            it('redirects to the referring page', done => {
-              browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}"]`, err => {
-                if (err) return done.fail(err);
-                browser.assert.success();
-
-                browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
-                  done();
-                });
-              });
+            }).catch(err => {
+              done.fail(err);
             });
           });
         });
@@ -310,69 +179,26 @@ describe('Publishing a track', () => {
             browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('does not remove the track from the agent\'s directory', done => {
-            fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(3);
-              expect(files.includes('lanny1.ogg')).toBe(true);
+          it('does not set the database record to published', done => {
+            models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].published).toEqual(null);
 
               request(app)
                 .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                 .set('Cookie', browser.cookies)
+                .expect(302)
                 .end((err, res) => {
                   if (err) return done.fail(err);
-                  expect(res.status).toEqual(302);
-                  expect(res.header.location).toEqual(`/track/${lanny.getAgentDirectory()}`);
 
-                  fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-                    if (err) return done.fail(err);
-                    expect(files.length).toEqual(3);
-                    expect(files.includes('lanny1.ogg')).toBe(true);
+                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
-                    fs.readdir(`public/tracks/uploads`, (err, files) => {
-                      if (err) return done.fail(err);
-                      expect(files.length).toEqual(0);
-                      expect(files.includes('track1.ogg')).toBe(false);
-
-                      done();
-                    });
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
                   });
-                });
-            });
-          });
-
-          it('does not modify the database record\'s path property', done => {
-            models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-              expect(tracks.length).toEqual(0);
-
-              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].published).toEqual(null);
-
-                request(app)
-                  .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
-                  .set('Cookie', browser.cookies)
-                  .expect(302)
-                  .end((err, res) => {
-                    if (err) return done.fail(err);
-
-                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].published).toEqual(null);
-
-                      models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                });
-              }).catch(err => {
-                done.fail(err);
               });
             }).catch(err => {
               done.fail(err);
@@ -416,213 +242,29 @@ describe('Publishing a track', () => {
             browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
           });
 
-          it('does not touch the track on the file system', function(done) {
-            fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(1);
-              expect(files.includes('troy1.ogg')).toBe(true);
+          it('does not modify the database record', done => {
+            models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].published).toEqual(null);
 
               request(app)
                 .post(`/track/${troy.getAgentDirectory()}/troy1.ogg`)
                 .set('Cookie', browser.cookies)
+                .expect(302)
                 .end(function(err, res) {
                   if (err) return done.fail(err);
-                  expect(res.status).toEqual(302);
-                  expect(res.header.location).toEqual('/');
 
-                  fs.readdir(`uploads/${troy.getAgentDirectory()}`, (err, files) => {
-                    if (err) return done.fail(err);
-                    expect(files.length).toEqual(1);
-                    expect(files.includes('troy1.ogg')).toBe(true);
+                  models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
-                    fs.readdir(`public/tracks/uploads`, (err, files) => {
-                      if (err) return done.fail(err);
-                      expect(files.length).toEqual(0);
-                      expect(files.includes('troy1.ogg')).toBe(false);
-
-                      done();
-                    });
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
                   });
-                });
-            });
-          });
-
-          it('does not modify the database record\'s path property', done => {
-            models.Track.find({ path: `public/tracks/uploads/troy1.ogg`}).then(tracks => {
-              expect(tracks.length).toEqual(0);
-
-              models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].published).toEqual(null);
-
-                request(app)
-                  .post(`/track/${troy.getAgentDirectory()}/troy1.ogg`)
-                  .set('Cookie', browser.cookies)
-                  .expect(302)
-                  .end(function(err, res) {
-                    if (err) return done.fail(err);
-
-                    models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].published).toEqual(null);
-
-                      models.Track.find({ path: `public/tracks/uploads/troy1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                });
-              }).catch(err => {
-                done.fail(err);
               });
             }).catch(err => {
               done.fail(err);
-            });
-          });
-        });
-
-        describe('sudo mode', () => {
-
-          afterEach(() => {
-            delete process.env.SUDO;
-          });
-
-          describe('set', () => {
-            describe('non sudo agent', () => {
-
-              beforeEach(() => {
-                process.env.SUDO = 'lanny@example.com';
-                expect(process.env.SUDO).not.toEqual(agent.email);
-              });
-
-              it('doesn\'t render the Publish button', done => {
-                browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, (err) => {
-                  if (err) return done.fail(err);
-
-                  browser.assert.success();
-                  browser.assert.elements('.publish-track-form', 0);
-                  done();
-                });
-              });
-
-              it('redirects to the original directory', done => {
-                request(app)
-                  .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
-                  .set('Cookie', browser.cookies)
-                  .expect(302)
-                  .end((err, res) => {
-                    if (err) return done.fail(err);
-
-                    expect(res.header.location).toEqual(`/track/${agent.getAgentDirectory()}/track2.ogg`);
-                    done();
-                  });
-              });
-
-              it('does not modify the database record\'s path property', done => {
-                models.Track.find({ path: `public/tracks/uploads/track2.ogg`}).then(tracks => {
-                  expect(tracks.length).toEqual(0);
-
-                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track2.ogg`}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].published).toEqual(null);
-
-                    request(app)
-                      .post(`/track/${agent.getAgentDirectory()}/track2.ogg`)
-                      .set('Cookie', browser.cookies)
-                      .expect(302)
-                      .end(function(err, res) {
-                        if (err) return done.fail(err);
-
-                        models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track2.ogg`}).then(tracks => {
-                          expect(tracks.length).toEqual(1);
-                          expect(tracks[0].published).toEqual(null);
-
-                          models.Track.find({ path: `public/tracks/uploads/track2.ogg`}).then(tracks => {
-                            expect(tracks.length).toEqual(0);
-
-                            done();
-                          }).catch(err => {
-                            done.fail(err);
-                          });
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-            });
-
-            describe('sudo agent', () => {
-
-              beforeEach(done => {
-                process.env.SUDO = agent.email;
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, (err) => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                  done();
-                });
-              });
-
-              it('renders the Publish button', () => {
-                browser.assert.element('.publish-track-form');
-              });
-
-              it('redirects to the referer page', done => {
-                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                  done();
-                });
-              });
-
-              it('does not point the database path to the public/tracks/uploads directory', done => {
-                models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                  expect(tracks.length).toEqual(0);
-
-                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].published).toEqual(null);
-
-                    browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(1);
-                        expect(tracks[0].published instanceof Date).toBe(true);
-
-                        models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                          expect(tracks.length).toEqual(0);
-
-                          done();
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
             });
           });
         });
@@ -677,140 +319,36 @@ describe('Publishing a track', () => {
         mock.restore();
       });
 
-      it('renders forms to allow an agent to publish a track', () => {
-        browser.assert.elements('.publish-track-form', 3);
-        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"]`);
-        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track2.ogg"][method="post"]`);
-        browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track3.ogg"][method="post"]`);
-      });
-
       describe('publishing', () => {
+
         describe('owner resource', () => {
-          beforeEach(() => {
-            browser.assert.elements('.publish-track-form', 3);
+
+          it('renders forms to allow an agent to publish a track', () => {
+            browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('redirects to referer if the publish is successful', done => {
-            //
-            // Careful here... this is pressing the first button. There are three Publish buttons
-            //
-            // If this flakes out somehow, remember this:
-            //   browser.document.forms[0].submit();
-            //
-            // 2020-10-2 https://stackoverflow.com/a/40264336/1356582
-            //
+          it('does not change the database', done => {
+            models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].published).toEqual(null);
 
-            browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-              if (err) return done.fail(err);
-
-              browser.assert.success();
-              browser.assert.text('.alert.alert-success', 'Track published');
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
-              done();
-            });
-          });
-
-          it('does not delete the track from the agent\'s directory', done => {
-            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-              expect(mostRecentTrack.length).toEqual(1);
-
-              let filename = mostRecentTrack[0].path.split('/');
-              filename = filename[filename.length - 1];
-
-              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-                if (err) return done.fail(err);
-                expect(files.length).toEqual(3);
-                expect(files.includes(filename)).toBe(true);
-
-                // Cf., Publish notes above
-                browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
+              request(app)
+                .post(`/track/${agent.getAgentDirectory()}/track1.ogg`)
+                .set('Cookie', browser.cookies)
+                .expect(302)
+                .end(function(err, res) {
                   if (err) return done.fail(err);
-                  browser.assert.success();
 
-                  fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-                    if (err) return done.fail(err);
-                    expect(files.length).toEqual(3);
-                    expect(files.includes(filename)).toBe(true);
-
+                  models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
+                    expect(tracks[0].published instanceof Date).toBe(false);
+  
                     done();
+                  }).catch(err => {
+                    done.fail(err);
                   });
                 });
-              });
-            }).catch(err => {
-              done.fail(err);
-            });
-          });
-
-          it('does not add the track to the public/tracks/uploads directory', function(done) {
-            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-              expect(mostRecentTrack.length).toEqual(1);
-
-              let filename = mostRecentTrack[0].path.split('/');
-              filename = filename[filename.length - 1];
-
-              fs.readdir(`uploads/${agent.getAgentDirectory()}`, (err, files) => {
-                if (err) return done.fail(err);
-                expect(files.length).toEqual(3);
-                expect(files.includes(filename)).toBe(true);
-
-                // Cf., Publish notes above
-                browser.pressButton('button.publish-track[aria-label="Publish"]', function(err) {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  fs.readdir(`public/tracks/uploads`, (err, files) => {
-                    if (err) return done.fail(err);
-                    expect(files.length).toEqual(0);
-                    expect(files.includes(filename)).toBe(false);
-
-                    done();
-                  });
-                });
-              });
-            }).catch(err => {
-              done.fail(err);
-            });
-          });
-
-          it('does not point the database path to the public/tracks/uploads directory', done => {
-            models.Track.find({ recordist: agent._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-              expect(mostRecentTrack.length).toEqual(1);
-
-              let filename = mostRecentTrack[0].path.split('/');
-              filename = filename[filename.length - 1];
-
-              models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
-                expect(tracks.length).toEqual(0);
-
-                models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(tracks => {
-                  expect(tracks.length).toEqual(1);
-                  expect(tracks[0].published).toEqual(null);
-
-                  browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                    if (err) return done.fail(err);
-                    browser.assert.success();
-
-                    models.Track.find({ path: `uploads/${agent.getAgentDirectory()}/${filename}`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].published instanceof Date).toBe(true);
-
-                      models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              }).catch(err => {
-                done.fail(err);
-              });
             }).catch(err => {
               done.fail(err);
             });
@@ -830,233 +368,29 @@ describe('Publishing a track', () => {
             browser.assert.elements('.publish-track-form', 0);
           });
 
-          it('does not remove the track from the agent\'s directory', function(done) {
-            fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-              if (err) return done.fail(err);
-              expect(files.length).toEqual(3);
-              expect(files.includes('lanny1.ogg')).toBe(true);
-              expect(files.includes('lanny2.ogg')).toBe(true);
-              expect(files.includes('lanny3.ogg')).toBe(true);
+          it('does not modify the database record', done => {
+            models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].published).toEqual(null);
 
               request(app)
                 .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
                 .set('Cookie', browser.cookies)
+                .expect(302)
                 .end(function(err, res) {
                   if (err) return done.fail(err);
-                  expect(res.status).toEqual(302);
-                  expect(res.header.location).toEqual(`/track/${lanny.getAgentDirectory()}`);
 
-                  fs.readdir(`uploads/${lanny.getAgentDirectory()}`, (err, files) => {
-                    if (err) return done.fail(err);
-                    expect(files.length).toEqual(3);
-                    expect(files.includes('lanny1.ogg')).toBe(true);
-                    expect(files.includes('lanny2.ogg')).toBe(true);
-                    expect(files.includes('lanny3.ogg')).toBe(true);
+                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].published).toEqual(null);
 
-                    fs.readdir(`public/tracks/uploads`, (err, files) => {
-                      if (err) return done.fail(err);
-                      expect(files.length).toEqual(0);
-                      expect(files.includes('track1.ogg')).toBe(false);
-                      expect(files.includes('track2.ogg')).toBe(false);
-                      expect(files.includes('track3.ogg')).toBe(false);
-
-                      done();
-                    });
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
                   });
                 });
-            });
-          });
-
-          it('does not modify the database record\'s path property', done => {
-            models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-              expect(tracks.length).toEqual(0);
-
-              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].published).toEqual(null);
-
-                request(app)
-                  .post(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`)
-                  .set('Cookie', browser.cookies)
-                  .expect(302)
-                  .end(function(err, res) {
-                    if (err) return done.fail(err);
-
-                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].published).toEqual(null);
-
-                      models.Track.find({ path: `public/tracks/uploads/lanny1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(0);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                });
-              }).catch(err => {
-                done.fail(err);
-              });
             }).catch(err => {
               done.fail(err);
-            });
-          });
-        });
-
-        describe('sudo mode', () => {
-
-          afterEach(() => {
-            delete process.env.SUDO;
-          });
-
-          describe('set', () => {
-            describe('non sudo agent', () => {
-
-              beforeEach(() => {
-                process.env.SUDO = 'lanny@example.com';
-                expect(process.env.SUDO).not.toEqual(agent.email);
-              });
-
-              it('doesn\'t render the Publish buttons', done => {
-                browser.visit(`/track/${agent.getAgentDirectory()}`, (err) => {
-                  browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}` });
-                  browser.assert.elements('.publish-track-form', 0);
-                  done();
-                });
-              });
-            });
-
-            describe('sudo agent', () => {
-
-              beforeEach(done => {
-                process.env.SUDO = agent.email;
-                browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  done();
-                });
-              });
-
-              it('renders the Publish button', () => {
-                browser.assert.success();
-                browser.assert.elements('.publish-track-form', 3);
-              });
-
-              it('does not point the database path to the public/tracks/uploads directory', done => {
-                models.Track.find({ recordist: lanny._id }).limit(1).sort({ updatedAt: 'desc' }).then(mostRecentTrack => {
-                  expect(mostRecentTrack.length).toEqual(1);
-
-                  let filename = mostRecentTrack[0].path.split('/');
-                  filename = filename[filename.length - 1];
-
-                  models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
-                    expect(tracks.length).toEqual(0);
-
-                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].published).toEqual(null);
-
-                      browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                        if (err) return done.fail(err);
-                        browser.assert.success();
-
-                        models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/${filename}`}).then(tracks => {
-                          expect(tracks.length).toEqual(1);
-                          expect(tracks[0].published instanceof Date).toBe(true);
-
-                          models.Track.find({ path: `public/tracks/uploads/${filename}`}).then(tracks => {
-                            expect(tracks.length).toEqual(0);
-
-                            done();
-                          }).catch(err => {
-                            done.fail(err);
-                          });
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                      });
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-
-              describe('unpublishing', () => {
-                let track;
-                beforeEach(done => {
-                  models.Track.find({ recordist: lanny._id }).sort({updatedAt: 'desc'}).then(tracks => {
-                    track = tracks[0];
-                    browser.pressButton('button.publish-track[aria-label="Publish"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-                      done();
-                    });
-                  });
-                });
-
-                it('shows an unpublish button on the agent\'s audio roll', () => {
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track[aria-label="Unpublish"]`);
-                });
-
-                it('shows an unpublish button on the track\'s show view', done => {
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                  browser.clickLink(`a[href="/${track.path.replace('uploads', 'track')}"]`, err => {
-                    if (err) return done.fail(err);
-                    browser.assert.success();
-                    browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}"] button.publish-track[aria-label="Unpublish"]`);
-                    done();
-                  });
-                });
-
-                it('sets the track\'s published property to null in the database', done => {
-                  models.Track.find({ _id: track._id}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].published).not.toEqual(null);
-
-                    browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      models.Track.find({ _id: track._id}).then(tracks => {
-                        expect(tracks.length).toEqual(1);
-                        expect(tracks[0].published).toEqual(null);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                });
-
-                it('redirects to the referring page', done => {
-                  browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
-                    if (err) return done.fail(err);
-                    browser.assert.success();
-
-                    browser.pressButton('button.publish-track[aria-label="Unpublish"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-                      done();
-                    });
-                  });
-                });
-              });
-
             });
           });
         });
