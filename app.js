@@ -131,7 +131,7 @@ app.use(express.static(path.join(__dirname, 'public')));
  * Protected static assets
  */
 app.use(`/uploads`, [function(req, res, next) {
-  if (req.user.email === process.env.SUDO) {
+  if (req.isAuthenticated() && req.user.email === process.env.SUDO) {
     return next();
   }
 
