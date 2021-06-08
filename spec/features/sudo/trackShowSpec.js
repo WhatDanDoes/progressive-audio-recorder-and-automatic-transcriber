@@ -66,6 +66,10 @@ describe('sudo trackShowSpec', () => {
             'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
             'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
           },
+          [`uploads/${lanny.getAgentDirectory()}`]: {
+            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+          },
           'public/tracks/uploads': {}
         });
 
@@ -157,7 +161,7 @@ describe('sudo trackShowSpec', () => {
 
       it('is able to listen to the track', done => {
         request(app)
-          .post(`/uploads/${lanny.getAgentDirectory()}/lanny1.ogg`)
+          .get(`/uploads/${lanny.getAgentDirectory()}/lanny1.ogg`)
           .set('Cookie', browser.cookies)
           .expect(200)
           .end((err, res) => {
