@@ -4,23 +4,23 @@
             <i class="fas fa-trash-alt"></i>
           </button>
         </form>
-        <% if (!process.env.SUDO || agent.email === process.env.SUDO) { %>
-            <% if (track.flagged) { %>
-              <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-track-form">
-                <button class="publish-track" type="submit" aria-label="Deflag">
-                  <i class="far fa-flag"></i>
-                </button>
-              </form>
-            <% } else { %>
-              <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-track-form">
-                <button class="publish-track" type="submit" aria-Label="<%= track.published ? 'Unpublish' : 'Publish' %>">
-                  <% if (track.published) { %>
-                    <i class="far fa-eye"></i>
-                  <% } else { %>
-                    <i class="far fa-eye-slash"></i>
-                  <% } %>
-                </button>
-              </form>
-            <% } %>
+        <% if (agent.email === process.env.SUDO) { %>
+          <% if (track.flagged) { %>
+            <form action="<%= `/${track.path.replace('uploads', 'track')}/flag?_method=PATCH` %>" method="post" class="deflag-track-form">
+              <button class="publish-track" type="submit" aria-label="Deflag">
+                <i class="far fa-flag"></i>
+              </button>
+            </form>
+          <% } else { %>
+            <form action="<%= `/${track.path.replace('uploads', 'track')}` %>" method="post" class="publish-track-form">
+              <button class="publish-track" type="submit" aria-Label="<%= track.published ? 'Unpublish' : 'Publish' %>">
+                <% if (track.published) { %>
+                  <i class="far fa-eye"></i>
+                <% } else { %>
+                  <i class="far fa-eye-slash"></i>
+                <% } %>
+              </button>
+            </form>
+          <% } %>
         <% } %>
       </section>
