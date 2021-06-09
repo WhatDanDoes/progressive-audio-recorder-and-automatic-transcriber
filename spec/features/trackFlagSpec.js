@@ -35,9 +35,6 @@ describe('Flagging a track', () => {
   let browser, agent, lanny;
 
   beforeEach(done => {
-    // In case sudo is set in .env
-    delete process.env.SUDO;
-
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
     fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
@@ -94,6 +91,7 @@ describe('Flagging a track', () => {
   describe('from show view', () => {
 
     describe('authenticated', () => {
+
       beforeEach(done => {
         stubAuth0Sessions(agent.email, DOMAIN, err => {
           if (err) done.fail(err);
@@ -192,17 +190,11 @@ describe('Flagging a track', () => {
             });
           });
 
-          /**
-           * Take note:
-           *
-           * Until broader administrative privileges can be established, a resource
-           * owner will be able to un-flag his own track outside of sudo mode
-           */
-          it('disables the Publish button on the flagged track', done => {
+          it('does not display a Publish button on the flagged track', done => {
             browser.visit(`/track/${agent.getAgentDirectory()}`, err => {
               if (err) return done.fail(err);
               browser.assert.element(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`)
-              browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg"][method="post"] button.publish-track[aria-label="Publish"]`);
+              browser.assert.elements(`button.publish-track[aria-label="Publish"]`, 0);
 
               browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, err => {
                 if (err) return done.fail(err);
@@ -211,7 +203,8 @@ describe('Flagging a track', () => {
                   if (err) return done.fail(err);
                   browser.assert.success();
 
-                  browser.assert.element(`form[action="/track/${agent.getAgentDirectory()}/track1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
+                  browser.assert.elements(`button.publish-track[aria-label="Deflag"]`, 0);
+                  browser.assert.elements(`button.publish-track[aria-label="Publish"]`, 0);
                   done();
                 });
               });
@@ -305,6 +298,35 @@ describe('Flagging a track', () => {
               });
             });
           });
+
+          it('does not allow track flagger to flag again', done => {
+            browser.pressButton('button[aria-label="Flag"]', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
+
+              models.Track.findOneAndUpdate({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }, { flagged: false }, { new: true }).then(track => {
+                expect(track.flagged).toBe(false);
+                expect(track.flaggers.length).toEqual(1);
+
+                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+                  if (err) return done.fail(err);
+                  browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+
+                  browser.pressButton('button[aria-label="Flag"]', err => {
+                    if (err) return done.fail(err);
+                    browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
+
+                    browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
+                    browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
+
+                    done();
+                  });
+                });
+              }).catch(err => {
+                done.fail(err);
+              });
+            });
+          });
         });
 
         describe('unauthorized resource', () => {
@@ -372,72 +394,7 @@ describe('Flagging a track', () => {
           });
         });
 
-        describe('unauthorized resource', () => {
-          let troy;
-          beforeEach(done => {
-            models.Agent.findOne({ email: 'troy@example.com' }).then(result => {
-              troy = result;
-
-              expect(agent.canRead.length).toEqual(1);
-              expect(agent.canRead[0]).not.toEqual(troy._id);
-
-              mkdirp(`uploads/${troy.getAgentDirectory()}`, err => {
-                fs.writeFileSync(`uploads/${troy.getAgentDirectory()}/troy1.ogg`, fs.readFileSync('spec/files/troll.ogg'));
-
-                const tracks = [
-                  { path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`, recordist: troy._id },
-                ];
-                models.Track.create(tracks).then(results => {
-
-                  browser.visit(`/track/${troy.getAgentDirectory()}/troy1.ogg`, err => {
-                    if (err) return done.fail(err);
-                    done();
-                  });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
-            }).catch(error => {
-              done.fail(error);
-            });
-          });
-
-          it('redirects home', () => {
-            browser.assert.redirected();
-            browser.assert.url({ pathname: '/'});
-            browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-          });
-
-          it('does not modify the database record', done => {
-            models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
-              expect(tracks.length).toEqual(1);
-              expect(tracks[0].flagged).toBe(false);
-              expect(tracks[0].flaggers).toEqual([]);
-
-              request(app)
-                .patch(`/track/${troy.getAgentDirectory()}/troy1.ogg/flag`)
-                .set('Cookie', browser.cookies)
-                .expect(302)
-                .end((err, res) => {
-                  if (err) return done.fail(err);
-
-                  models.Track.find({ path: `uploads/${troy.getAgentDirectory()}/troy1.ogg`}).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].flagged).toBe(false);
-                    expect(tracks[0].flaggers).toEqual([]);
-
-                    done();
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                });
-            }).catch(err => {
-              done.fail(err);
-            });
-          });
-        });
-
-        describe('sudo mode', () => {
+        describe('Flagged resource page', () => {
 
           beforeEach(done => {
             browser.visit(`/track/${lanny.getAgentDirectory()}`, err => {
@@ -456,243 +413,50 @@ describe('Flagging a track', () => {
             });
           });
 
-          afterEach(() => {
-            delete process.env.SUDO;
-          });
-
-          describe('not set', () => {
-            it('shows a link to flagged resource page', done => {
-              browser.visit('/', (err) => {
-                browser.assert.elements('a[href="/track/flagged"]', 0);
-                done();
-              });
-            });
-
-            it('doesn\'t allow viewing flagged resources', done => {
-              browser.visit('/track/flagged', err => {
-                if (err) return done.fail(err);
-                browser.assert.success();
-
-                browser.assert.url('/');
-                browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-                done();
-              });
-            });
-
-            it('does not allow de-flagging the track', done => {
-              models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                expect(tracks.length).toEqual(1);
-                expect(tracks[0].flagged).toBe(true);
-                expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                request(app)
-                  .patch(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag`)
-                  .set('Cookie', browser.cookies)
-                  .set('Referer', `"/track/${lanny.getAgentDirectory()}/lanny1.ogg"`)
-                  .expect(302)
-                  .end((err, res) => {
-                    if (err) return done.fail(err);
-
-                    models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                      expect(tracks.length).toEqual(1);
-                      expect(tracks[0].flagged).toBe(true);
-                      expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                      done();
-                    }).catch(err => {
-                      done.fail(err);
-                    });
-                  });
-              }).catch(err => {
-                done.fail(err);
-              });
+          it('does not show a link', done => {
+            browser.visit('/', (err) => {
+              browser.assert.elements('a[href="/track/flagged"]', 0);
+              done();
             });
           });
 
-          describe('set', () => {
-            describe('non sudo agent', () => {
+          it('doesn\'t allow viewing flagged resources', done => {
+            browser.visit('/track/flagged', err => {
+              if (err) return done.fail(err);
+              browser.assert.success();
 
-              beforeEach(() => {
-                process.env.SUDO = 'lanny@example.com';
-                expect(process.env.SUDO).not.toEqual(agent.email);
-              });
-
-              it('does not show a link to flagged resource page', done => {
-                browser.visit('/', (err) => {
-                  browser.assert.elements('a[href="/track/flagged"]', 0);
-                  done();
-                });
-              });
-
-              it('doesn\'t allow viewing flagged resources', done => {
-                browser.assert.elements('a[href="/track/flagged"]', 0);
-                browser.visit('/track/flagged', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  browser.assert.url('/');
-                  browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-                  done();
-                });
-              });
-
-              it('does not allow de-flagging the track', done => {
-                models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                  expect(tracks.length).toEqual(1);
-                  expect(tracks[0].flagged).toBe(true);
-                  expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                  request(app)
-                    .patch(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag`)
-                    .set('Cookie', browser.cookies)
-                    .set('Referer', `"/track/${lanny.getAgentDirectory()}/lanny1.ogg"`)
-                    .expect(302)
-                    .end((err, res) => {
-                      if (err) return done.fail(err);
-
-                      models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
-                        expect(tracks.length).toEqual(1);
-                        expect(tracks[0].flagged).toBe(true);
-                        expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                }).catch(err => {
-                  done.fail(err);
-                });
-              });
+              browser.assert.url('/');
+              browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+              done();
             });
+          });
 
-            describe('sudo agent', () => {
+          it('does not allow de-flagging the track', done => {
+            models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+              expect(tracks.length).toEqual(1);
+              expect(tracks[0].flagged).toBe(true);
+              expect(tracks[0].flaggers).toEqual([agent._id]);
 
-              beforeEach(()=> {
-                process.env.SUDO = agent.email;
-              });
-
-              it('shows a link to flagged resource page', done => {
-                browser.visit('/', (err) => {
-                  browser.assert.element('a[href="/track/flagged"]');
-                  done();
-                });
-              });
-
-              it('is allowed to view flagged tracks', done => {
-                browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, (err) => {
+              request(app)
+                .patch(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag`)
+                .set('Cookie', browser.cookies)
+                .set('Referer', `"/track/${lanny.getAgentDirectory()}/lanny1.ogg"`)
+                .expect(302)
+                .end((err, res) => {
                   if (err) return done.fail(err);
-                  browser.assert.success();
-                  browser.assert.text('.alert.alert-danger', 'Track flagged');
-                  browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-                  done();
-                });
-              });
 
-              it('renders flagged resources with management UI', done => {
-                browser.visit('/track/flagged', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
+                  models.Track.find({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].flagged).toBe(true);
+                    expect(tracks[0].flaggers).toEqual([agent._id]);
 
-                  browser.assert.elements('section.track audio', 1);
-                  browser.assert.element(`.track audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-                  browser.assert.element(`.track a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-                  browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"]`);
-                  browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg?_method=DELETE"]`);
-                  done();
-                });
-              });
-
-              describe('deflagging', () => {
-                it('shows track on owner\'s page', done => {
-                  browser.visit(`/track/${lanny.getAgentDirectory()}`, (err) => {
-                    if (err) return done.fail(err);
-
-                    browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 0);
-
-                    browser.visit('/track/flagged', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                      browser.pressButton('button[aria-label="Deflag"]', err => {
-                        if (err) return done.fail(err);
-                        browser.assert.success();
-
-                        browser.visit(`/track/${lanny.getAgentDirectory()}`, (err) => {
-                          if (err) return done.fail(err);
-                          browser.assert.success();
-
-                          browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-                          done();
-                        });
-                      });
-                    });
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
                   });
                 });
-
-                it('does not allow track flagger to flag again', done => {
-                  browser.visit('/track/flagged', err => {
-                    if (err) return done.fail(err);
-                    browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                    browser.pressButton('button[aria-label="Deflag"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      process.env.SUDO = 'lanny@example.com';
-
-                      browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                        if (err) return done.fail(err);
-                        browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-
-                        browser.pressButton('button[aria-label="Flag"]', err => {
-                          if (err) return done.fail(err);
-                          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-
-                          browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
-                          browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-
-                          done();
-                        });
-                      });
-                    });
-                  });
-                });
-
-                it('does allow sudo to flag again', done => {
-                  browser.visit('/track/flagged', err => {
-                    if (err) return done.fail(err);
-                    browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                    browser.pressButton('button[aria-label="Deflag"]', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.success();
-
-                      browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                        if (err) return done.fail(err);
-                        browser.assert.element(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`);
-
-                        browser.pressButton('button[aria-label="Flag"]', err => {
-                          if (err) return done.fail(err);
-                          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}` });
-
-                          browser.assert.text('.alert.alert-success', 'Track flagged');
-                          browser.assert.elements(`.track figure audio[src="/uploads/${lanny.getAgentDirectory()}/lanny1.ogg"]`, 0);
-
-                          browser.visit('/track/flagged', err => {
-                            if (err) return done.fail(err);
-                            browser.assert.success();
-
-                            browser.assert.element(`form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                            done();
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
+            }).catch(err => {
+              done.fail(err);
             });
           });
         });
@@ -850,7 +614,7 @@ describe('Flagging a track', () => {
             });
           });
 
-          describe('sudo mode', () => {
+          describe('Flagged resource page', () => {
 
             let track;
             beforeEach(done => {
@@ -872,190 +636,43 @@ describe('Flagging a track', () => {
               });
             });
 
-            afterEach(() => {
-              delete process.env.SUDO;
-            });
+            it('doesn\'t allow viewing flagged resources', done => {
+              browser.visit('/track/flagged', err => {
+                if (err) return done.fail(err);
+                browser.assert.success();
 
-            describe('not set', () => {
-
-              it('doesn\'t allow viewing flagged resources', done => {
-                browser.visit('/track/flagged', err => {
-                  if (err) return done.fail(err);
-                  browser.assert.success();
-
-                  browser.assert.url('/');
-                  browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-                  done();
-                });
-              });
-
-              it('does not allow de-flagging the track', done => {
-                models.Track.find({ path: track.path }).then(tracks => {
-                  expect(tracks.length).toEqual(1);
-                  expect(tracks[0].flagged).toBe(true);
-                  expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                  request(app)
-                    .patch(`/${track.path.replace('uploads', 'track')}/flag`)
-                    .set('Cookie', browser.cookies)
-                    .set('Referer', `/${track.path.replace('uploads', 'track')}`)
-                    .expect(302)
-                    .end((err, res) => {
-                      if (err) return done.fail(err);
-
-                      models.Track.find({ path: track.path }).then(tracks => {
-                        expect(tracks.length).toEqual(1);
-                        expect(tracks[0].flagged).toBe(true);
-                        expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                        done();
-                      }).catch(err => {
-                        done.fail(err);
-                      });
-                    });
-                }).catch(err => {
-                  done.fail(err);
-                });
+                browser.assert.url('/');
+                browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
+                done();
               });
             });
 
-            describe('set', () => {
-              describe('non sudo agent', () => {
+            it('does not allow de-flagging the track', done => {
+              models.Track.find({ path: track.path }).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].flagged).toBe(true);
+                expect(tracks[0].flaggers).toEqual([agent._id]);
 
-                beforeEach(() => {
-                  process.env.SUDO = 'lanny@example.com';
-                  expect(process.env.SUDO).not.toEqual(agent.email);
-                });
-
-                it('doesn\'t allow viewing flagged resources', done => {
-                  browser.visit('/track/flagged', err => {
+                request(app)
+                  .patch(`/${track.path.replace('uploads', 'track')}/flag`)
+                  .set('Cookie', browser.cookies)
+                  .set('Referer', `/${track.path.replace('uploads', 'track')}`)
+                  .expect(302)
+                  .end((err, res) => {
                     if (err) return done.fail(err);
-                    browser.assert.success();
 
-                    browser.assert.url('/');
-                    browser.assert.text('.alert.alert-danger', 'You are not authorized to access that resource');
-                    done();
-                  });
-                });
+                    models.Track.find({ path: track.path }).then(tracks => {
+                      expect(tracks.length).toEqual(1);
+                      expect(tracks[0].flagged).toBe(true);
+                      expect(tracks[0].flaggers).toEqual([agent._id]);
 
-                it('does not allow de-flagging the track', done => {
-                  models.Track.find({ path: track.path }).then(tracks => {
-                    expect(tracks.length).toEqual(1);
-                    expect(tracks[0].flagged).toBe(true);
-                    expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                    request(app)
-                      .patch(`/${track.path.replace('uploads', 'track')}/flag`)
-                      .set('Cookie', browser.cookies)
-                      .set('Referer', `/${track.path.replace('uploads', 'track')}`)
-                      .expect(302)
-                      .end((err, res) => {
-                        if (err) return done.fail(err);
-
-                        models.Track.find({ path: track.path }).then(tracks => {
-                          expect(tracks.length).toEqual(1);
-                          expect(tracks[0].flagged).toBe(true);
-                          expect(tracks[0].flaggers).toEqual([agent._id]);
-
-                          done();
-                        }).catch(err => {
-                          done.fail(err);
-                        });
-                      });
-                  }).catch(err => {
-                    done.fail(err);
-                  });
-                });
-              });
-
-              describe('sudo agent', () => {
-
-                beforeEach(() => {
-                  process.env.SUDO = agent.email;
-                });
-
-                it('is allowed to view flagged tracks', done => {
-                  browser.visit(`/${track.path.replace('uploads', 'track')}`, err => {
-                    if (err) return done.fail(err);
-                    browser.assert.success();
-                    browser.assert.text('.alert.alert-danger', 'Track flagged');
-                    browser.assert.url({ pathname: `/${track.path.replace('uploads', 'track')}` });
-                    done();
-                  });
-                });
-
-                it('renders flagged resources with management UI', done => {
-                  browser.visit('/track/flagged', err => {
-                    if (err) return done.fail(err);
-                    browser.assert.success();
-
-                    browser.assert.elements('section.track audio', 1);
-                    browser.assert.element(`.track audio[src="/${track.path}"]`);
-                    browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"]`);
-                    browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}/flag?_method=PATCH"][method="post"]`);
-                    browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}?_method=DELETE"]`);
-                    done();
-                  });
-                });
-
-                describe('deflagging', () => {
-                  it('shows track on landing page', done => {
-                    browser.visit('/', (err) => {
-                      if (err) return done.fail(err);
-
-                      browser.assert.elements(`.track a[href="/${track.path.replace('uploads', 'track')}"] img[src="/${track.path}"]`, 0);
-
-                      browser.visit('/track/flagged', err => {
-                        if (err) return done.fail(err);
-                        browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                        browser.pressButton('button[aria-label="Deflag"]', err => {
-                          if (err) return done.fail(err);
-                          browser.assert.success();
-
-                          browser.visit('/', err => {
-                            if (err) return done.fail(err);
-                            browser.assert.success();
-
-                            browser.assert.element(`.track audio[src="/${track.path}"]`);
-                            browser.assert.element(`.track a[href="/${track.path.replace('uploads', 'track')}"]`);
-                            done();
-                          });
-                        });
-                      });
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
                     });
                   });
-
-                  it('does not allow track flagger to flag again', done => {
-                    browser.visit('/track/flagged', err => {
-                      if (err) return done.fail(err);
-                      browser.assert.element(`form[action="/${track.path.replace('uploads', 'track')}/flag?_method=PATCH"][method="post"] button.publish-track[aria-label="Deflag"]`);
-
-                      browser.pressButton('button[aria-label="Deflag"]', err => {
-                        if (err) return done.fail(err);
-                        browser.assert.success();
-
-                        process.env.SUDO = 'lanny@example.com';
-
-                        browser.visit(`/${track.path.replace('uploads', 'track')}`, err => {
-                          if (err) return done.fail(err);
-                          //browser.assert.element(`.track img[src="/${track.path}"]`);
-                          browser.assert.element(`.track figure audio[src="/${track.path}"]`);
-
-                          browser.pressButton('button[aria-label="Flag"]', err => {
-                            if (err) return done.fail(err);
-                            browser.assert.url({ pathname: `/track/${track.recordist.getAgentDirectory()}` });
-
-                            browser.assert.text('.alert.alert-danger', 'This post has administrative approval');
-                            browser.assert.element(`.track figure figcaption a[href="/${track.path.replace('uploads', 'track')}"]`);
-
-                            done();
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
+              }).catch(err => {
+                done.fail(err);
               });
             });
           });

@@ -281,7 +281,7 @@ router.patch('/:domain/:agentId/:trackId/flag', (req, res) => {
           return res.redirect(returnTo);
         }
 
-        const canRead = readables.includes(`${req.params.domain}/${req.params.agentId}`);
+        const canRead = readables.includes(`${req.params.domain}/${req.params.agentId}`) || req.user.email === process.env.SUDO;
 
         if (track.published || canRead) {
           track.flag(req.user, (err, track) => {

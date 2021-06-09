@@ -207,7 +207,6 @@ describe('trackStaticSpec', () => {
     it('returns a 404', done => {
       request(app)
         .get(`/uploads/${agent.getAgentDirectory()}/track1.ogg`)
-        .set('Cookie', browser.cookies)
         .expect(404)
         .end((err, res) => {
           if (err) done.fail(err);
@@ -220,7 +219,6 @@ describe('trackStaticSpec', () => {
         expect(published.length).toEqual(1);
         request(app)
           .get(`/${published[0].path}`)
-          .set('Cookie', browser.cookies)
           .expect(200)
           .end((err, res) => {
             if (err) done.fail(err);

@@ -4,12 +4,12 @@ const DOMAIN = 'example.com';
 Browser.localhost(DOMAIN, PORT);
 
 const fs = require('fs');
-const app = require('../../app');
+const app = require('../../../app');
 const request = require('supertest');
 const fixtures = require('pow-mongoose-fixtures');
-const models = require('../../models');
+const models = require('../../../models');
 
-const stubAuth0Sessions = require('../support/stubAuth0Sessions');
+const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
@@ -19,20 +19,26 @@ const stubAuth0Sessions = require('../support/stubAuth0Sessions');
  * problem.
  */
 const mock = require('mock-fs');
-const mockAndUnmock = require('../support/mockAndUnmock')(mock);
+const mockAndUnmock = require('../../support/mockAndUnmock')(mock);
 
-describe('trackEditSpec', () => {
-
+describe('sudo trackEditSpec', () => {
   let browser, agent, lanny;
+
   beforeEach(done => {
     browser = new Browser({ waitDuration: '30s', loadCss: true });
     //browser.debug();
-    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
+    fixtures.load(__dirname + '/../../fixtures/agents.js', models.mongoose, err => {
       models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
         agent = results;
         models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
           lanny = results;
-          done();
+
+          browser.visit('/', err => {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            done();
+          });
         }).catch(error => {
           done.fail(error);
         });
@@ -52,32 +58,62 @@ describe('trackEditSpec', () => {
 
   describe('authenticated', () => {
 
+    let root;
     beforeEach(done => {
-      stubAuth0Sessions(agent.email, DOMAIN, err => {
-        if (err) done.fail(err);
+      expect(process.env.SUDO).toBeDefined();
+      stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
+        if (err) return done.fail(err);
 
-        mockAndUnmock({
-          [`uploads/${agent.getAgentDirectory()}`]: {
-            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
-          },
-          'public/tracks/uploads': {}
-        });
+        browser.clickLink('Login', err => {
+          if (err) done.fail(err);
+          browser.assert.success();
 
-        const tracks = [
-          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id, published: new Date() },
-        ];
-        models.Track.create(tracks).then(results => {
-          done();
-        }).catch(err => {
-          done.fail(err);
+          browser.clickLink('Admin', function(err) {
+            if (err) return done.fail(err);
+            browser.assert.success();
+
+            models.Agent.findOne({ email: process.env.SUDO }).then(results => {
+              root = results;
+
+              mockAndUnmock({
+                [`uploads/${agent.getAgentDirectory()}`]: {
+                  'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                [`uploads/${lanny.getAgentDirectory()}`]: {
+                  'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                [`uploads/${root.getAgentDirectory()}`]: {
+                  'root1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'root2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'root3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                'public/tracks/uploads': {}
+              });
+
+              const tracks = [
+                { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+                { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+                { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
+                { path: `uploads/${root.getAgentDirectory()}/root1.ogg`, recordist: root._id },
+                { path: `uploads/${root.getAgentDirectory()}/root2.ogg`, recordist: root._id },
+                { path: `uploads/${root.getAgentDirectory()}/root3.ogg`, recordist: root._id },
+              ];
+              models.Track.create(tracks).then(results => {
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
         });
       });
     });
@@ -88,39 +124,19 @@ describe('trackEditSpec', () => {
 
     describe('as tested with zombie', () => {
 
-      beforeEach(done => {
-        browser.visit('/', err => {
-          if (err) return done.fail(err);
-          browser.assert.success();
-
-          browser.clickLink('Login', err => {
-            if (err) done.fail(err);
-            browser.assert.success();
-
-            models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
-              agent = results;
-
-              done();
-            }).catch(err => {
-              done.fail(err);
-            });
-          });
-        });
-      });
-
-      afterEach(() => {
-        mock.restore();
-      });
-
       describe('authorized', () => {
 
-        describe('owner', () => {
+        describe('root\'s own resource', () => {
 
           beforeEach(done => {
-            browser.clickLink(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`, (err) => {
+            browser.clickLink('Tracks', err => {
               if (err) done.fail(err);
-              browser.assert.success();
-              done();
+
+              browser.clickLink(`a[href="/track/${root.getAgentDirectory()}/root1.ogg"]`, (err) => {
+                if (err) done.fail(err);
+                browser.assert.success();
+                done();
+              });
             });
           });
 
@@ -204,7 +220,7 @@ describe('trackEditSpec', () => {
 
                   // Let the Javascript execute
                   setTimeout(function(){
-                    browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                    browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
                     browser.assert.text('.alert.alert-success', 'Track updated');
                     done();
                   }, 300);
@@ -349,7 +365,6 @@ describe('trackEditSpec', () => {
                   done();
                 });
               });
-
             });
 
             describe('successfully', () => {
@@ -363,7 +378,7 @@ describe('trackEditSpec', () => {
 
                   // Let the Javascript execute
                   setTimeout(function(){
-                    browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                    browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
                     browser.assert.text('.alert.alert-success', 'Track updated');
                     done();
                   }, 300);
@@ -461,59 +476,314 @@ describe('trackEditSpec', () => {
             });
           });
         });
-      });
 
-      describe('unauthorized', () => {
-        beforeEach(done => {
-          // No permissions
-          agent.canRead.pop();
-          agent.save().then(agent => {
-            expect(agent.canRead.length).toEqual(0);
-            done();
-          }).catch(error => {
-            done.fail(error);
+        describe('regular agent resource', () => {
+
+          beforeEach(done => {
+            //browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
+            browser.clickLink(lanny.getAgentDirectory(), err => {
+              if (err) done.fail(err);
+              browser.assert.success();
+
+              browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
+                if (err) done.fail(err);
+                browser.assert.success();
+
+                done();
+              });
+            });
           });
-        });
-
-        describe('canRead agent', () => {
 
           describe('edit name field', () => {
 
-            it('responds with forbidden', done => {
-              request(app)
-                .patch(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`)
-                .set('Cookie', browser.cookies)
-                .set('Accept', 'application/json')
-                .send({
-                  name: 'Austin Powers',
-                })
-                .expect(403)
-                .end((err, res) => {
+            describe('interface', () => {
+
+              it('has an edit button', () => {
+                browser.assert.element('.post .track figure figcaption h2 i#edit-track-name');
+              });
+
+              it('reveals cancel and save buttons when editing', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                browser.click('i#edit-track-name', err => {
                   if (err) return done.fail(err);
 
-                  expect(res.body.message).toEqual('You are not authorized to access that resource');
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
                   done();
                 });
+              });
+
+              it('hides the edit button when editing', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                  done();
+                });
+              });
+
+              it('reveals cancel and save buttons when field is given focus via direct click', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+                // 2021-5-7
+                // Clicking works in tests, but not in real life.
+                // Focus works in real life, but not in tests.
+                browser.click('#track-name-field', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                  done();
+                });
+              });
+            });
+
+            describe('successfully', () => {
+              it('lands in the correct spot and displays a friendly message', done => {
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                browser.click('i#save-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  // Let the Javascript execute
+                  setTimeout(function(){
+                    browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
+                    browser.assert.text('.alert.alert-success', 'Track updated');
+                    done();
+                  }, 300);
+                });
+              });
+
+              it('updates the interface', done => {
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('#track-name-field', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+
+                  browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                  browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                  browser.click('i#save-track-name', err => {
+                    if (err) return done.fail(err);
+
+                    setTimeout(function(){
+                      browser.assert.text('#track-name-field', 'Austin Powers');
+                      browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+                      browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                      browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+
+                      done();
+                    }, 300);
+                  });
+                });
+              });
+            });
+
+            describe('cancelled', () => {
+              beforeEach(done => {
+                browser.click('i#edit-track-name', err => {
+                  if (err) return done.fail(err);
+                  done();
+                });
+              });
+
+              it('resets the interface', done => {
+                browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', '');
+                browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', 'none');
+                browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', '');
+
+                browser.click('i#cancel-edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure figcaption h2 i#edit-track-name', 'display', '');
+                  browser.assert.style('.post .track figure figcaption h2 i#save-track-name', 'display', 'none');
+                  browser.assert.style('.post .track figure figcaption h2 i#cancel-edit-track-name', 'display', 'none');
+
+                  done();
+                });
+              });
+
+              it('resets the value', done => {
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                browser.document.getElementById('track-name-field').innerHTML = 'Austin Powers';
+                browser.assert.text('.post .track figure figcaption h2 span#track-name-field', 'Austin Powers');
+
+                browser.click('i#cancel-edit-track-name', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('.post .track figure figcaption h2 span#track-name-field', '');
+                  done();
+                });
+              });
             });
           });
 
           describe('edit transcript field', () => {
 
-            it('responds with forbidden', done => {
-              request(app)
-                .patch(`/track/${lanny.getAgentDirectory()}/lanny2.ogg`)
-                .set('Cookie', browser.cookies)
-                .set('Accept', 'application/json')
-                .send({
-                  transcript: 'Groovy, baby! Yeah...'
-                })
-                .expect(403)
-                .end((err, res) => {
+            describe('interface', () => {
+
+              it('has an edit button', () => {
+                browser.assert.element('.post .track figure h3 i#edit-track-transcript');
+              });
+
+              it('reveals cancel and save buttons when editing', done => {
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                browser.click('i#edit-track-transcript', err => {
                   if (err) return done.fail(err);
 
-                  expect(res.body.message).toEqual('You are not authorized to access that resource');
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
                   done();
                 });
+              });
+
+              it('hides the edit button when editing', done => {
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                  done();
+                });
+              });
+
+              it('reveals cancel and save buttons when field is given focus via direct click', done => {
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+
+                // 2021-5-7
+                // Clicking works in tests, but not in real life.
+                // Focus works in real life, but not in tests.
+                browser.click('#track-transcript-field', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                  done();
+                });
+              });
+            });
+
+            // See puppeteer block for DB update test.
+            // PATCHing with zombie leaves an empty request body
+            describe('successfully', () => {
+
+              it('lands in the correct spot and displays a friendly message', done => {
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.click('i#save-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  // Let the Javascript execute
+                  setTimeout(function(){
+                    browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
+                    browser.assert.text('.alert.alert-success', 'Track updated');
+                    done();
+                  }, 300);
+                });
+              });
+
+              it('updates the interface', done => {
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.text('#track-transcript-field', '');
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+
+                  browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                  browser.assert.text('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                  browser.click('i#save-track-transcript', err => {
+                    if (err) return done.fail(err);
+
+                    setTimeout(function(){
+                      browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+                      browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                      browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                      browser.assert.text('#track-transcript-field', 'Groovy, baby! Yeah!');
+
+                      done();
+                    }, 300);
+                  });
+                });
+              });
+            });
+
+            describe('cancelled', () => {
+
+              beforeEach(done => {
+                browser.click('i#edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+                  done();
+                });
+              });
+
+              it('resets the value', done => {
+                browser.assert.input('.post .track figure #track-transcript-field', '');
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.click('i#cancel-edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.input('.post .track figure #track-transcript-field', '');
+                  done();
+                });
+              });
+
+              it('resets the field value when focus is lost and then regained', done => {
+                browser.assert.input('.post .track figure #track-transcript-field', '');
+                browser.document.getElementById('track-transcript-field').innerHTML = 'Groovy, baby! Yeah!';
+                browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                browser.focus('body');
+                browser.click('#track-transcript-field', err => {
+                  browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                  browser.focus('body');
+                  browser.click('#track-transcript-field', err => {
+                    browser.assert.input('.post .track figure #track-transcript-field', 'Groovy, baby! Yeah!');
+
+                    browser.click('i#cancel-edit-track-transcript', err => {
+                      if (err) return done.fail(err);
+
+                      browser.assert.input('.post .track figure #track-transcript-field', '');
+                      done();
+                    });
+                  });
+                });
+              });
+
+              it('resets the interface', done => {
+                browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', '');
+                browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', 'none');
+                browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', '');
+
+                browser.click('i#cancel-edit-track-transcript', err => {
+                  if (err) return done.fail(err);
+
+                  browser.assert.style('.post .track figure h3 i#edit-track-transcript', 'display', '');
+                  browser.assert.style('.post .track figure h3 i#save-track-transcript', 'display', 'none');
+                  browser.assert.style('.post .track figure h3 i#cancel-edit-track-transcript', 'display', 'none');
+
+                  done();
+                });
+              });
             });
           });
         });
@@ -551,8 +821,9 @@ describe('trackEditSpec', () => {
           page.on('console', msg => console.log('PAGE LOG:', msg.text().toString()));
 
 
+          expect(process.env.SUDO).toBeDefined();
           let stubSessions = new Promise((resolve, reject) => {
-            stubAuth0Sessions(agent.email,`localhost:${PORT}`, err => {
+            stubAuth0Sessions(process.env.SUDO, `localhost:${PORT}`, err => {
               if (err) return reject(err);
               resolve();
             });
@@ -570,8 +841,8 @@ describe('trackEditSpec', () => {
           await page.click('#login-link');
           await page.waitForTimeout(200);
 
-          await page.waitForSelector(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
-          await page.click(`a[href="/track/${agent.getAgentDirectory()}/track1.ogg"]`);
+          await page.waitForSelector(`a[href="/track/${root.getAgentDirectory()}/root1.ogg"]`);
+          await page.click(`a[href="/track/${root.getAgentDirectory()}/root1.ogg"]`);
           await page.waitForTimeout(200);
         } catch (e) {
           console.log(e);
@@ -585,7 +856,7 @@ describe('trackEditSpec', () => {
       describe('edit name field', () => {
 
         it('updates the database', async ()=> {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           //await models.Track.findOne({ path: filePath }).then(async track => {
           let track = await models.Track.findOne({ path: filePath });
           expect(track.name).toEqual('');
@@ -611,7 +882,7 @@ describe('trackEditSpec', () => {
          * This test breaks if focus isn't set in the track show view js.
          */
         it('gives focus to name field when editing', async done => {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.name).toEqual('');
 
@@ -644,7 +915,7 @@ describe('trackEditSpec', () => {
         });
 
         it('submits on Enter keypress', done => {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.name).toEqual('');
 
@@ -760,7 +1031,7 @@ describe('trackEditSpec', () => {
 
       describe('edit transcript field', () => {
         it('updates the database', done => {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.transcript).toEqual('');
 
@@ -894,7 +1165,7 @@ describe('trackEditSpec', () => {
         });
 
         it('does not submit on Enter keypress', done => {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.name).toEqual('');
 
@@ -925,7 +1196,7 @@ describe('trackEditSpec', () => {
         });
 
         it('submits on ctrl-s keypress', done => {
-          const filePath = `uploads/${agent.getAgentDirectory()}/track1.ogg`;
+          const filePath = `uploads/${root.getAgentDirectory()}/root1.ogg`;
           models.Track.findOne({ path: filePath }).then(async track => {
             expect(track.name).toEqual('');
 

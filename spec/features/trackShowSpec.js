@@ -24,7 +24,6 @@ describe('trackShowSpec', () => {
   let browser, agent, lanny;
 
   beforeEach(done => {
-    delete process.env.SUDO;
 
     browser = new Browser({ waitDuration: '30s', loadCss: false });
     //browser.debug();
@@ -140,7 +139,7 @@ describe('trackShowSpec', () => {
             browser.assert.element('article.post section.feedback-controls');
             browser.assert.element('article.post section.feedback-controls i.like-button');
             browser.assert.element('.delete-track-form');
-            browser.assert.element('.publish-track-form');
+            browser.assert.elements('.publish-track-form', 0);
 
             done();
           });
@@ -170,69 +169,7 @@ describe('trackShowSpec', () => {
         });
       });
 
-      describe('sudo', () => {
 
-         beforeEach(done => {
-           process.env.SUDO = agent.email;
-
-           agent.canRead.pop();
-           agent.save().then(obj => {
-             agent = obj;
-             expect(agent.canRead.length).toEqual(0);
-             done();
-           }).catch(err => {
-             done.fail(err);
-           });
-         });
-
-        it('view a track', done => {
-          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-            if (err) return done.fail(err);
-            browser.assert.success();
-            browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg`});
-
-            browser.assert.element('article.post section.track figure figcaption h2');
-            browser.assert.element('article.post section.track figure figcaption a');
-            browser.assert.element('article.post section.track canvas#visualizer');
-            browser.assert.element('article.post section.track figure audio ');
-            browser.assert.element('article.post section.track-controls');
-
-            browser.assert.element('article.post header img.avatar');
-            browser.assert.element('article.post header aside div');
-            browser.assert.element('article.post header aside time');
-            browser.assert.element('article.post header span.post-menu');
-            browser.assert.element('article.post section.feedback-controls');
-            browser.assert.element('article.post section.feedback-controls i.like-button');
-            browser.assert.element('.delete-track-form');
-            browser.assert.element('.publish-track-form');
-
-            done();
-          });
-        });
-
-        it('receives an editable track name field', done => {
-          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-            if (err) return done.fail(err);
-            browser.assert.success();
-
-            browser.assert.element('article.post section.track figure figcaption h2 span#track-name-field[contenteditable="true"]');
-            browser.assert.element('article.post section.track figure figcaption h2 .editable-field-control');
-            done();
-          });
-        });
-
-        it('receives an editable transcript field', done => {
-          browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-            if (err) return done.fail(err);
-            browser.assert.success();
-
-            browser.assert.element('article.post section.track figure #track-transcript-field');
-            browser.assert.attribute('article.post section.track figure #track-transcript-field', 'disabled', null);
-            browser.assert.element('article.post section.track figure h3 .editable-field-control');
-            done();
-          });
-        });
-      });
 
       describe('canRead agent', () => {
         it('can view a track to which he has permission to read', done => {
