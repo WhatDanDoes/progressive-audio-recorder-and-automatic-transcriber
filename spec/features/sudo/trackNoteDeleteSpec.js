@@ -1,9 +1,9 @@
 'use strict';
 
 const fixtures = require('pow-mongoose-fixtures');
-const models = require('../../models');
+const models = require('../../../models');
 
-const app = require('../../app');
+const app = require('../../../app');
 const request = require('supertest');
 
 const fs = require('fs');
@@ -14,7 +14,7 @@ const PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
 const DOMAIN = 'example.com';
 Browser.localhost(DOMAIN, PORT);
 
-const stubAuth0Sessions = require('../support/stubAuth0Sessions');
+const stubAuth0Sessions = require('../../support/stubAuth0Sessions');
 
 /**
  * `mock-fs` stubs the entire file system. So if a module hasn't
@@ -24,20 +24,19 @@ const stubAuth0Sessions = require('../support/stubAuth0Sessions');
  * problem.
  */
 const mock = require('mock-fs');
-const mockAndUnmock = require('../support/mockAndUnmock')(mock);
-
+const mockAndUnmock = require('../../support/mockAndUnmock')(mock);
 
 // For when system resources are scarce
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe('Deleting a note on a track', () => {
+describe('sudo Deleting a note on a track', () => {
 
   let browser, agent, lanny;
 
   beforeEach(done => {
     browser = new Browser({ waitDuration: '30s' });
     //browser.debug();
-    fixtures.load(__dirname + '/../fixtures/agents.js', models.mongoose, err => {
+    fixtures.load(__dirname + '/../../fixtures/agents.js', models.mongoose, err => {
       models.Agent.findOne({ email: 'daniel@example.com' }).then(results => {
         agent = results;
         models.Agent.findOne({ email: 'lanny@example.com' }).then(results => {
@@ -64,55 +63,63 @@ describe('Deleting a note on a track', () => {
     });
   });
 
-  describe('unauthenticated', () => {
-    it('does not allow deleting a note on a track', done => {
-      request(app)
-        .delete(`/track/${agent.getAgentDirectory()}/track2.ogg/note/some-fake-note-id`)
-        .end((err, res) => {
-          if (err) return done.fail(err);
-          expect(res.status).toEqual(401);
-          expect(res.body.message).toEqual('You are not logged in');
-          done();
-        });
-    });
-  });
-
   describe('authenticated', () => {
+    let root;
     beforeEach(done => {
-      stubAuth0Sessions(agent.email, DOMAIN, err => {
-        if (err) done.fail(err);
+      expect(process.env.SUDO).toBeDefined();
+      stubAuth0Sessions(process.env.SUDO, DOMAIN, err => {
+        if (err) return done.fail(err);
 
-        mockAndUnmock({
-          [`uploads/${agent.getAgentDirectory()}`]: {
-            'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
-          },
-          [`uploads/${lanny.getAgentDirectory()}`]: {
-            'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
-            'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
-          },
-          'public/tracks/uploads': {}
-        });
+        browser.clickLink('Login', err => {
+          if (err) done.fail(err);
+          browser.assert.success();
 
-        const tracks = [
-          { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id, published: new Date() },
-          { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
-          { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
-          { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
-        ];
-        models.Track.create(tracks).then(results => {
-
-          browser.clickLink('Login', err => {
-            if (err) done.fail(err);
+          browser.clickLink('Admin', function(err) {
+            if (err) return done.fail(err);
             browser.assert.success();
-            done();
+
+            models.Agent.findOne({ email: process.env.SUDO }).then(results => {
+              root = results;
+
+              mockAndUnmock({
+                [`uploads/${agent.getAgentDirectory()}`]: {
+                  'track1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'track2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'track3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                [`uploads/${lanny.getAgentDirectory()}`]: {
+                  'lanny1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'lanny2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'lanny3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                [`uploads/${root.getAgentDirectory()}`]: {
+                  'root1.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'root2.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                  'root3.ogg': fs.readFileSync('spec/files/troll.ogg'),
+                },
+                'public/tracks/uploads': {}
+              });
+
+              const tracks = [
+                { path: `uploads/${agent.getAgentDirectory()}/track1.ogg`, recordist: agent._id },
+                { path: `uploads/${agent.getAgentDirectory()}/track2.ogg`, recordist: agent._id },
+                { path: `uploads/${agent.getAgentDirectory()}/track3.ogg`, recordist: agent._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`, recordist: lanny._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny2.ogg`, recordist: lanny._id },
+                { path: `uploads/${lanny.getAgentDirectory()}/lanny3.ogg`, recordist: lanny._id },
+                { path: `uploads/${root.getAgentDirectory()}/root1.ogg`, recordist: root._id },
+                { path: `uploads/${root.getAgentDirectory()}/root2.ogg`, recordist: root._id },
+                { path: `uploads/${root.getAgentDirectory()}/root3.ogg`, recordist: root._id },
+              ];
+              models.Track.create(tracks).then(results => {
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
           });
-        }).catch(err => {
-          done.fail(err);
         });
       });
     });
@@ -121,106 +128,46 @@ describe('Deleting a note on a track', () => {
       mock.restore();
     });
 
-    describe('unauthorized', () => {
-
-      describe('from the show page', () => {
-
-        let track;
-        beforeEach(done => {
-          models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg` }).then(result => {
-            result.published = new Date();
-            result.notes.push({ author: lanny._id, text: "Word to your mom" });
-
-            result.save().then(result => {
-              track = result;
-
-              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                if (err) done.fail(err);
-                browser.assert.success();
-
-                done();
-              });
-            }).catch(err => {
-              done.fail(err);
-            })
-          }).catch(err => {
-            done.fail(err);
-          })
-        });
-
-        it('does not provide a menu to modify/delete the note', done => {
-          browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
-          browser.assert.elements('article.note .note-menu', 0);
-
-          done();
-        });
-
-        it('returns 403', done => {
-          request(app)
-            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}`)
-            .set('Cookie', browser.cookies)
-            .end((err, res) => {
-              if (err) return done.fail(err);
-              expect(res.status).toEqual(403);
-              expect(res.body.message).toEqual('You are not authorized to access that resource');
-              done();
-            });
-        });
-
-        it('does not remove the note from the database', done => {
-          expect(track.notes.length).toEqual(1);
-
-          request(app)
-            .delete(`/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}`)
-            .set('Cookie', browser.cookies)
-            .expect(403)
-            .end((err, res) => {
-              if (err) return done.fail(err);
-
-              models.Track.findOne({ _id: track._id }).populate('notes').then(result => {
-                track = result;
-                expect(track.notes.length).toEqual(1);
-
-                done();
-              }).catch(err => {
-                done.fail(err);
-              });
-            });
-        });
-      });
-    });
-
     describe('authorized', () => {
+
       describe('from the show page', () => {
-        describe('agent owns resource', () => {
-          describe('agent wrote note', () => {
+
+        describe('root\'s owns resource', () => {
+
+          describe('root wrote note', () => {
             let track;
             beforeEach(done => {
-              browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
+              browser.clickLink('Tracks', err => {
                 if (err) done.fail(err);
                 browser.assert.success();
 
-                browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
-                browser.pressButton('.post-note[aria-label="Post"]', err => {
-                  if (err) return done.fail(err);
+                //browser.visit(`/track/${root.getAgentDirectory()}/root1.ogg`, err => {
+                browser.clickLink(`a[href="/track/${root.getAgentDirectory()}/root1.ogg"]`, err => {
+                  if (err) done.fail(err);
                   browser.assert.success();
 
-                  models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg` }).populate('notes').then(result => {
-                    track = result;
-                    expect(track.notes.length).toEqual(1);
+                  browser.fill('#track-note-field', 'Groovy, baby! Yeah!');
+                  browser.pressButton('.post-note[aria-label="Post"]', err => {
+                    if (err) return done.fail(err);
+                    browser.assert.success();
 
-                    done();
-                  }).catch(err => {
-                    done.fail(err);
-                  })
+                    models.Track.findOne({ path: `uploads/${root.getAgentDirectory()}/root1.ogg` }).populate('notes').then(result => {
+                      track = result;
+                      expect(track.notes.length).toEqual(1);
+
+                      done();
+                    }).catch(err => {
+                      done.fail(err);
+                    })
+                  });
                 });
               });
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+              browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${root.getAgentDirectory()}/root1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -231,7 +178,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
                 done();
               });
             });
@@ -268,15 +215,15 @@ describe('Deleting a note on a track', () => {
           describe('another agent wrote note', () => {
             let track;
             beforeEach(done => {
-              models.Track.findOne({ path: `uploads/${agent.getAgentDirectory()}/track1.ogg` }).then(result => {
+              models.Track.findOne({ path: `uploads/${root.getAgentDirectory()}/root1.ogg` }).then(result => {
                 result.published = new Date();
                 result.notes.push({ author: lanny._id, text: "Word to your mom" });
 
                 result.save().then(result => {
                   track = result;
 
-                  browser.visit(`/track/${agent.getAgentDirectory()}/track1.ogg`, err => {
-                    if (err) done.fail(err);
+                  browser.visit(`/track/${root.getAgentDirectory()}/root1.ogg`, err => {
+                   if (err) done.fail(err);
                     browser.assert.success();
 
                     done();
@@ -290,9 +237,9 @@ describe('Deleting a note on a track', () => {
             });
 
             it('provides a button to delete the note', done => {
-              browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+              browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
               browser.assert.element('article.note .note-menu');
-              browser.assert.element(`article.note .note-menu form[action="/track/${agent.getAgentDirectory()}/track1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
+              browser.assert.element(`article.note .note-menu form[action="/track/${root.getAgentDirectory()}/root1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`);
 
               done();
             });
@@ -303,7 +250,7 @@ describe('Deleting a note on a track', () => {
                 browser.assert.success();
 
                 browser.assert.text('.alert.alert-success', 'Note deleted');
-                browser.assert.url({ pathname: `/track/${agent.getAgentDirectory()}/track1.ogg` });
+                browser.assert.url({ pathname: `/track/${root.getAgentDirectory()}/root1.ogg` });
                 done();
               });
             });
@@ -338,9 +285,9 @@ describe('Deleting a note on a track', () => {
           });
         });
 
-        describe('agent does not own resource', () => {
+        describe('root does not own resource', () => {
 
-          describe('agent wrote note', () => {
+          describe('root wrote note', () => {
 
             let track;
             beforeEach(done => {
@@ -413,7 +360,7 @@ describe('Deleting a note on a track', () => {
             });
           });
 
-          describe('agent did not write note', () => {
+          describe('another agent wrote note', () => {
 
             let track;
             beforeEach(done => {
@@ -425,7 +372,16 @@ describe('Deleting a note on a track', () => {
                 result.save().then(result => {
                   track = result;
 
-                  done();
+                  browser.clickLink(lanny.getAgentDirectory(), err => {
+                    if (err) return done.fail(err);
+
+                    browser.clickLink(`a[href="/track/${lanny.getAgentDirectory()}/lanny1.ogg"]`, err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+                      browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
+                      done();
+                    });
+                  });
                 }).catch(err => {
                   done.fail(err);
                 });
@@ -434,28 +390,22 @@ describe('Deleting a note on a track', () => {
               });
             });
 
-            it('provides a menu to modify/delete the agent\'s own note but not that belonging to another', done => {
-              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                if (err) return done.fail();
-                browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
+            it('provides a menu to modify/delete every note', () => {
+              browser.assert.url({ pathname: `/track/${lanny.getAgentDirectory()}/lanny1.ogg` });
 
-                browser.assert.elements('article.note', 2);
+              browser.assert.elements('article.note', 2);
+              browser.assert.elements('article.note .note-menu', 2);
 
-                browser.assert.elements('article.note .note-menu', 1);
-                expect(track.notes[0].author).toEqual(agent._id);
-                browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
+              expect(track.notes[0].author).toEqual(agent._id);
+              expect(track.notes[1].author).toEqual(lanny._id);
 
-                browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[1]._id}?_method=DELETE"]`, 0);
-                done();
-              });
+              browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[0]._id}?_method=DELETE"]`, 1);
+              browser.assert.elements(`article.note .note-menu form[action="/track/${lanny.getAgentDirectory()}/lanny1.ogg/note/${track.notes[1]._id}?_method=DELETE"]`, 1);
             });
 
             it('deletes notes from the database', done => {
               models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                 expect(tracks.notes.length).toEqual(2);
-
-              browser.visit(`/track/${lanny.getAgentDirectory()}/lanny1.ogg`, err => {
-                if (err) return done.fail();
 
                 browser.pressButton('.delete-note', err => {
                   if (err) return done.fail(err);
@@ -463,14 +413,22 @@ describe('Deleting a note on a track', () => {
 
                   models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
                     expect(tracks.notes.length).toEqual(1);
-                    expect(tracks.notes[0].author).not.toEqual(agent._id);
-                    expect(tracks.notes[0].author).toEqual(lanny._id);
 
-                    done();
+                    browser.pressButton('.delete-note', err => {
+                      if (err) return done.fail(err);
+                      browser.assert.success();
+
+                      models.Track.findOne({ path: `uploads/${lanny.getAgentDirectory()}/lanny1.ogg`}).then(tracks => {
+                        expect(tracks.notes.length).toEqual(0);
+
+                        done();
+                      }).catch(err => {
+                        done.fail(err);
+                      });
+                    });
                   }).catch(err => {
                     done.fail(err);
                   });
-                });
                 });
               }).catch(err => {
                 done.fail(err);
