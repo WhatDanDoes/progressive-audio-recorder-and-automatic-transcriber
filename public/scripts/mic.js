@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
       devices = devices.filter(d => d.kind === 'audioinput');
       if (devices.length) {
 
-        const wave = new Wave();
+        // Audio visualizer
+        let wave;
 
         /**
          * Swap out basic image upload form for mic and launcher
@@ -39,21 +40,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
         const visualizer = document.getElementById('visualizer');
         const cancel = document.getElementById('cancel');
 
-        const send = document.getElementById('send');
-        // Send the audio to the server
-        let sendWasClicked = false;
-        send.addEventListener('click', () => {
-          sendWasClicked = true;
-          spinner.style.display = 'block';
-          send.style.display = 'none';
-          cancel.style.display = 'none';
-
-          stopAllStreams();
-        });
-
-        // Initialized on app load
-        let recorder, chunks, stream;
-
         // Stop all incoming streams
         function stopAllStreams() {
           wave.stopStream();
@@ -70,6 +56,21 @@ document.addEventListener('DOMContentLoaded', function(event) {
           });
           stream = null;
         };
+
+        const send = document.getElementById('send');
+        // Send the audio to the server
+        let sendWasClicked = false;
+        send.addEventListener('click', () => {
+          sendWasClicked = true;
+          spinner.style.display = 'block';
+          send.style.display = 'none';
+          cancel.style.display = 'none';
+
+          stopAllStreams();
+        });
+
+        // Initialized on app load
+        let recorder, chunks, stream;
 
         /**
          * Hide mic
@@ -104,6 +105,8 @@ document.addEventListener('DOMContentLoaded', function(event) {
          * @param Object - user media constraints
          */
         function launchMic(constraints) {
+
+          wave = new Wave();
 
           navigator.mediaDevices.getUserMedia(constraints).then(function(s) {
             stream = s;
