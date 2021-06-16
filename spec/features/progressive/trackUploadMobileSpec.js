@@ -84,6 +84,9 @@ describe('track mobile upload', () => {
 
   let agent;
   beforeEach(done => {
+    mediaRecorderStartSpy = jasmine.createSpy('start');
+    mediaRecorderStopSpy = jasmine.createSpy('stop');
+
     fixtures.load(__dirname + '/../../fixtures/agents.js', models.mongoose, function(err) {
       if (err) {
         return done.fail(err);
@@ -179,6 +182,7 @@ describe('track mobile upload', () => {
     });
 
     describe('no mic available', () => {
+
       it('displays the basic file upload form', done => {
         /**
          * Mock browser MediaDevices interface
@@ -196,7 +200,7 @@ describe('track mobile upload', () => {
           },
           getUserMedia: () => {
             return new Promise((resolve, reject) => {
-              resolve('howdy!');
+              resolve('No mic here!');
             });
           }
         };
@@ -322,6 +326,7 @@ describe('track mobile upload', () => {
 
             browser.clickLink('Login', err => {
               if (err) return done.fail(err);
+
               browser.assert.element('#mic-button');
               browser.assert.element('#tracks-form');
               done();
@@ -343,8 +348,8 @@ describe('track mobile upload', () => {
         it('applies constraints to each audio track', done => {
           browser.click('#mic-button').then(res => {
             expect(_stream.getAudioTracks).toHaveBeenCalled();
-            expect(_track.applyConstraints).toHaveBeenCalledWith({ channelCount: 1 });
             expect(_track.applyConstraints.calls.count()).toEqual(2);
+            expect(_track.applyConstraints).toHaveBeenCalledWith({ channelCount: 1 });
 
             done();
           }).catch(err => {
@@ -382,11 +387,9 @@ describe('track mobile upload', () => {
          */
         describe('granted', () => {
           beforeEach(() => {
-            mediaRecorderStartSpy = jasmine.createSpy('start');
-
             mediaDevices.getUserMedia = () => {
               return new Promise((resolve, reject) => {
-                resolve('Mic access allowed. Streaming!');
+                resolve(_stream);
               });
             };
           });
@@ -426,7 +429,6 @@ describe('track mobile upload', () => {
 
             let mediaTrackStopSpy, streamRemoveTrackSpy;
             beforeEach(done => {
-              mediaRecorderStopSpy = jasmine.createSpy('stop');
               mediaTrackStopSpy = jasmine.createSpy('stop');
               streamRemoveTrackSpy = jasmine.createSpy('removeTrack');
 
@@ -465,6 +467,7 @@ describe('track mobile upload', () => {
                 getUserMedia: () => {
                   return new Promise((resolve, reject) => {
                     resolve({
+                      ..._stream,
                       dummy: 'This device has at least two mics!',
                       removeTrack: streamRemoveTrackSpy,
                       getTracks: () => [

@@ -111,54 +111,63 @@ document.addEventListener('DOMContentLoaded', function(event) {
           navigator.mediaDevices.getUserMedia(constraints).then(function(s) {
             stream = s;
 
-            // Attach the audio stream to a recorder
-            recorder = new MediaRecorder(stream);
+            let tracks = stream.getAudioTracks().map(t => {
+              return t.applyConstraints({ channelCount: 1 });
+            });
 
-            recorder.onstart = e => {
-              console.log('Recording started');
+            Promise.all(tracks).then(v => {
+              // Attach the audio stream to a recorder
+              recorder = new MediaRecorder(stream);
 
-              // Audio visualization
-              wave.fromStream(stream, 'visualizer', { type: 'wave' });
-            };
+              recorder.onstart = e => {
+                console.log('Recording started');
 
-            recorder.onstop = e => {
-              console.log('Recording stopped');
-            };
+                // Audio visualization
+                wave.fromStream(stream, 'visualizer', { type: 'wave' });
+              };
 
-            recorder.ondataavailable = e => {
-              console.log('Data received');
-              chunks.push(e.data);
+              recorder.onstop = e => {
+                console.log('Recording stopped');
+              };
 
-              if (recorder.state === 'inactive' && sendWasClicked) {
-                console.log('inactive');
-                console.log(chunks.length);
+              recorder.ondataavailable = e => {
+                console.log('Data received');
+                chunks.push(e.data);
 
-                //let blob = new Blob(chunks);
-                let blob = new Blob(chunks, { type: chunks[0].type });
-                console.log(blob);
+                if (recorder.state === 'inactive' && sendWasClicked) {
+                  console.log('inactive');
+                  console.log(chunks.length);
 
-                const formData = new FormData();
-                formData.append('docs', blob);
+                  //let blob = new Blob(chunks);
+                  let blob = new Blob(chunks, { type: chunks[0].type });
+                  console.log(blob);
 
-                fetch('/track', {
-                  method: 'POST',
-                  body: formData,
-                  redirect: 'manual',
-                  headers: {
-                    referer: window.location
-                  }
-                })
-                .then(res => {
-                  hideMic();
-                  // Automatically following redirect does not re-render the document
-                  window.location.href = res.url;
-                });
+                  const formData = new FormData();
+                  formData.append('docs', blob);
 
-              }
-            };
+                  fetch('/track', {
+                    method: 'POST',
+                    body: formData,
+                    redirect: 'manual',
+                    headers: {
+                      referer: window.location
+                    }
+                  })
+                  .then(res => {
+                    hideMic();
+                    // Automatically following redirect does not re-render the document
+                    window.location.href = res.url;
+                  });
 
-            recorder.start();
-            setInitialMicState();
+                }
+              };
+
+              recorder.start();
+              setInitialMicState();
+            }).catch(function(err) {
+              console.log('Constraint error');
+              console.error(err);
+            });
           }).catch(function(err) {
             console.error(err);
             section.innerHTML = defaultUploadForm;
@@ -177,4 +186,3 @@ document.addEventListener('DOMContentLoaded', function(event) {
     });
   }
 });
-
