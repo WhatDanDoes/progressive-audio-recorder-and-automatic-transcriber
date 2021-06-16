@@ -22,6 +22,22 @@ describe('track mobile upload', () => {
    * Inspired by manual inspection of my desktop browser.
    * Mobile devices typically have at least two `videoinputs`.
    */
+  const _track = {
+    kind: 'audio',
+    applyConstraints: () => {
+      return new Promise((resolve, reject) => {
+        resolve('Constraints applied');
+      });
+    }
+  };
+
+  const _stream = {
+    getAudioTracks: () => [
+      { ..._track },
+      { ..._track },
+    ],
+  };
+
   const _mediaDevices = {
     enumerateDevices: () => {
       return new Promise((resolve, reject) => {
@@ -47,7 +63,8 @@ describe('track mobile upload', () => {
     },
     getUserMedia: () => {
       return new Promise((resolve, reject) => {
-        resolve('howdy!');
+        // The _stream_ object
+        resolve(_stream);
       });
     },
   };
@@ -284,6 +301,8 @@ describe('track mobile upload', () => {
         let browser;
         beforeEach(done => {
           spyOn(mediaDevices, 'getUserMedia').and.callThrough();
+          spyOn(_stream, 'getAudioTracks').and.callThrough();
+          spyOn(_track, 'applyConstraints').and.callThrough();
 
           /**
            * Mock browser MediaDevices interface and MediaRecorder
@@ -310,11 +329,23 @@ describe('track mobile upload', () => {
           });
         });
 
-        it('requests the appropriate media access permissions ', done => {
+        it('requests the appropriate media access permissions', done => {
           browser.click('#mic-button').then(res => {
             expect(mediaDevices.getUserMedia).toHaveBeenCalledWith({
-              audio: true,
+              audio: true
             });
+            done();
+          }).catch(err => {
+            done.fail(err);
+          });
+        });
+
+        it('applies constraints to each audio track', done => {
+          browser.click('#mic-button').then(res => {
+            expect(_stream.getAudioTracks).toHaveBeenCalled();
+            expect(_track.applyConstraints).toHaveBeenCalledWith({ channelCount: 1 });
+            expect(_track.applyConstraints.calls.count()).toEqual(2);
+
             done();
           }).catch(err => {
             done.fail(err);
