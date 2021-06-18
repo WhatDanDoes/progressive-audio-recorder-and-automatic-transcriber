@@ -494,7 +494,7 @@ describe('track upload API', () => {
 
           let _asrCommand, asrSpyReturnValue;
           beforeEach(done => {
-            asrSpyReturnValue = 'behold the power of automatic speach recognition';
+            asrSpyReturnValue = 'behold the power of automatic speech recognition';
             _asrCommand = process.env.ASR_COMMAND;
 
             spyOn(child_process, 'exec').and.returnValue(asrSpyReturnValue);
@@ -580,7 +580,7 @@ describe('track upload API', () => {
                 });
             });
 
-            it('calls upon ASR rig to attempt inference on multiple', done => {
+            it('calls upon ASR rig to attempt inference on multiple files', done => {
               request(app)
                 .post('/track')
                 .set('Accept', 'application/json')
