@@ -17,6 +17,8 @@ const url = require('url');
 const marked = require('marked');
 const mime = require('mime-types');
 
+const child_process = require('child_process');
+
 const MAX_IMGS = parseInt(process.env.MAX_IMGS);
 
 // Set upload destination directory
@@ -393,11 +395,26 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
         return done(err);
       }
 
-      models.Track.create({ path: path.dest, recordist: req.user._id }).then(track => {
-        recursiveSave(done);
-      }).catch(err => {
-        done(err);
-      });
+      if (process.env.ASR_COMMAND) {
+        child_process.exec(process.env.ASR_COMMAND, (error, stdout, stderr) => {
+          if (err || stderr) {
+            console.error(err);
+          }
+
+          models.Track.create({ path: path.dest, recordist: req.user._id, transcript: stdout }).then(track => {
+            recursiveSave(done);
+          }).catch(err => {
+            done(err);
+          });
+        });
+      }
+      else {
+        models.Track.create({ path: path.dest, recordist: req.user._id }).then(track => {
+          recursiveSave(done);
+        }).catch(err => {
+          done(err);
+        });
+      }
     });
   };
 

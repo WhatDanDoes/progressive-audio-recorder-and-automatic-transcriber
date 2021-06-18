@@ -278,13 +278,13 @@ describe('track upload basic', () => {
         const child_process = require('child_process');
 
         let _asrCommand, asrSpyReturnValue;
-        beforeEach(done => {
+        beforeEach(() => {
           asrSpyReturnValue = 'behold the power of automatic speech recognition';
           _asrCommand = process.env.ASR_COMMAND;
 
-          spyOn(child_process, 'exec').and.returnValue(asrSpyReturnValue);
-
-          done();
+          spyOn(child_process, 'exec').and.callFake(function(command, done) {
+            return done(null, asrSpyReturnValue);
+          });
         });
 
         afterEach(() => {
