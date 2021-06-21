@@ -11,6 +11,12 @@
     "database": "progressive_audio_recorder_test",
     "host": "localhost"
   },
+  "flashlight": {
+    "username": "progressive_audio_recorder",
+    "password": "secret",
+    "database": "progressive_audio_recorder_flashlight",
+    "host": "mongo"
+  },
   "staging": {
     "username": "progressive_audio_recorder",
     "password": "secret",
