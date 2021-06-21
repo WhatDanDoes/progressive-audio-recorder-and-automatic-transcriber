@@ -1,0 +1,40 @@
+version: '3'
+services:
+  node:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=flashlight
+    volumes:
+      - .:/home/node
+      - /home/node/node_modules
+#      - progressive_audio_recorder_files:/home/node/uploads
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - progressive_audio_recorder_data:/data/db
+  flashlight:
+    build:
+      context: .
+      dockerfile: Dockerfile-flashlight
+    container_name: flashlight
+    stdin_open: true      # docker run -i
+    tty: true             # docker run -t
+    volumes:
+      - ./workspace:/root/workspace
+      - ./.ssh:/root/.ssh
+      - ./uploads:/root/uploads
+   
+networks:
+  default:
+    external:
+      name: nginx-proxy
+volumes:
+  progressive_audio_recorder_data:
+#  progressive_audio_recorder_files:
+
