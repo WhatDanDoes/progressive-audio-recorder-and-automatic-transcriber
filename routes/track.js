@@ -396,7 +396,7 @@ router.post('/', upload.array('docs', 8), function(req, res, next) {
       }
 
       if (process.env.ASR_COMMAND) {
-        child_process.exec(process.env.ASR_COMMAND, (error, stdout, stderr) => {
+        child_process.exec(`${process.env.ASR_COMMAND} ${path.dest}`, (error, stdout, stderr) => {
           if (err || stderr) {
             console.error(err);
           }

@@ -492,18 +492,21 @@ describe('track upload API', () => {
         describe('Flashlight ASR', () => {
           const child_process = require('child_process');
 
-          let _asrCommand, asrSpyReturnValue;
+          let _asrCommand, asrSpyReturnValue, interpolatedAsrCommand;
           beforeEach(() => {
             asrSpyReturnValue = 'behold the power of automatic speech recognition';
             _asrCommand = process.env.ASR_COMMAND;
 
             spyOn(child_process, 'exec').and.callFake(function(command, done) {
+              interpolatedAsrCommand = command;
               return done(null, asrSpyReturnValue);
             });
           });
 
           afterEach(() => {
-            process.env.ASR_COMMAND = _asrCommand;
+            if (_asrCommand) {
+              process.env.ASR_COMMAND = _asrCommand;
+            }
           });
 
           describe('not enabled', () => {
@@ -613,6 +616,31 @@ describe('track upload API', () => {
                   models.Track.find({}).then(tracks => {
                     expect(tracks.length).toEqual(1);
                     expect(tracks[0].transcript).toEqual(asrSpyReturnValue);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
+
+            it('interpolates the command string with the file path', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+
+                    expect(interpolatedAsrCommand).toEqual(`${process.env.ASR_COMMAND} ${tracks[0].path}`);
 
                     done();
                   }).catch(err => {
