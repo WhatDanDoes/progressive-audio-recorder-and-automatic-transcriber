@@ -107,5 +107,38 @@ show collections
 db.agents.update({ email: 'daniel@example.com' }, { $push: { "canRead": db.agents.findOne({ email: 'lyndsay@example.com' })._id } })
 ```
 
+# Flashlight
 
+## Development
+
+```
+docker-compose up -d
+```
+
+## Production
+
+```
+docker-compose -f docker-compose.flashlight.yml up -d
+```
+
+## SSH Setup
+
+Flashlight commands are requested via SSH within this container. As such, keys are required:
+
+```
+# 2021-6-21 https://unix.stackexchange.com/a/135090/61705
+< /dev/zero | ssh-keygen -q -N "" -f ./.ssh/id_rsa
+```
+
+Flashlight and the PAR app are sharing the same `.ssh` volume. Authorize the key so that the app can call `ssh` without a password:
+
+```
+cat .ssh/id_rsa.pub >> .ssh/authorized_keys
+```
+
+## Test
+
+```
+docker-compose stop && docker-compose up --build -d && docker exec -it -w /root flashlight bats tests
+```
 
