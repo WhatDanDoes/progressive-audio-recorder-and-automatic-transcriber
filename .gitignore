@@ -4,3 +4,5 @@ node_modules
 public/images/uploads/*.*
 uploads/*.*
 public/app/*.*
+.bash_history
+.ssh/
