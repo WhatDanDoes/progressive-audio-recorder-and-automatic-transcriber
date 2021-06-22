@@ -140,12 +140,20 @@ section.center {
 
 #page {
   height: 3em;
+  background-image: url("/images/parrot-white.svg");
+  background-position: left;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 #page h1,
 #landing h1 {
   margin: 0;
   font-size: 1.25em;
+}
+
+#page h1 {
+  margin-left: 3em;
 }
 
 #page nav,
@@ -182,6 +190,12 @@ p {
     margin: .5em;
     font-size: 1.5em;
   }
+
+  #page h1 {
+    margin-left: 3em;
+  }
+
+
 
   #page nav,
   #landing nav {
@@ -534,7 +548,7 @@ input[type=checkbox]:checked + label:before { color: green; } /* checked icon */
 #info {
   background-color: black;
   padding: 2em;
-  font-size: 1.5em;
+  font-size: 1em;
   text-align: center;
 }
 #info a {
@@ -899,3 +913,60 @@ canvas#visualizer {
 .editable-field-control {
   margin-left: 1em;
 }
+
+/**
+ * Copy item 
+ */
+.copy {
+  width: 100%;
+  background-color: #151515;
+  color: white;
+  padding: 2em 0 2em 0;
+  margin-top: 2em;
+}
+
+.copy h1,
+.copy h2 {
+  margin-left: auto;
+  margin-right: auto;
+  width: 70%;
+  text-align: center;
+}
+.copy h1 {
+  font-size: 1.5em;
+  line-height: 2.25em;
+}
+.copy h2 {
+  line-height: 1.75em;
+}
+
+.copy ul {
+  line-height: 1.5em;
+}
+
+.copy h1 em{
+  font-size: 2em;
+}
+
+.copy img.true-size {
+  width: auto;
+  min-width: 0;
+}
+
+.copy img.small-size {
+  width: 40%;
+  min-width: 0;
+}
+
+.copy ul {
+  margin-left: auto;
+  margin-right: auto;
+  width: 70%;
+  font-size: 1.25em;
+}
+
+.copy p {
+  text-align: center;
+}
+
+
