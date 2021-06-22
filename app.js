@@ -30,7 +30,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/config/config.json')[env];
 
 const sessionConfig = {
-  name: 'progressive-audio-recorder',
+  name: 'paraat',
   secret: process.env.AUTH0_CLIENT_SECRET, // This seemed convenient
   resave: false,
   saveUninitialized: false,
@@ -193,7 +193,7 @@ app.use(function(err, req, res, next) {
 
 let port = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'tor' ? 3000 : 3001;
 app.listen(port, '0.0.0.0', () => {
-  console.log('progressive-audio-recorder listening on ' + port + '!');
+  console.log('paraat listening on ' + port + '!');
 });
 
 module.exports = app;
