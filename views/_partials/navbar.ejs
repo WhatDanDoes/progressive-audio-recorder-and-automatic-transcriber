@@ -1,5 +1,18 @@
-  <header id="page">
-    <h1><a href="/"><%= process.env.TITLE %></a></h1>
+  <% if (agent) { %>
+    <header id="page">
+      <h1><a href="/"><%= process.env.TITLE %></a></h1>
+  <% } else { %>
+    <header id="landing">
+      <a href="/">
+        <section class="splash">
+          <p>Progressive</p>
+          <p>Audio</p>
+          <p>Recorder and</p>
+          <p>Automatic</p>
+          <p>Transcriber</p>
+        </section>
+      </a>
+    <% } %>
     <nav>
       <ul>
         <% if (agent) { %>

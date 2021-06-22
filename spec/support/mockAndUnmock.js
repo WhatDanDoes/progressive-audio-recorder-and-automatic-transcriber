@@ -14,6 +14,8 @@ module.exports = function(mock) {
       ...mocks,
       'public/images/file-upload.png': fs.readFileSync('public/images/file-upload.png'),
       'public/images/mic-logo.png': fs.readFileSync('public/images/mic-logo.png'),
+      'public/images/parrot.svg': fs.readFileSync('public/images/parrot.svg'),
+      'public/images/parrot-white.svg': fs.readFileSync('public/images/parrot-white.svg'),
       'public/scripts/foobar404/wave/dist/bundle.iife.js': fs.readFileSync('public/scripts/foobar404/wave/dist/bundle.iife.js'),
       'public/scripts/mic.js': fs.readFileSync('public/scripts/mic.js'),
       'public/scripts/like.js': fs.readFileSync('public/scripts/like.js'),

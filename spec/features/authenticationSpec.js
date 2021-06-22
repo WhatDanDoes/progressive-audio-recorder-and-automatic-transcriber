@@ -53,7 +53,7 @@ describe('authentication', function() {
     });
 
     it('shows the home page', function() {
-      browser.assert.text('#page h1 a', process.env.TITLE);
+      browser.assert.text('#landing a .splash', 'Progressive Audio Recorder and Automatic Transcriber');
     });
 
     it('displays the login form if not logged in', function() {

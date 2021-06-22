@@ -104,7 +104,7 @@ describe('landing page', () => {
       browser.visit('/', (err) => {
         if (err) return done.fail(err);
         browser.assert.success();
-        browser.assert.text('#page h1 a', process.env.TITLE);
+        browser.assert.text('#landing a .splash', 'Progressive Audio Recorder and Automatic Transcriber');
         done();
       });
     });
