@@ -1,5 +1,5 @@
 {
-  "name": "progressive-audio-recorder",
+  "name": "progressive-audio-recorder-and-automatic-transcriber",
   "version": "0.0.0",
   "private": true,
   "scripts": {

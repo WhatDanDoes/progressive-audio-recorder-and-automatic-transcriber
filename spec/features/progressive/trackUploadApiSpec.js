@@ -248,7 +248,9 @@ describe('track upload API', () => {
     });
 
     describe('authenticated access', () => {
+
       describe('audio file upload', () => {
+
         it('responds with 201 on successful receipt of file', done => {
           request(app)
             .post('/track')
@@ -484,6 +486,168 @@ describe('track upload API', () => {
                   done();
                 });
               });
+          });
+        });
+
+        describe('Flashlight ASR', () => {
+          const child_process = require('child_process');
+
+          let _asrCommand, asrSpyReturnValue, interpolatedAsrCommand;
+          beforeEach(() => {
+            asrSpyReturnValue = 'behold the power of automatic speech recognition';
+            _asrCommand = process.env.ASR_COMMAND;
+
+            spyOn(child_process, 'exec').and.callFake(function(command, done) {
+              interpolatedAsrCommand = command;
+              return done(null, asrSpyReturnValue);
+            });
+          });
+
+          afterEach(() => {
+            if (_asrCommand) {
+              process.env.ASR_COMMAND = _asrCommand;
+            }
+          });
+
+          describe('not enabled', () => {
+
+            beforeEach(() => {
+              delete process.env.ASR_COMMAND;
+              expect(process.env.ASR_COMMAND).toBeUndefined();
+            });
+
+            it('does not call upon ASR rig', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(child_process.exec.calls.count()).toEqual(0);
+                  done();
+                });
+            });
+
+            it('leaves the track\'s transcript property empty', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].transcript).toEqual('');
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
+          });
+
+          describe('enabled', () => {
+
+            beforeEach(() => {
+              if (!process.env.ASR_COMMAND) {
+                process.env.ASR_COMMAND = './some-asr-command --to --be --executed';
+              };
+              expect(process.env.ASR_COMMAND).toBeDefined();
+            });
+
+            it('calls upon ASR rig to attempt inference on one file', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(child_process.exec.calls.count()).toEqual(1);
+                  done();
+                });
+            });
+
+            it('calls upon ASR rig to attempt inference on multiple files', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .attach('docs', 'spec/files/troll.wav')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  expect(child_process.exec.calls.count()).toEqual(2);
+                  done();
+                });
+            });
+
+            it('sets the track\'s transcript property to that returned by the inference', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+                    expect(tracks[0].transcript).toEqual(asrSpyReturnValue);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
+
+            it('interpolates the command string with the file path', done => {
+              request(app)
+                .post('/track')
+                .set('Accept', 'application/json')
+                .field('token', token)
+                .attach('docs', 'spec/files/troll.ogg')
+                .expect('Content-Type', /json/)
+                .expect(201)
+                .end(function(err, res) {
+                  if (err) {
+                    return done.fail(err);
+                  }
+
+                  models.Track.find({}).then(tracks => {
+                    expect(tracks.length).toEqual(1);
+
+                    expect(interpolatedAsrCommand).toEqual(`${process.env.ASR_COMMAND} ${tracks[0].path}`);
+
+                    done();
+                  }).catch(err => {
+                    done.fail(err);
+                  });
+                });
+            });
           });
         });
       });

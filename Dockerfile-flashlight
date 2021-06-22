@@ -1,0 +1,84 @@
+#
+# Composed from this tutorial:
+#
+# https://colab.research.google.com/github/flashlight/flashlight/blob/master/flashlight/app/asr/tutorial/notebooks/InferenceAndAlignmentCTC.ipynb
+#
+
+FROM flml/flashlight:cpu-latest
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get upgrade -y
+
+WORKDIR /root
+
+#
+# Need this to convert audio files to an acceptable format
+#
+RUN apt-get install -y ffmpeg
+
+#
+# The tutorial demands CUDA stuff, even though this is a CPU Flashlight container.
+# I have no idea how this or any of the following steps are working in conjunction
+# with CUDA.
+#
+# CUDA installation instructions were taken from here:
+#
+# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#pre-installation-actions:
+#
+RUN apt-get install -y linux-headers-$(uname -r)
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+RUN mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+RUN wget https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda-repo-ubuntu2004-11-3-local_11.3.1-465.19.01-1_amd64.deb
+RUN dpkg -i cuda-repo-ubuntu2004-11-3-local_11.3.1-465.19.01-1_amd64.deb
+RUN apt-key add /var/cuda-repo-ubuntu2004-11-3-local/7fa2af80.pub
+RUN apt-get -y update
+RUN apt-get -y install cuda
+RUN rm cuda-repo-ubuntu2004-11-3-local_11.3.1-465.19.01-1_amd64.deb
+
+#
+# Tutorial files
+#
+WORKDIR /root
+
+# Acoustic and language models
+RUN wget https://dl.fbaipublicfiles.com/wav2letter/rasr/tutorial/am_transformer_ctc_stride3_letters_300Mparams.bin
+RUN wget https://dl.fbaipublicfiles.com/wav2letter/rasr/tutorial/am_conformer_ctc_stride3_letters_25Mparams.bin
+RUN wget https://dl.fbaipublicfiles.com/wav2letter/rasr/tutorial/tokens.txt
+RUN wget https://dl.fbaipublicfiles.com/wav2letter/rasr/tutorial/lexicon.txt
+RUN wget https://dl.fbaipublicfiles.com/wav2letter/rasr/tutorial/lm_common_crawl_small_4gram_prun0-6-15_200kvocab.bin
+
+#
+# Script
+#
+COPY lib/infer.sh /root
+
+#
+# BATS: Bash Automated Testing System
+#
+WORKDIR /root
+RUN git clone https://github.com/sstephenson/bats.git
+RUN cd bats && ./install.sh /usr/local
+
+COPY spec/flashlight/ /root/tests
+
+#
+# SSH
+#
+EXPOSE 22
+RUN apt-get install -y openssh-server
+# This allows ssh with root
+RUN sed -i 's/#StrictModes yes/StrictModes no/g' /etc/ssh/sshd_config
+ENTRYPOINT service ssh restart && bash
+
+#
+# Build and execute:
+#
+# `docker-compose up -d`
+#
+# Login:
+#
+# `docker exec -it -w /root flashlight bash`
+#
+

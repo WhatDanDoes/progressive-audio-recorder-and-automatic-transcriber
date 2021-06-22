@@ -273,6 +273,92 @@ describe('track upload basic', () => {
           done.fail(err);
         });
       });
+
+      describe('Flashlight ASR', () => {
+        const child_process = require('child_process');
+
+        let _asrCommand, asrSpyReturnValue;
+        beforeEach(() => {
+          asrSpyReturnValue = 'behold the power of automatic speech recognition';
+          _asrCommand = process.env.ASR_COMMAND;
+
+          spyOn(child_process, 'exec').and.callFake(function(command, done) {
+            return done(null, asrSpyReturnValue);
+          });
+        });
+
+        afterEach(() => {
+          process.env.ASR_COMMAND = _asrCommand;
+        });
+
+        describe('not enabled', () => {
+
+          beforeEach(() => {
+            delete process.env.ASR_COMMAND;
+            expect(process.env.ASR_COMMAND).toBeUndefined();
+          });
+
+          it('does not call upon ASR rig', done => {
+            browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+              expect(child_process.exec.calls.count()).toEqual(0);
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+
+          it('leaves the track\'s transcript property empty', done => {
+            browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+              models.Track.find({}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].transcript).toEqual('');
+
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+        });
+
+        describe('enabled', () => {
+
+          beforeEach(() => {
+            if (!process.env.ASR_COMMAND) {
+              process.env.ASR_COMMAND = './some-asr-command --to --be --executed';
+            };
+            expect(process.env.ASR_COMMAND).toBeDefined();
+          });
+
+          // Attaching a file immediately triggers the upload. Cannot test more than one file here.
+          // See the corresponding API test
+          it('calls upon ASR rig to attempt inference on one file', done => {
+            browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+              expect(child_process.exec.calls.count()).toEqual(1);
+              done();
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+
+          it('sets the track\'s transcript property to that returned by the inference', done => {
+            browser.attach('docs', 'spec/files/troll.ogg').then(res => {
+              models.Track.find({}).then(tracks => {
+                expect(tracks.length).toEqual(1);
+                expect(tracks[0].transcript).toEqual(asrSpyReturnValue);
+
+                done();
+              }).catch(err => {
+                done.fail(err);
+              });
+            }).catch(err => {
+              done.fail(err);
+            });
+          });
+        });
+      });
     });
   });
 });

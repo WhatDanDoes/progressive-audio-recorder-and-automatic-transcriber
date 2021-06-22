@@ -1,13 +1,13 @@
-progressive-audio-recorder
-==========================
+progressive-audio-recorder-and-automatic-transcriber
+====================================================
 
-`node`/`express` backend for receiving audio collected by a remote device.
+`node`/`express` backend for receiving audio collected by a remote device. Currently wired to leverage Flashlight's the English-language automatic speech recognition employed in this [tutorial](https://colab.research.google.com/github/flashlight/flashlight/blob/master/flashlight/app/asr/tutorial/notebooks/InferenceAndAlignmentCTC.ipynb).
 
-The `progressive-audio-recorder` may be considered a _hard fork_ of the [auth0-photo-server](https://github.com/WhatDanDoes/auth0-photo-server), though the repository was never actually forked.
+The `paraat` application may be considered a _hard fork_ of the [auth0-photo-server](https://github.com/WhatDanDoes/auth0-photo-server), though the repository was never actually forked.
 
 ## Basic Functionality
 
-This is a Progressive Web Application. It uses audio when available and defaults to simple file upload when not. Upon audio stream completion, the file can be found in the agent's personal album, whereupon it may be _deleted_ or _published_ to the public library. Authenticated agents can _like_, comment, or flag audio tracks. Currently, only one agent may post to the public audio wall. There is no facility in place for following other accounts. This functionality may be deployed via Auth0 (continued below...)
+This is a Progressive Web Application. It uses audio when available and defaults to simple file upload when not. Upon audio upload completion, the file is found in the agent's personal album, whereupon it may be _deleted_ or _published_ to the public library. Authenticated agents can _like_, comment, or flag audio tracks. Currently, only one agent may post to the public audio wall. This functionality may be deployed via Auth0 (continued below...)
 
 ## Setup
 
@@ -64,7 +64,7 @@ npm start
 In the application directory:
 
 ```
-cd progressive-audio-recorder
+cd progressive-audio-recorder-and-automatic-transcriber
 cp .env.example .env # <- don't forget to configure
 NODE_ENV=production npm install
 ```
@@ -107,5 +107,41 @@ show collections
 db.agents.update({ email: 'daniel@example.com' }, { $push: { "canRead": db.agents.findOne({ email: 'lyndsay@example.com' })._id } })
 ```
 
+# Flashlight
+
+Configuring Flashlight is still a finicky thing. Directions will fill-out as deployments are repeated.
+
+## SSH Setup
+
+Flashlight commands are requested via SSH within this container. As such, keys are required:
+
+```
+# 2021-6-21 https://unix.stackexchange.com/a/135090/61705
+< /dev/zero | ssh-keygen -q -N "" -f ./.ssh/id_rsa
+```
+
+Flashlight and `paraat` share the same `.ssh` volume. Authorize the key so that `paraat` can call `ssh` without a password:
+
+```
+cat .ssh/id_rsa.pub >> .ssh/authorized_keys
+```
+
+## Test
+
+```
+docker-compose stop && docker-compose up --build -d && docker exec -it -w /root flashlight bats tests
+```
+
+## Development
+
+```
+docker-compose up -d
+```
+
+## Production
+
+```
+docker-compose -f docker-compose.flashlight.yml up -d
+```
 
 
