@@ -1,7 +1,7 @@
 progressive-audio-recorder-and-automatic-transcriber
 ====================================================
 
-`node`/`express` backend for receiving audio collected by a remote device. Currently wired to leverage Flashlight's the English-language automatic speech recognition employed in this [tutorial](https://colab.research.google.com/github/flashlight/flashlight/blob/master/flashlight/app/asr/tutorial/notebooks/InferenceAndAlignmentCTC.ipynb).
+`node`/`express` backend for receiving audio collected by a remote device. Currently wired to leverage Flashlight's English-language automatic speech recognition as employed in this [tutorial](https://colab.research.google.com/github/flashlight/flashlight/blob/master/flashlight/app/asr/tutorial/notebooks/InferenceAndAlignmentCTC.ipynb).
 
 The `paraat` application may be considered a _hard fork_ of the [auth0-photo-server](https://github.com/WhatDanDoes/auth0-photo-server), though the repository was never actually forked.
 
