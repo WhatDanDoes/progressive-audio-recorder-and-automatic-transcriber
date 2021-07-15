@@ -22,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-flashlight
+    restart: unless-stopped
     container_name: flashlight
     stdin_open: true      # docker run -i
     tty: true             # docker run -t
