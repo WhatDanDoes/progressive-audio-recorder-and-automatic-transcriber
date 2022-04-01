@@ -12,12 +12,14 @@ services:
       - .:/home/node
       - /home/node/node_modules
     depends_on:
-      - mongo
-  mongo:
+      - mongo-paraat
+  mongo-paraat:
     image: mongo
     restart: unless-stopped
     volumes:
       - progressive_audio_recorder_data:/data/db
+    ports:
+      - "27018:27017"
 networks:
   default:
     external:
