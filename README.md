@@ -126,6 +126,8 @@ Flashlight and `paraat` share the same `.ssh` volume. Authorize the key so that 
 cat .ssh/id_rsa.pub >> .ssh/authorized_keys
 ```
 
+Make sure the `.ssh` directory is owned by the correct user (and the `uploads` directory too!).
+
 ## Test
 
 ```
