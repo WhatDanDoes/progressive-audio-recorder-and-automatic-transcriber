@@ -28,7 +28,7 @@
     "username": "progressive_audio_recorder",
     "password": "secret",
     "database": "progressive_audio_recorder_production",
-    "host": "mongo",
+    "host": "mongo-paraat",
     "dialect": "mongodb"
   }
 }
