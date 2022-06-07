@@ -2,6 +2,16 @@ version: '3'
 services:
   node:
     build: .
+    #
+    # Sometimes the host user's id doesn't align with the container user's id.
+    # If there are any permission errors, this is one likely cause
+    #
+    # Execute the container like this:
+    #
+    # ```
+    # UID="$(id -u)" GID="$(id -g)" docker-compose -f docker-compose.flashlight.yml up -d
+    # ```
+    #user: "${UID}:${GID}"
     restart: unless-stopped
     environment:
       - NODE_ENV=production
