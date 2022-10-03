@@ -1,0 +1,40 @@
+version: '3'
+services:
+  node:
+    build: .
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VIRTUAL_HOST=example.com
+      - LETSENCRYPT_HOST=example.com
+      - LETSENCRYPT_EMAIL=daniel@example.com
+    volumes:
+      - .:/home/node
+      - /home/node/node_modules
+    depends_on:
+      - mongo-paraat
+  mongo-paraat:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - progressive_audio_recorder_data:/data/db
+    ports:
+      - "27018:27017"
+  allosaurus:
+    build:
+      context: .
+      dockerfile: Dockerfile-allosaurus
+    restart: unless-stopped
+    container_name: allosaurus
+    stdin_open: true      # docker run -i
+    tty: true             # docker run -t
+    volumes:
+      - ./workspace:/root/workspace
+      - ./.ssh:/root/.ssh
+      - ./uploads:/root/uploads
+networks:
+  default:
+    external:
+      name: nginx-proxy
+volumes:
+  progressive_audio_recorder_data:
