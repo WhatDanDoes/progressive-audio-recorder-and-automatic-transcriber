@@ -163,22 +163,36 @@ Allosaurus and `paraat` share the same `.ssh` volume. Authorize the key so that 
 cat .ssh/id_rsa.pub >> .ssh/authorized_keys
 ```
 
+## Hands-on Testing
+
+Build the container:
+
+```
+docker build --file Dockerfile-allosaurus -t allosaurus .
+```
+
+Login to container:
+
+```
+docker run -it allosaurus
+```
+
+Execute tests:
+
+```
+bats tests
+```
+
 ## Test
 
 ```
-docker-compose stop && docker-compose up --build -d && docker exec -it -w /root allosaurus bats tests
-```
-
-## Development
-
-```
-docker-compose up -d
+docker-compose -f docker-compose.test-allosaurus.yml stop && docker-compose -f docker-compose.test-allosaurus.yml up --build -d && docker exec -it -w /root allosaurus bats tests
 ```
 
 ## Production
 
 ```
-docker-compose -f docker-compose.flashlight.yml up -d
+docker-compose -f docker-compose.allosaurus.yml up -d
 ```
 
 
