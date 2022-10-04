@@ -34,6 +34,11 @@ RUN cd bats && ./install.sh /usr/local
 COPY spec/allosaurus/ /root/tests
 
 #
+# This just downloads the pretrained model
+#
+RUN ./allosaurus-infer.sh /root/tests/audio/hello-world.wav
+
+#
 # SSH
 #
 EXPOSE 22
