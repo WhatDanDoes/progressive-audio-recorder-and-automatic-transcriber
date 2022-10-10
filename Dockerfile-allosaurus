@@ -34,7 +34,8 @@ RUN cd bats && ./install.sh /usr/local
 COPY spec/allosaurus/ /root/tests
 
 #
-# This just downloads the pretrained model
+# This just downloads the pretrained model so that it doesn't need to happen on
+# first execution.
 #
 RUN ./allosaurus-infer.sh /root/tests/audio/hello-world.wav
 
