@@ -344,8 +344,8 @@ button[type="submit"] {
   font-size: .8em;
 }
 
-
 textarea {
+  font-family: "Times New Roman", Calibri, Arial, "Lucida Sans Unicode";
   display: inline;
   width: 100%;
 }
