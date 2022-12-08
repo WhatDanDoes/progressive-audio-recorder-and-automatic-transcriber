@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
   <title><%= process.env.TITLE %></title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
   <link rel='stylesheet' href='/stylesheets/fontawesome-free-5.9.0-web/css/all.css' />
@@ -27,10 +28,6 @@
   <script src="/scripts/like.js"></script>
   <script src="/scripts/upload.js"></script>
   <script src="/scripts/foobar404/wave/dist/bundle.iife.js"></script>
-
-  <% if (process.env.NODE_ENV === 'production') { %>
-    <% include matomo %>
-  <% } %>
 </head>
 <body>
   <% include navbar %>
